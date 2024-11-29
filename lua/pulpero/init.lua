@@ -67,6 +67,57 @@ local function extract_function_context()
     return table.concat(lines, '\n')
 end
 
+local function clean_model_output(raw_output)
+    raw_output = raw_output:gsub("<|im_start|>system.-<|im_start|>user.-purpose:", "")
+
+    raw_output = raw_output:gsub("<|im_start|>", "")
+    raw_output = raw_output:gsub("<|im_end|>", "")
+
+    raw_output = raw_output:gsub("%[end of text%]", "")
+    raw_output = raw_output:gsub("^%s+", "")
+    raw_output = raw_output:gsub("%s+$", "")
+
+    local sections = {
+        "Purpose:",
+        "Implementation:",
+        "Patterns & Techniques:",
+        "Notable Behaviors:"
+    }
+
+    local paragraphs = {}
+    for para in raw_output:gmatch("[^\n]+") do
+        if para:match("%S") then  -- Only keep non-empty paragraphs
+            table.insert(paragraphs, para)
+        end
+    end
+
+    local formatted_output = {}
+    if #paragraphs >= 1 then
+        table.insert(formatted_output, sections[1])
+        table.insert(formatted_output, "  " .. paragraphs[1])
+        table.insert(formatted_output, "")
+    end
+
+    if #paragraphs >= 2 then
+        table.insert(formatted_output, sections[2])
+        table.insert(formatted_output, "  " .. paragraphs[2])
+        table.insert(formatted_output, "")
+    end
+
+    if #paragraphs >= 3 then
+        table.insert(formatted_output, sections[3])
+        table.insert(formatted_output, "  " .. paragraphs[3])
+        table.insert(formatted_output, "")
+    end
+
+    if #paragraphs >= 4 then
+        table.insert(formatted_output, sections[4])
+        table.insert(formatted_output, "  " .. paragraphs[4])
+    end
+
+    return table.concat(formatted_output, "\n")
+end
+
 local function run_local_model(context, language)
     PluginData.logger:debug("Starting function explanation", {
         language = language,
@@ -74,15 +125,16 @@ local function run_local_model(context, language)
     })
 
     local prompt = string.format([[<|im_start|>system
-You are an expert programmer who excels at explaining code clearly and thoroughly. Analyze code and explain:
-1. The main purpose of the function
+You are a code explanation expert. Analyze this code and provide a clear explanation with these sections:
+1. Main purpose of the function
 2. How it works internally
 3. Important patterns or techniques it uses
-4. Any notable side effects or behaviors to be aware of
-Keep explanations clear and thorough but concise.
+4. Any notable behaviors or side effects
+
+Format your response in clear paragraphs, one for each section.
 <|im_end|>
 <|im_start|>user
-Explain this %s function's behavior and purpose:
+Explain this %s function:
 
 %s
 <|im_end|>
@@ -119,47 +171,13 @@ Explain this %s function's behavior and purpose:
 
     os.remove(tmp_prompt)
 
-    result = result:gsub("<|im_start|>assistant", "")
-    result = result:gsub("<|im_end|>", "")
-    result = result:gsub("^%s+", "")
+    result = clean_model_output(result)
 
     PluginData.logger:debug("Processed result", {
         cleaned_length = #result
     })
 
     return result
-end
-
-local function show_explanation(text)
-    local width = math.min(120, vim.o.columns - 4)
-    local height = math.min(20, vim.o.lines - 4)
-
-    local buf = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_lines(buf, 0, -1, true, vim.split(text, '\n'))
-
-    vim.api.nvim_buf_set_option(buf, 'modifiable', false)
-    vim.api.nvim_buf_set_option(buf, 'bufhidden', 'wipe')
-
-    local row = math.floor((vim.o.lines - height) / 2)
-    local col = math.floor((vim.o.columns - width) / 2)
-
-    local opts = {
-        relative = 'editor',
-        row = row,
-        col = col,
-        width = width,
-        height = height,
-        style = 'minimal',
-        border = 'rounded'
-    }
-
-    local win = vim.api.nvim_open_win(buf, true, opts)
-
-    vim.api.nvim_win_set_option(win, 'wrap', true)
-    vim.api.nvim_win_set_option(win, 'conceallevel', 2)
-
-    vim.api.nvim_buf_set_keymap(buf, 'n', 'q', ':close<CR>', {silent = true, noremap = true})
-    vim.api.nvim_buf_set_keymap(buf, 'n', '<Esc>', ':close<CR>', {silent = true, noremap = true})
 end
 
 function UI.create_loading_animation()
