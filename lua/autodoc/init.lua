@@ -49,10 +49,9 @@ local function run_local_model(context, language)
     '%s -m %s -f %s -n 128 --temp 0.1 --ctx-size %d --threads %d --memory.arena %s',
     ModelData.config.llama_cpp_path,
     ModelData.config.model_path,
-    tmp_prompt,
     ModelData.config.context_window,
     ModelData.config.num_threads,
-    ModelData.config.memory_limit
+    prompt
     )
 
     local handle = io.popen(command)
@@ -105,7 +104,7 @@ end
 function ModelData.setup(opts)
     local default_settings = {
         model_path = vim.fn.expand('/Users/agustinallamanocosta/repo/personal/AI/models/tinyLlama'),
-        llama_cpp_path = vim.fn.expand('~/.local/bin/llama'),
+        llama_cpp_path = vim.fn.expand('~/.local/bin/llama/llama-cli'),
         context_window = 512,
         memory_limit = "512MB",
         num_threads = 4
