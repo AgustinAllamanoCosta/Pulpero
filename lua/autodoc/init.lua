@@ -3,26 +3,13 @@ local PluginData = {}
 
 PluginData.config = {
     supported_languages = {
-        python = {
-            doc_style = '"""',
-            indent = '    '
-        },
-        javascript = {
-            doc_style = '/**',
-            indent = '  '
-        },
-        typescript = {
-            doc_style = '/**',
-            indent = '  '
-        },
-        typescriptreact = {
-            doc_style = '/**',
-            indent = '  '
-        },
-        lua = {
-            doc_style = '---',
-            indent = '    '
-        }
+        python = true,
+        javascript = true,
+        typescript = true,
+        typescriptreact = true,
+        lua = true,
+        java = true,
+        cpp = true
     },
     logs = {
         directory = "/tmp",
@@ -80,20 +67,25 @@ local function extract_function_context()
 end
 
 local function run_local_model(context, language)
-    PluginData.logger:debug("Starting documentation generation", {
+    PluginData.logger:debug("Starting function explanation", {
         language = language,
         context_length = #context
     })
-    local prompt = string.format([[Write a documentation comment for this %s function:
+
+    local prompt = string.format([[<|im_start|>system
+You are an expert programmer who excels at explaining code clearly and thoroughly. Analyze code and explain:
+1. The main purpose of the function
+2. How it works internally
+3. Important patterns or techniques it uses
+4. Any notable side effects or behaviors to be aware of
+Keep explanations clear and thorough but concise.
+<|im_end|>
+<|im_start|>user
+Explain this %s function's behavior and purpose:
 
 %s
-
-Instructions:
-1. Start with /** and end with */
-2. Include @param for parameters
-3. Include @returns for return value
-4. Be brief and clear
-5. Only output the documentation, nothing else
+<|im_end|>
+<|im_start|>assistant
 ]], language, context)
 
     PluginData.logger:debug("Generated prompt", {prompt = prompt})
@@ -105,15 +97,16 @@ Instructions:
     f:close()
 
     local command = string.format(
-        '%s -m %s --temp 0.1 -f %s -n 256',
+        '%s -m %s --temp 0.1 -f %s -n 512 --top_p 0.2 2>>%s',
         PluginData.config.llama_cpp_path,
         PluginData.config.model_path,
-        tmp_prompt
+        tmp_prompt,
+        PluginData.config.logs.error_file
     )
 
     PluginData.logger:debug("Executing command", {command = command})
 
-    local handle = io.popen(command .. " 2>/tmp/autodoc_error.log")
+    local handle = io.popen(command)
     local result = handle:read("*a")
     local success, exit_type, exit_code = handle:close()
 
@@ -123,61 +116,52 @@ Instructions:
         exit_code = exit_code
     })
 
-    local error_log = io.open("/tmp/autodoc_error.log", "r")
-    if error_log then
-        local errors = error_log:read("*a")
-        error_log:close()
-        debug_log("Error log contents", {errors = errors})
-    end
-
     os.remove(tmp_prompt)
 
-    PluginData.logger:debug("Raw model output", {output = result})
+    result = result:gsub("<|im_start|>assistant", "")
+    result = result:gsub("<|im_end|>", "")
+    result = result:gsub("^%s+", "")
 
-    local cleaned_result = result:match("(/[*][*].-[*]/)")
-    if not cleaned_result then
-        cleaned_result = result:match('(""".-""")')
-    end
+    PluginData.logger:debug("Processed result", {
+        cleaned_length = #result
+    })
 
-    PluginData.logger:debug("Cleaned output", {cleaned = cleaned_result or "No match found"})
-
-    if not cleaned_result then
-        return "/** \n * Documentation generation failed. Check /tmp/autodoc_debug.log for details \n */"
-    end
-
-    return cleaned_result
+    return result
 end
 
-local function insert_documentation(doc_text, language)
-    local lang_config = PluginData.config.supported_languages[language]
-    if not lang_config then
-        print("Language not supported for documentation")
-        return
-    end
+local function show_explanation(text)
+    local width = math.min(120, vim.o.columns - 4)
+    local height = math.min(20, vim.o.lines - 4)
 
-    local current_line = vim.fn.line('.')
-    local current_indent = vim.fn.indent(current_line)
-    local indent_str = string.rep(lang_config.indent, math.floor(current_indent / #lang_config.indent))
+    local buf = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_buf_set_lines(buf, 0, -1, true, vim.split(text, '\n'))
 
-    local formatted_doc = {}
-    if lang_config.doc_style == '/**' then
-        table.insert(formatted_doc, indent_str .. '/**')
+    vim.api.nvim_buf_set_option(buf, 'modifiable', false)
+    vim.api.nvim_buf_set_option(buf, 'bufhidden', 'wipe')
 
-        for line in doc_text:gmatch("[^\r\n]+") do
-            table.insert(formatted_doc, indent_str .. ' * ' .. line)
-        end
+    local row = math.floor((vim.o.lines - height) / 2)
+    local col = math.floor((vim.o.columns - width) / 2)
 
-        table.insert(formatted_doc, indent_str .. ' */')
-    else
-        for line in doc_text:gmatch("[^\r\n]+") do
-            table.insert(formatted_doc, indent_str .. lang_config.doc_style .. ' ' .. line)
-        end
-    end
+    local opts = {
+        relative = 'editor',
+        row = row,
+        col = col,
+        width = width,
+        height = height,
+        style = 'minimal',
+        border = 'rounded'
+    }
 
-    vim.api.nvim_buf_set_lines(0, current_line - 1, current_line - 1, false, formatted_doc)
+    local win = vim.api.nvim_open_win(buf, true, opts)
+
+    vim.api.nvim_win_set_option(win, 'wrap', true)
+    vim.api.nvim_win_set_option(win, 'conceallevel', 2)
+
+    vim.api.nvim_buf_set_keymap(buf, 'n', 'q', ':close<CR>', {silent = true, noremap = true})
+    vim.api.nvim_buf_set_keymap(buf, 'n', '<Esc>', ':close<CR>', {silent = true, noremap = true})
 end
 
-function PluginData.generate_doc()
+function PluginData.explain_function()
     local language = vim.bo.filetype
     if not PluginData.config.supported_languages[language] then
         print("Language not supported: " .. language)
@@ -185,8 +169,8 @@ function PluginData.generate_doc()
     end
 
     local context = extract_function_context()
-    local doc = run_local_model(context, language)
-    insert_documentation(doc, language)
+    local explanation = run_local_model(context, language)
+    show_explanation(explanation)
 end
 
 function PluginData.setup(opts)
@@ -194,7 +178,6 @@ function PluginData.setup(opts)
         model_path = vim.fn.expand('/Users/agustinallamanocosta/repo/personal/AI/models/tinyLlama'),
         llama_cpp_path = vim.fn.expand('~/.local/bin/llama/llama-cli'),
         context_window = 512,
-        memory_limit = "512MB",
         num_threads = 4,
         logs = {
             directory = "/tmp",
@@ -219,7 +202,8 @@ function PluginData.setup(opts)
     PluginData.logger = Logger.new(PluginData.config.logs)
 
     vim.api.nvim_create_user_command('AutoDoc', function()
-        PluginData.generate_doc()
+        PluginData.logger:clear_logs()
+        PluginData.explain_function()
     end, {})
 end
 
