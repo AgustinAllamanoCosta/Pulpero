@@ -14,6 +14,10 @@ ModelData.config = {
             doc_style = '/**',
             indent = '  '
         },
+        typescriptreact = {
+            doc_style = '/**',
+            indent = '  '
+        },
         lua = {
             doc_style = '---',
             indent = '    '
