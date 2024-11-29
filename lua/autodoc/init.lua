@@ -31,45 +31,88 @@ local function extract_function_context()
     return table.concat(lines, '\n')
 end
 
-local function run_local_model(context, language)
-    local prompt = string.format([[
-    Generate documentation for this %s function.
-    Only output the documentation comment, nothing else.
+local function debug_log(message, data)
+    local log_file = io.open("/tmp/autodoc_debug.log", "a")
+    if log_file then
+        log_file:write(os.date("%Y-%m-%d %H:%M:%S") .. ": " .. message .. "\n")
+        if data then
+            log_file:write("Data: " .. vim.inspect(data) .. "\n")
+        end
+        log_file:write("----------------------------------------\n")
+        log_file:close()
+    end
+end
 
-    Function to document:
+local function run_local_model(context, language)
+    debug_log("Starting documentation generation", {
+        language = language,
+        context_length = #context
+    })
+
+    local prompt = string.format([[
+    Task: Generate a documentation comment for the following %s function.
+    Rules:
+    - Only output the documentation comment
+    - Include parameter types and descriptions
+    - Include return type and description
+    - Keep it concise and professional
+
+    Function:
     %s
 
-    Format as a documentation comment.
+    Output the documentation comment only, starting with /** or """:
     ]], language, context)
+
+    debug_log("Generated prompt", {prompt = prompt})
 
     local tmp_prompt = os.tmpname()
     local f = io.open(tmp_prompt, 'w')
+
     f:write(prompt)
     f:close()
 
     local command = string.format(
-    '%s -m %s --temp 0.1 --ctx-size %d --threads %d -f %s -n 256',
-    ModelData.config.llama_cpp_path,
-    ModelData.config.model_path,
-    ModelData.config.context_window,
-    ModelData.config.num_threads,
-    tmp_prompt
+        '%s -m %s --temp 0.1 --ctx-size %d --threads %d -f %s -n 256 --memory-f32 --ignore-eos',
+        ModelData.config.llama_cpp_path,
+        ModelData.config.model_path,
+        ModelData.config.context_window,
+        ModelData.config.num_threads,
+        tmp_prompt
     )
 
-    local handle = io.popen(command)
-    local result = handle:read('*a')
-    handle:close()
-    os.remove(tmp_prompt)
+    debug_log("Executing command", {command = command})
 
-    result = result:gsub(".*Function to document:", "")
-    result = result:match("(/[*][*].*[*]/)") 
+    local handle = io.popen(command .. " 2>/tmp/autodoc_error.log")
+    local result = handle:read("*a")
+    local success, exit_type, exit_code = handle:close()
 
-    if not result then
-        -- Fallback if no JSDoc found
-        result = "/** \n * Documentation generation failed \n */"
+    debug_log("Command execution completed", {
+        success = success,
+        exit_type = exit_type,
+        exit_code = exit_code
+    })
+
+    local error_log = io.open("/tmp/autodoc_error.log", "r")
+    if error_log then
+        local errors = error_log:read("*a")
+        error_log:close()
+        debug_log("Error log contents", {errors = errors})
     end
 
-    return result
+    debug_log("Raw model output", {output = result})
+
+    local cleaned_result = result:match("(/[*][*].*[*]/)")
+    if not cleaned_result then
+        cleaned_result = result:match('(""".*""")')
+    end
+
+    debug_log("Cleaned output", {cleaned = cleaned_result or "No match found"})
+
+    if not cleaned_result then
+        return "/** \n * Documentation generation failed. Check /tmp/autodoc_debug.log for details \n */"
+    end
+
+    return cleaned_result
 end
 
 local function insert_documentation(doc_text, language)
