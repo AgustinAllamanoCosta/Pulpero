@@ -1,6 +1,7 @@
-local ModelData = {}
+local Logger = {}
+local PluginData = {}
 
-ModelData.config = {
+PluginData.config = {
     supported_languages = {
         python = {
             doc_style = '"""',
@@ -22,8 +23,55 @@ ModelData.config = {
             doc_style = '---',
             indent = '    '
         }
+    },
+    logs = {
+        directory = "/tmp",
+        debug_file = "autodoc_debug.log",
+        error_file = "autodoc_error.log"
     }
 }
+
+function Logger.new(config)
+    local self = setmetatable({}, { __index = Logger })
+    self.debug_path = string.format("%s/%s", config.directory, config.debug_file)
+    self.error_path = string.format("%s/%s", config.directory, config.error_file)
+    return self
+end
+
+function Logger.clear_logs(self)
+    local debug_file = io.open(self.debug_path, "w")
+    if debug_file then
+        debug_file:write("=== New Debug Session Started ===\n")
+        debug_file:close()
+    end
+
+    local error_file = io.open(self.error_path, "w")
+    if error_file then
+        error_file:write("=== New Error Session Started ===\n")
+        error_file:close()
+    end
+end
+
+function Logger.debug(self, message, data)
+    local debug_file = io.open(self.debug_path, "a")
+    if debug_file then
+        debug_file:write(os.date("%Y-%m-%d %H:%M:%S") .. ": " .. message .. "\n")
+        if data then
+            debug_file:write("Data: " .. vim.inspect(data) .. "\n")
+        end
+        debug_file:write("----------------------------------------\n")
+        debug_file:close()
+    end
+end
+
+function Logger.error(self, error_text)
+    local error_file = io.open(self.error_path, "a")
+    if error_file then
+        error_file:write(os.date("%Y-%m-%d %H:%M:%S") .. ": " .. error_text .. "\n")
+        error_file:write("----------------------------------------\n")
+        error_file:close()
+    end
+end
 
 local function extract_function_context()
     local line = vim.fn.line('.')
@@ -31,20 +79,8 @@ local function extract_function_context()
     return table.concat(lines, '\n')
 end
 
-local function debug_log(message, data)
-    local log_file = io.open("/tmp/autodoc_debug.log", "a")
-    if log_file then
-        log_file:write(os.date("%Y-%m-%d %H:%M:%S") .. ": " .. message .. "\n")
-        if data then
-            log_file:write("Data: " .. vim.inspect(data) .. "\n")
-        end
-        log_file:write("----------------------------------------\n")
-        log_file:close()
-    end
-end
-
 local function run_local_model(context, language)
-    debug_log("Starting documentation generation", {
+    PluginData.logger:debug("Starting documentation generation", {
         language = language,
         context_length = #context
     })
@@ -60,7 +96,7 @@ Instructions:
 5. Only output the documentation, nothing else
 ]], language, context)
 
-    debug_log("Generated prompt", {prompt = prompt})
+    PluginData.logger:debug("Generated prompt", {prompt = prompt})
 
     local tmp_prompt = os.tmpname()
     local f = io.open(tmp_prompt, 'w')
@@ -70,18 +106,18 @@ Instructions:
 
     local command = string.format(
         '%s -m %s --temp 0.1 -f %s -n 256',
-        ModelData.config.llama_cpp_path,
-        ModelData.config.model_path,
+        PluginData.config.llama_cpp_path,
+        PluginData.config.model_path,
         tmp_prompt
     )
 
-    debug_log("Executing command", {command = command})
+    PluginData.logger:debug("Executing command", {command = command})
 
     local handle = io.popen(command .. " 2>/tmp/autodoc_error.log")
     local result = handle:read("*a")
     local success, exit_type, exit_code = handle:close()
 
-    debug_log("Command execution completed", {
+    PluginData.logger:debug("Command execution completed", {
         success = success,
         exit_type = exit_type,
         exit_code = exit_code
@@ -96,14 +132,14 @@ Instructions:
 
     os.remove(tmp_prompt)
 
-    debug_log("Raw model output", {output = result})
-    
+    PluginData.logger:debug("Raw model output", {output = result})
+
     local cleaned_result = result:match("(/[*][*].-[*]/)")
     if not cleaned_result then
         cleaned_result = result:match('(""".-""")')
     end
 
-    debug_log("Cleaned output", {cleaned = cleaned_result or "No match found"})
+    PluginData.logger:debug("Cleaned output", {cleaned = cleaned_result or "No match found"})
 
     if not cleaned_result then
         return "/** \n * Documentation generation failed. Check /tmp/autodoc_debug.log for details \n */"
@@ -113,7 +149,7 @@ Instructions:
 end
 
 local function insert_documentation(doc_text, language)
-    local lang_config = ModelData.config.supported_languages[language]
+    local lang_config = PluginData.config.supported_languages[language]
     if not lang_config then
         print("Language not supported for documentation")
         return
@@ -141,9 +177,9 @@ local function insert_documentation(doc_text, language)
     vim.api.nvim_buf_set_lines(0, current_line - 1, current_line - 1, false, formatted_doc)
 end
 
-function ModelData.generate_doc()
+function PluginData.generate_doc()
     local language = vim.bo.filetype
-    if not ModelData.config.supported_languages[language] then
+    if not PluginData.config.supported_languages[language] then
         print("Language not supported: " .. language)
         return
     end
@@ -153,13 +189,18 @@ function ModelData.generate_doc()
     insert_documentation(doc, language)
 end
 
-function ModelData.setup(opts)
+function PluginData.setup(opts)
     local default_settings = {
         model_path = vim.fn.expand('/Users/agustinallamanocosta/repo/personal/AI/models/tinyLlama'),
         llama_cpp_path = vim.fn.expand('~/.local/bin/llama/llama-cli'),
         context_window = 512,
         memory_limit = "512MB",
-        num_threads = 4
+        num_threads = 4,
+        logs = {
+            directory = "/tmp",
+            debug_file = "autodoc_debug.log",
+            error_file = "autodoc_error.log"
+        }
     }
 
     local success, handle = pcall(io.popen, 'free -m | grep Mem: | awk \'{print $2}\'')
@@ -173,12 +214,13 @@ function ModelData.setup(opts)
             default_settings.num_threads = 2
         end
     end
+    PluginData.config = vim.tbl_deep_extend('force', PluginData.config, default_settings, opts or {})
 
-    ModelData.config = vim.tbl_deep_extend('force', ModelData.config, default_settings, opts or {})
+    PluginData.logger = Logger.new(PluginData.config.logs)
 
     vim.api.nvim_create_user_command('AutoDoc', function()
-        ModelData.generate_doc()
+        PluginData.generate_doc()
     end, {})
 end
 
-return ModelData
+return PluginData
