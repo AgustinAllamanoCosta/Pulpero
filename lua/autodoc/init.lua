@@ -46,7 +46,7 @@ local function run_local_model(context, language)
     f:close()
 
     local command = string.format(
-    '%s -m %s -f %s -n 128 --temp 0.1 --ctx-size %d --threads %d --memory.arena %s',
+    '%s -m %s --temp 0.1 --ctx-size %d --threads %d -p "%s" -n 128',
     ModelData.config.llama_cpp_path,
     ModelData.config.model_path,
     ModelData.config.context_window,
