@@ -1,11 +1,6 @@
 local ModelData = {}
 
 ModelData.config = {
-    model_path = vim.fn.expand('/Users/agustinallamanocosta/repo/personal/AI/models/tinyLlama'),
-    llama_cpp_path = vim.fn.expand('~/.local/bin/llama'),
-    context_window = 512,
-    memory_limit = "512MB",
-    num_threads = 4,
     supported_languages = {
         python = {
             doc_style = '"""',
@@ -105,6 +100,8 @@ end
 
 function ModelData.setup(opts)
     local default_settings = {
+        model_path = vim.fn.expand('/Users/agustinallamanocosta/repo/personal/AI/models/tinyLlama'),
+        llama_cpp_path = vim.fn.expand('~/.local/bin/llama'),
         context_window = 512,
         memory_limit = "512MB",
         num_threads = 4
@@ -122,7 +119,7 @@ function ModelData.setup(opts)
         end
     end
 
-    ModelData.config = vim.tbl_deep_extend('force', default_settings, opts or {})
+    ModelData.config = vim.tbl_deep_extend('force', ModelData.config, default_settings, opts or {})
 
     vim.api.nvim_create_user_command('AutoDoc', function()
         ModelData.generate_doc()
