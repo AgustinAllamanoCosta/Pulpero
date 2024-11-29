@@ -14,8 +14,8 @@ PluginData.config = {
     },
     logs = {
         directory = "/tmp",
-        debug_file = "autodoc_debug.log",
-        error_file = "autodoc_error.log"
+        debug_file = "pulpero_debug.log",
+        error_file = "pulpero_error.log"
     }
 }
 
