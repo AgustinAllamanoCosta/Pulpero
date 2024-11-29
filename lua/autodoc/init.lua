@@ -34,12 +34,12 @@ end
 
 local function run_local_model(context, language)
     local prompt = string.format([[
-Generate brief documentation for this %s function.
-Include: parameters and return type.
-Context:
-%s
-Keep it concise.
-]], language, context)
+    Generate brief documentation for this %s function.
+    Include: parameters and return type.
+    Context:
+    %s
+    Keep it concise.
+    ]], language, context)
 
     local tmp_prompt = os.tmpname()
     local f = io.open(tmp_prompt, 'w')
@@ -47,13 +47,13 @@ Keep it concise.
     f:close()
 
     local command = string.format(
-        '%s -m %s -f %s -n 128 --temp 0.1 --ctx-size %d --threads %d --memory.arena %s',
-        ModelData.config.llama_cpp_path,
-        ModelData.config.model_path,
-        tmp_prompt,
-        ModelData.config.context_window,
-        ModelData.config.num_threads,
-        ModelData.config.memory_limit
+    '%s -m %s -f %s -n 128 --temp 0.1 --ctx-size %d --threads %d --memory.arena %s',
+    ModelData.config.llama_cpp_path,
+    ModelData.config.model_path,
+    tmp_prompt,
+    ModelData.config.context_window,
+    ModelData.config.num_threads,
+    ModelData.config.memory_limit
     )
 
     local handle = io.popen(command)
@@ -104,16 +104,26 @@ function ModelData.generate_doc()
 end
 
 function ModelData.setup(opts)
-    local handle = io.popen('free -m | grep Mem: | awk \'{print $2}\'')
-    local total_mem = tonumber(handle:read('*a'))
-    handle:close()
-    if total_mem < 4096 then
-        ModelData.config.context_window = 256
-        ModelData.config.memory_limit = "256MB"
-        ModelData.config.num_threads = 2
+    local default_settings = {
+        context_window = 512,
+        memory_limit = "512MB",
+        num_threads = 4
+    }
+
+    local success, handle = pcall(io.popen, 'free -m | grep Mem: | awk \'{print $2}\'')
+    if success and handle then
+        local total_mem = tonumber(handle:read('*a'))
+        handle:close()
+
+        if total_mem and total_mem < 4096 then
+            default_settings.context_window = 256
+            default_settings.memory_limit = "256MB"
+            default_settings.num_threads = 2
+        end
     end
 
-    ModelData.config = vim.tbl_deep_extend('force', ModelData.config, opts or {})
+    ModelData.config = vim.tbl_deep_extend('force', default_settings, opts or {})
+
     vim.api.nvim_create_user_command('AutoDoc', function()
         ModelData.generate_doc()
     end, {})
