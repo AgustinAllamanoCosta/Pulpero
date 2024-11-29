@@ -48,20 +48,17 @@ local function run_local_model(context, language)
         language = language,
         context_length = #context
     })
+    local prompt = string.format([[Write a documentation comment for this %s function:
 
-    local prompt = string.format([[
-    Task: Generate a documentation comment for the following %s function.
-    Rules:
-    - Only output the documentation comment
-    - Include parameter types and descriptions
-    - Include return type and description
-    - Keep it concise and professional
+%s
 
-    Function:
-    %s
-
-    Output the documentation comment only, starting with /** or """:
-    ]], language, context)
+Instructions:
+1. Start with /** and end with */
+2. Include @param for parameters
+3. Include @returns for return value
+4. Be brief and clear
+5. Only output the documentation, nothing else
+]], language, context)
 
     debug_log("Generated prompt", {prompt = prompt})
 
@@ -72,11 +69,9 @@ local function run_local_model(context, language)
     f:close()
 
     local command = string.format(
-        '%s -m %s --temp 0.1 --ctx-size %d --threads %d -f %s -n 256 --memory-f32 --ignore-eos',
+        '%s -m %s --temp 0.1 -f %s -n 256',
         ModelData.config.llama_cpp_path,
         ModelData.config.model_path,
-        ModelData.config.context_window,
-        ModelData.config.num_threads,
         tmp_prompt
     )
 
@@ -99,11 +94,13 @@ local function run_local_model(context, language)
         debug_log("Error log contents", {errors = errors})
     end
 
-    debug_log("Raw model output", {output = result})
+    os.remove(tmp_prompt)
 
-    local cleaned_result = result:match("(/[*][*].*[*]/)")
+    debug_log("Raw model output", {output = result})
+    
+    local cleaned_result = result:match("(/[*][*].-[*]/)")
     if not cleaned_result then
-        cleaned_result = result:match('(""".*""")')
+        cleaned_result = result:match('(""".-""")')
     end
 
     debug_log("Cleaned output", {cleaned = cleaned_result or "No match found"})
