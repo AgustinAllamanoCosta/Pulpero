@@ -193,7 +193,7 @@ function UI.create_loading_animation()
 
     local function update_spinner()
         if loading_buf and vim.api.nvim_buf_is_valid(loading_buf) then
-            vim.api.nvim_buf_set_lines(loading_buf, 0, -1, false, 
+            vim.api.nvim_buf_set_lines(loading_buf, 0, -1, false,
                 {string.format("  %s  Analyzing function...", frames[current_frame])})
             current_frame = (current_frame % #frames) + 1
         else
@@ -230,18 +230,24 @@ function UI.create_loading_animation()
 end
 
 function UI.show_explanation(text)
+
     local width = math.min(120, vim.o.columns - 4)
-    local height = math.min(20, vim.o.lines - 4)
-
-    local buf = vim.api.nvim_create_buf(false, true)
-
+    local min_height = 10
     local lines = vim.split(text, '\n')
+
+    while #lines > 0 and lines[#lines] == "" do
+        table.remove(lines)
+    end
 
     table.insert(lines, "")
     table.insert(lines, string.rep("─", width - 2))
     table.insert(lines, "Note: This explanation is AI-generated and should be verified for accuracy.")
     table.insert(lines, "Press 'q' or <Esc> to close this window.")
 
+    local content_height = #lines
+    local height = math.min(math.max(content_height, min_height), vim.o.lines - 4)
+
+    local buf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_lines(buf, 0, -1, true, lines)
 
     local row = math.floor((vim.o.lines - height) / 2)
@@ -260,15 +266,19 @@ function UI.show_explanation(text)
     }
 
     local win = vim.api.nvim_open_win(buf, true, opts)
-
     vim.api.nvim_win_set_option(win, 'wrap', true)
     vim.api.nvim_win_set_option(win, 'conceallevel', 2)
 
-    vim.api.nvim_buf_add_highlight(buf, -1, 'Comment', -2, 0, -1)
-    vim.api.nvim_buf_add_highlight(buf, -1, 'Comment', -1, 0, -1)
+    local last_lines = #lines
+    if last_lines > 2 then
+        pcall(vim.api.nvim_buf_add_highlight, buf, -1, 'Comment', last_lines - 1, 0, -1)
+        pcall(vim.api.nvim_buf_add_highlight, buf, -1, 'Comment', last_lines, 0, -1)
+    end
 
     vim.api.nvim_buf_set_keymap(buf, 'n', 'q', ':close<CR>', {silent = true, noremap = true})
     vim.api.nvim_buf_set_keymap(buf, 'n', '<Esc>', ':close<CR>', {silent = true, noremap = true})
+
+    return buf, win
 end
 
 function PluginData.explain_function()
