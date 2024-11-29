@@ -33,11 +33,13 @@ end
 
 local function run_local_model(context, language)
     local prompt = string.format([[
-    Generate brief documentation for this %s function.
-    Include: parameters and return type.
-    Context:
+    Generate documentation for this %s function.
+    Only output the documentation comment, nothing else.
+
+    Function to document:
     %s
-    Keep it concise.
+
+    Format as a documentation comment.
     ]], language, context)
 
     local tmp_prompt = os.tmpname()
@@ -46,18 +48,26 @@ local function run_local_model(context, language)
     f:close()
 
     local command = string.format(
-    '%s -m %s --temp 0.1 --ctx-size %d --threads %d -p "%s" -n 128',
+    '%s -m %s --temp 0.1 --ctx-size %d --threads %d -f %s -n 256',
     ModelData.config.llama_cpp_path,
     ModelData.config.model_path,
     ModelData.config.context_window,
     ModelData.config.num_threads,
-    prompt
+    tmp_prompt
     )
 
     local handle = io.popen(command)
     local result = handle:read('*a')
     handle:close()
     os.remove(tmp_prompt)
+
+    result = result:gsub(".*Function to document:", "")
+    result = result:match("(/[*][*].*[*]/)") 
+
+    if not result then
+        -- Fallback if no JSDoc found
+        result = "/** \n * Documentation generation failed \n */"
+    end
 
     return result
 end
@@ -76,9 +86,11 @@ local function insert_documentation(doc_text, language)
     local formatted_doc = {}
     if lang_config.doc_style == '/**' then
         table.insert(formatted_doc, indent_str .. '/**')
+
         for line in doc_text:gmatch("[^\r\n]+") do
             table.insert(formatted_doc, indent_str .. ' * ' .. line)
         end
+
         table.insert(formatted_doc, indent_str .. ' */')
     else
         for line in doc_text:gmatch("[^\r\n]+") do
