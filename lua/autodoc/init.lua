@@ -1,5 +1,6 @@
 local Logger = {}
 local PluginData = {}
+local UI = {}
 
 PluginData.config = {
     supported_languages = {
@@ -161,6 +162,115 @@ local function show_explanation(text)
     vim.api.nvim_buf_set_keymap(buf, 'n', '<Esc>', ':close<CR>', {silent = true, noremap = true})
 end
 
+function UI.create_loading_animation()
+    local frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
+    local current_frame = 1
+    local timer = nil
+    local loading_buf = nil
+    local loading_win = nil
+
+    local function create_loading_window()
+        loading_buf = vim.api.nvim_create_buf(false, true)
+
+        local width = 30
+        local height = 1
+        local row = math.floor((vim.o.lines - height) / 2)
+        local col = math.floor((vim.o.columns - width) / 2)
+
+        local opts = {
+            relative = 'editor',
+            row = row,
+            col = col,
+            width = width,
+            height = height,
+            style = 'minimal',
+            border = 'rounded'
+        }
+
+        loading_win = vim.api.nvim_open_win(loading_buf, false, opts)
+        return loading_buf, loading_win
+    end
+
+    local function update_spinner()
+        if loading_buf and vim.api.nvim_buf_is_valid(loading_buf) then
+            vim.api.nvim_buf_set_lines(loading_buf, 0, -1, false, 
+                {string.format("  %s  Analyzing function...", frames[current_frame])})
+            current_frame = (current_frame % #frames) + 1
+        else
+            if timer then
+                timer:stop()
+            end
+        end
+    end
+
+    local function start()
+        local buf, win = create_loading_window()
+        timer = vim.loop.new_timer()
+        timer:start(0, 100, vim.schedule_wrap(update_spinner))
+        return buf, win
+    end
+
+    local function stop()
+        if timer then
+            timer:stop()
+            timer:close()
+        end
+        if loading_win and vim.api.nvim_win_is_valid(loading_win) then
+            vim.api.nvim_win_close(loading_win, true)
+        end
+        if loading_buf and vim.api.nvim_buf_is_valid(loading_buf) then
+            vim.api.nvim_buf_delete(loading_buf, { force = true })
+        end
+    end
+
+    return {
+        start = start,
+        stop = stop
+    }
+end
+
+function UI.show_explanation(text)
+    local width = math.min(120, vim.o.columns - 4)
+    local height = math.min(20, vim.o.lines - 4)
+
+    local buf = vim.api.nvim_create_buf(false, true)
+
+    local lines = vim.split(text, '\n')
+
+    table.insert(lines, "")
+    table.insert(lines, string.rep("─", width - 2))
+    table.insert(lines, "Note: This explanation is AI-generated and should be verified for accuracy.")
+    table.insert(lines, "Press 'q' or <Esc> to close this window.")
+
+    vim.api.nvim_buf_set_lines(buf, 0, -1, true, lines)
+
+    local row = math.floor((vim.o.lines - height) / 2)
+    local col = math.floor((vim.o.columns - width) / 2)
+
+    local opts = {
+        relative = 'editor',
+        row = row,
+        col = col,
+        width = width,
+        height = height,
+        style = 'minimal',
+        border = 'rounded',
+        title = ' Function Analysis ',
+        title_pos = 'center'
+    }
+
+    local win = vim.api.nvim_open_win(buf, true, opts)
+
+    vim.api.nvim_win_set_option(win, 'wrap', true)
+    vim.api.nvim_win_set_option(win, 'conceallevel', 2)
+
+    vim.api.nvim_buf_add_highlight(buf, -1, 'Comment', -2, 0, -1)
+    vim.api.nvim_buf_add_highlight(buf, -1, 'Comment', -1, 0, -1)
+
+    vim.api.nvim_buf_set_keymap(buf, 'n', 'q', ':close<CR>', {silent = true, noremap = true})
+    vim.api.nvim_buf_set_keymap(buf, 'n', '<Esc>', ':close<CR>', {silent = true, noremap = true})
+end
+
 function PluginData.explain_function()
     local language = vim.bo.filetype
     if not PluginData.config.supported_languages[language] then
@@ -168,9 +278,15 @@ function PluginData.explain_function()
         return
     end
 
-    local context = extract_function_context()
-    local explanation = run_local_model(context, language)
-    show_explanation(explanation)
+    local loading = UI.create_loading_animation()
+    loading.start()
+
+    vim.schedule(function()
+        local context = extract_function_context()
+        local explanation = run_local_model(context, language)
+        loading.stop()
+        UI.show_explanation(explanation)
+    end)
 end
 
 function PluginData.setup(opts)
@@ -201,7 +317,7 @@ function PluginData.setup(opts)
 
     PluginData.logger = Logger.new(PluginData.config.logs)
 
-    vim.api.nvim_create_user_command('AutoDoc', function()
+    vim.api.nvim_create_user_command('ExpFn', function()
         PluginData.logger:clear_logs()
         PluginData.explain_function()
     end, {})
