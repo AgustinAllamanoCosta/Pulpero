@@ -11,6 +11,7 @@ function PluginData.setup(opts)
         context_window = 512,
         temp = 0.1,
         num_threads = 4,
+        top_p = 0.2,
         supported_languages = {
             python = true,
             javascript = true,
@@ -23,6 +24,7 @@ function PluginData.setup(opts)
         logs = {
             directory = "/tmp",
             debug_file = "pulpero_debug.log",
+            command_output = "pulpero_command.log",
             error_file = "pulpero_error.log"
         }
     }
@@ -31,7 +33,6 @@ function PluginData.setup(opts)
     if success and handle then
         local total_mem = tonumber(handle:read('*a'))
         handle:close()
-        -- Adjust settings based on available memory
         if total_mem and total_mem < 4096 then -- Less than 4GB RAM
             default_settings.context_window = 256
             default_settings.num_threads = 2
@@ -40,7 +41,6 @@ function PluginData.setup(opts)
             default_settings.num_threads = 4
         else -- 8GB or more RAM
             default_settings.context_window = 1024
-            default_settings.temp = 0.7
             default_settings.num_threads = 6
         end
     end
