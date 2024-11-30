@@ -22,13 +22,7 @@ function Runner.run_local_model(self, context, language)
 
     local prompt = string.format([[
 <|system|>
-You are a code explanation expert. Analyze this code and provide a clear explanation with these sections:
-1. Main purpose of the function
-2. How it works internally
-3. Important patterns or techniques it uses
-4. Any notable behaviors or side effects
-
-Format your response in clear paragraphs, one for each section.</s>
+You are a code explanation expert. Analyze this code and provide a clear explanation in a few lines, max 10</s>
 <|user|>
 Explain this %s function:
 

@@ -40,6 +40,7 @@ function Parser.clean_model_output(raw_output)
     end
 
     assistant_response = string.gsub(assistant_response,"<|assistant[^>]+>", "") -- Remove any remaining tokens
+    assistant_response = string.gsub(assistant_response,"%[end of text%]", "") -- Remove any remaining tokens
     assistant_response = string.gsub(assistant_response,"\n+", "\n")       -- Normalize newlines
     assistant_response = string.gsub(assistant_response,"^%s+", "")        -- Remove leading whitespace
     assistant_response = string.gsub(assistant_response,"%s+$", "")        -- Remove trailing whitespace
