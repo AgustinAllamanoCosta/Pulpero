@@ -51,6 +51,8 @@ Explain this %s function:
     tmp_prompt_file:write(prompt)
     tmp_prompt_file:close()
 
+    local full_path = string.format('%s/$s',self.config.logs.directory, self.config.logs.error_file)
+
     local command = string.format(
         '%s -m %s --temp %d -f %s -n 512 --ctx-size %d --threads %d --top_p 0.2 2>>%s',
         self.config.llama_cpp_path,
@@ -59,7 +61,7 @@ Explain this %s function:
         tmp_prompt,
         self.config.context_window,
         self.config.num_threads,
-        self.config.logs.error_file
+        full_path
     )
 
     self.logger:debug("Executing command", {command = command})

@@ -10,7 +10,7 @@ function Parser.extract_function_context(self)
     local lines_before, lines_after = self.calculate_context_lines(self.config.context_window)
 
     local line = vim.fn.line('.')
-    local lines = vim.api.nvim_buf_get_lines(0, 
+    local lines = vim.api.nvim_buf_get_lines(0,
         math.max(0, line - lines_before),
         math.min(line + lines_after, vim.fn.line('$')),
         false
