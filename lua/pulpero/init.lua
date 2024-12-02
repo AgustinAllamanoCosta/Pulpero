@@ -12,15 +12,6 @@ function PluginData.setup(opts)
         temp = 0.1,
         num_threads = 4,
         top_p = 0.2,
-        supported_languages = {
-            python = true,
-            javascript = true,
-            typescript = true,
-            typescriptreact = true,
-            lua = true,
-            java = true,
-            cpp = true
-        },
         logs = {
             directory = "/tmp",
             debug_file = "pulpero_debug.log",
