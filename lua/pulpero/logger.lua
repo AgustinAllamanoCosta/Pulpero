@@ -5,6 +5,7 @@ function Logger.new(config)
     self.debug_path = string.format("%s/%s", config.directory, config.debug_file)
     self.error_path = string.format("%s/%s", config.directory, config.error_file)
     self.command_path = string.format("%s/%s", config.directory, config.command_path)
+    self.setup_path = string.format("%s/%s", config.directory, config.setup_file)
     return self
 end
 
@@ -23,8 +24,26 @@ function Logger.clear_logs(self)
 
     local command_file = io.open(self.command_path, "w")
     if command_file then
-        command_file:write("=== New Error Session Started ===\n")
+        command_file:write("=== New Command Session Started ===\n")
         command_file:close()
+    end
+
+    local setup_file = io.open(self.setup_path, "w")
+    if setup_file then
+        setup_file:write("=== New SetUp Session Started ===\n")
+        setup_file:close()
+    end
+end
+
+function Logger.setup(self, message, data)
+    local debug_file = io.open(self.setup_path, "a")
+    if debug_file then
+        debug_file:write(os.date("%Y-%m-%d %H:%M:%S") .. ": " .. message .. "\n")
+        if data then
+            debug_file:write("Data: " .. vim.inspect(data) .. "\n")
+        end
+        debug_file:write("----------------------------------------\n")
+        debug_file:close()
     end
 end
 

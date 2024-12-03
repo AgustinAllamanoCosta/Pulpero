@@ -1,44 +1,24 @@
 local Runner = require('pulpero.model_runner')
+local Setup = require('pulpero.setup')
+local UI = require('pulpero.ui')
+local Parser = require('pulpero.parser')
 
 local PluginData = {}
 PluginData.config = {}
 local runner = nil
+local setup = nil
+local parser = nil
+local ui = nil
 
-function PluginData.setup(opts)
-    local default_settings = {
-        model_path = vim.fn.expand('/Users/agustinallamanocosta/repo/personal/AI/models/tinyLlama'),
-        llama_cpp_path = vim.fn.expand('~/.local/bin/llama/llama-cli'),
-        context_window = 512,
-        temp = 0.1,
-        num_threads = 4,
-        top_p = 0.2,
-        logs = {
-            directory = "/tmp",
-            debug_file = "pulpero_debug.log",
-            command_output = "pulpero_command.log",
-            error_file = "pulpero_error.log"
-        }
-    }
+function PluginData.setup()
+    setup = Setup.new()
+    local config, logger = setup:configure_plugin()
+    setup:prepear_env()
 
-    local success, handle = pcall(io.popen, 'free -m | grep Mem: | awk \'{print $2}\'')
-    if success and handle then
-        local total_mem = tonumber(handle:read('*a'))
-        handle:close()
-        if total_mem and total_mem < 4096 then -- Less than 4GB RAM
-            default_settings.context_window = 256
-            default_settings.num_threads = 2
-        elseif total_mem and total_mem < 8192 then -- Less than 8GB RAM
-            default_settings.context_window = 512
-            default_settings.num_threads = 4
-        else -- 8GB or more RAM
-            default_settings.context_window = 1024
-            default_settings.num_threads = 6
-        end
-    end
+    parser = Parser.new(config)
+    ui = UI.new(config)
 
-    PluginData.config = vim.tbl_deep_extend('force', PluginData.config, default_settings, opts or {})
-
-    runner = Runner.new(PluginData.config)
+    runner = Runner.new(config, logger, parser, ui)
 
     vim.api.nvim_create_user_command('ExpFn', function()
         runner:explain_function()
