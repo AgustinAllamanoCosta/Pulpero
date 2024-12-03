@@ -4,6 +4,7 @@ function Logger.new(config)
     local self = setmetatable({}, { __index = Logger })
     self.debug_path = string.format("%s/%s", config.directory, config.debug_file)
     self.error_path = string.format("%s/%s", config.directory, config.error_file)
+    self.command_path = string.format("%s/%s", config.directory, config.command_path)
     return self
 end
 
@@ -18,6 +19,12 @@ function Logger.clear_logs(self)
     if error_file then
         error_file:write("=== New Error Session Started ===\n")
         error_file:close()
+    end
+
+    local command_file = io.open(self.command_path, "w")
+    if command_file then
+        command_file:write("=== New Error Session Started ===\n")
+        command_file:close()
     end
 end
 
