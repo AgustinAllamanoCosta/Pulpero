@@ -22,19 +22,16 @@ function Logger.clear_logs(self)
         debug_file:write("=== New Debug Session Started ===\n")
         debug_file:close()
     end
-
     local error_file = io.open(self.error_path, "w")
     if error_file then
         error_file:write("=== New Error Session Started ===\n")
         error_file:close()
     end
-
     local command_file = io.open(self.command_path, "w")
     if command_file then
         command_file:write("=== New Command Session Started ===\n")
         command_file:close()
     end
-
     local setup_file = io.open(self.setup_path, "w")
     if setup_file then
         setup_file:write("=== New SetUp Session Started ===\n")
@@ -47,7 +44,7 @@ function Logger.setup(self, message, data)
     if debug_file then
         debug_file:write(os.date("%Y-%m-%d %H:%M:%S") .. ": " .. message .. "\n")
         if data then
-            debug_file:write("Data: " .. vim.inspect(data) .. "\n")
+            debug_file:write("Data: " .. data .. "\n")
         end
         debug_file:write("----------------------------------------\n")
         debug_file:close()
@@ -59,7 +56,7 @@ function Logger.debug(self, message, data)
     if debug_file then
         debug_file:write(os.date("%Y-%m-%d %H:%M:%S") .. ": " .. message .. "\n")
         if data then
-            debug_file:write("Data: " .. vim.inspect(data) .. "\n")
+            debug_file:write("Data: " .. data .. "\n")
         end
         debug_file:write("----------------------------------------\n")
         debug_file:close()
