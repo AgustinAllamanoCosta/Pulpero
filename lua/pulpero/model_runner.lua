@@ -42,8 +42,6 @@ Explain this %s function:
     tmp_prompt_file:write(full_prompt)
     tmp_prompt_file:close()
 
-    local command_output = string.format('%s/%s',self.config.logs.directory, self.config.logs.command_output)
-
     local command = string.format(
     '%s -m %s --temp %d -f %s -n 512 --ctx-size %d --threads %d --top_p %d 2>>%s',
     self.config.llama_cpp_path,
@@ -53,7 +51,7 @@ Explain this %s function:
     self.config.context_window,
     self.config.num_threads,
     self.config.top_p,
-    command_output)
+    self.logger.command_path)
 
     self.logger:debug("Executing command", {command = command})
 
@@ -130,7 +128,7 @@ You can check the logs at: %s]],
             tostring(result),
             self.config.model_path,
             self.config.llama_cpp_path,
-            self.config.logs.directory
+            self.logger.error_path
             )
             self.ui:show_error(error_message)
         end

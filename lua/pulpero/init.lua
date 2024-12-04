@@ -1,6 +1,7 @@
 local Runner = require('pulpero.model_runner')
 local Setup = require('pulpero.setup')
 local UI = require('pulpero.ui')
+local Logger = require('pulpero.logger')
 local Parser = require('pulpero.parser')
 
 local PluginData = {}
@@ -9,10 +10,13 @@ local runner = nil
 local setup = nil
 local parser = nil
 local ui = nil
+local logger = nil
 
 function PluginData.setup()
-    setup = Setup.new()
-    local config, logger = setup:configure_plugin()
+    logger = Logger.new()
+    logger:clear_logs()
+    setup = Setup.new(logger)
+    local config = setup:configure_plugin()
     setup:prepear_env()
 
     parser = Parser.new(config)

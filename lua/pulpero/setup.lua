@@ -1,9 +1,61 @@
 local Setup = {}
-local Logger = require('pulpero.logger')
 
-function Setup.new ()
+function Setup.new(logger)
     local self = setmetatable({}, { __index = Setup })
+    self.logger = logger
+    self.command_output = logger.command_path
     return self
+end
+
+function Setup.execute_command(self, command)
+    local formatted_command
+    if package.config:sub(1,1) == '\\' then
+        formatted_command = string.format('%s >> "%s" 2>>&1', command, self.command_output)
+    else
+        formatted_command = string.format('%s >> "%s" 2>&1', command, self.command_output)
+    end
+
+    self.logger:setup("Executing command: " .. command)
+    local result = os.execute(formatted_command)
+
+    if type(result) == "number" then
+        return result == 0
+    else
+        return result
+    end
+end
+
+function Setup.check_cmake_installed(self)
+    self.logger:setup("Cheking if cmake is installed...")
+    return self:execute_command("cmake --version")
+end
+
+function Setup.install_cmake(self)
+    self.logger:setup("Installing CMake...")
+
+    -- Detect OS
+    local os_name = ""
+    if package.config:sub(1,1) == '\\' then
+        os_name = "windows"
+    else
+        local handle = io.popen("uname")
+        if handle then
+            os_name = handle:read("*l"):lower()
+            handle:close()
+        end
+    end
+
+    if os_name == "linux" then
+        if not self:execute_command("sudo apt-get update && sudo apt-get install -y cmake") then
+            return self:execute_command("sudo yum -y install cmake")
+        end
+    elseif os_name == "darwin" then
+        return self:execute_command("brew install cmake")
+    elseif os_name == "windows" then
+        return self:execute_command("choco install cmake -y")
+    end
+
+    return false
 end
 
 function Setup.get_data_path(self)
@@ -34,7 +86,6 @@ function Setup.is_directory(self, path)
     return false
 end
 
-
 function Setup.create_directory(self, path)
     if package.config:sub(1,1) == '\\' then
         os.execute('mkdir "' .. path .. '"')
@@ -63,50 +114,73 @@ function Setup.download_model(self)
 
     self.logger:setup("Downloading TinyLlama model (this may take a while)...")
 
-    local cmd = string.format(
-        'wget -O %s --header="Authorization: Bearer %s" %s 2>>%s',
+    local download_command = string.format(
+        'wget -O %s --header="Authorization: Bearer %s" %s',
         model_path,
         self.config.token,
-        self.config.model,
-        self.command_output
+        self.config.model
     )
 
-    local result = os.execute(cmd)
-    if result ~= 1 then
-        self.logger:setup("Failed to download the model " .. result)
-        return "", result
+    if self:execute_command(download_command) then
+        self.logger:setup("Download ended")
+        return model_path, 0
+    else
+        self.logger:setup("Failed to download the model")
+        return "", 1
     end
-
-    self.logger:setup("Download ended")
-    return model_path, 0
 end
 
 function Setup.setup_llama(self)
-    self.logger:setup("Prepearing Llama cpp")
-    local data_dir = self:get_data_path()
-    local llama_dir = data_dir .. '/llama.cpp'
-    local llama_bin = llama_dir .. '/llama-cli'
+    self.logger:setup("Preparing Llama cpp")
 
-    if self:file_exist(llama_dir) then
-        self.logger:setup("Llama is already cloned skipping")
-    else
-        local clone_llama_command = string.format('git clone %s %s 2>>%s', self.config.llama_repo, llama_dir, self.command_output)
-        local result = os.execute(clone_llama_command)
-        if result ~= 1 then
-            self.logger:setup("Failed to download the model " .. result)
-            return "", result
+    if not self:check_cmake_installed() then
+        self.logger:setup("CMake not found, attempting to install...")
+        if not self:install_cmake() then
+            self.logger:setup("Failed to install CMake. Please install it manually.")
+            return "", 1
         end
+        self.logger:setup("CMake installed successfully")
     end
 
-    if self:file_exist(llama_bin) then
-        self.logger:setup("Llama is already compile skipping")
-    else
-        local compile_llama_command = string.format('cd %s && make 2>>%s', llama_dir, self.command_output)
-        local result = os.execute(compile_llama_command)
-        if result ~= 1 then
-            self.logger:setup("Failed to compile llama.cpp " .. result)
-            return "", result
+    local data_dir = self:get_data_path()
+    local llama_dir = data_dir .. '/llama.cpp'
+    local llama_bin = llama_dir .. '/build/bin/llama-cli'
+
+    if not self:file_exist(llama_dir) then
+        local clone_command = string.format('git clone %s %s', self.config.llama_repo, llama_dir)
+        if not self:execute_command(clone_command) then
+            self.logger:setup("Failed to clone llama.cpp")
+            return "", 1
         end
+    else
+        self.logger:setup("Llama is already cloned, skipping")
+    end
+
+    if not self:file_exist(llama_bin) then
+        -- Create build directory
+        local build_dir = llama_dir .. '/build'
+        local mkdir_command = package.config:sub(1,1) == '\\' and
+            string.format('mkdir "%s"', build_dir) or
+            string.format('mkdir -p "%s"', build_dir)
+
+        if not self:execute_command(mkdir_command) then
+            self.logger:setup("Failed to create build directory")
+            return "", 1
+        end
+
+        -- Build with CMake
+        local build_commands = string.format(
+            'cd "%s" && cmake .. && cmake --build . --config Release',
+            build_dir
+        )
+
+        if not self:execute_command(build_commands) then
+            self.logger:setup("Failed to compile llama.cpp")
+            return "", 1
+        end
+
+    else
+        self.logger:setup("Llama is already compiled, skipping")
     end
 
     return llama_bin, 0
@@ -132,13 +206,6 @@ function Setup.configure_plugin(self)
         num_threads = 4,
         top_p = 0.2,
         token="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",
-        logs = {
-            directory = "/tmp",
-            debug_file = "pulpero_debug.log",
-            setup_file = "pulpero_setup.log",
-            command_output = "pulpero_command.log",
-            error_file = "pulpero_error.log"
-        },
         model = "https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
         llama_repo = "https://github.com/ggerganov/llama.cpp.git"
     }
@@ -160,10 +227,7 @@ function Setup.configure_plugin(self)
     end
 
     self.config = default_settings
-    self.command_output = string.format('%s/%s', self.config.logs.directory, self.config.logs.setup_file)
-    self.logger = Logger.new(self.config)
-    self.logger:clear_logs()
-    return default_settings, self.logger
+    return default_settings
 end
 
 return Setup

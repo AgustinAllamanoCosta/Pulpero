@@ -1,10 +1,17 @@
 local Logger = {}
+local config = {
+    directory = "/tmp",
+    debug_file = "pulpero_debug.log",
+    setup_file = "pulpero_setup.log",
+    command_output = "pulpero_command.log",
+    error_file = "pulpero_error.log"
+}
 
-function Logger.new(config)
+function Logger.new()
     local self = setmetatable({}, { __index = Logger })
     self.debug_path = string.format("%s/%s", config.directory, config.debug_file)
     self.error_path = string.format("%s/%s", config.directory, config.error_file)
-    self.command_path = string.format("%s/%s", config.directory, config.command_path)
+    self.command_path = string.format("%s/%s", config.directory, config.command_output)
     self.setup_path = string.format("%s/%s", config.directory, config.setup_file)
     return self
 end
