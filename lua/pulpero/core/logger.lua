@@ -16,6 +16,28 @@ function Logger.new()
     return self
 end
 
+function Logger.toString(self, table)
+    local result = "{"
+    for k, v in pairs(table) do
+        if type(k) == "string" then
+            result = result.."[\""..k.."\"]".."="
+        end
+
+        if type(v) == "table" then
+            result = result .. self:toString(v)
+        elseif type(v) == "boolean" then
+            result = result .. tostring(v)
+        else
+            result = result .. "\"" .. v .. "\""
+        end
+        result = result .. ","
+    end
+    if result ~= "{" then
+        result = result:sub(1, result:len()-1)
+    end
+    return result .. "}"
+end
+
 function Logger.clear_logs(self)
     local debug_file = io.open(self.debug_path, "w")
     if debug_file then
@@ -44,7 +66,7 @@ function Logger.setup(self, message, data)
     if debug_file then
         debug_file:write(os.date("%Y-%m-%d %H:%M:%S") .. ": " .. message .. "\n")
         if data then
-            debug_file:write("Data: " .. data .. "\n")
+            debug_file:write("Data: " .. self:toString(data) .. "\n")
         end
         debug_file:write("----------------------------------------\n")
         debug_file:close()
@@ -56,7 +78,7 @@ function Logger.debug(self, message, data)
     if debug_file then
         debug_file:write(os.date("%Y-%m-%d %H:%M:%S") .. ": " .. message .. "\n")
         if data then
-            debug_file:write("Data: " .. data .. "\n")
+            debug_file:write("Data: " .. self:toString(data) .. "\n")
         end
         debug_file:write("----------------------------------------\n")
         debug_file:close()
