@@ -31,8 +31,12 @@ local function start()
     "/explain",
     function (captures, query, headers, body)
         local lang = query.lang
-        local success, result, error = runner:explain_function(body, lang)
-        return result
+        local success,  error = runner:explain_function(body, lang)
+        if success then
+            return success
+        else
+            return error
+        end
     end)
     app.start()
 end

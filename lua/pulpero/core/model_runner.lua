@@ -114,7 +114,7 @@ function Runner.explain_function(self, language, context)
             return self:run_local_model(context, language)
         end)
         if success then
-            return result
+            return result, nil
         else
             local error_message = string.format(
                 error_message_template,
@@ -125,8 +125,7 @@ function Runner.explain_function(self, language, context)
             return nil, error_message
         end
     end
-    local success, result, error = execute_analysis()
-    return success, result, error
+    return execute_analysis()
 end
 
 return Runner
