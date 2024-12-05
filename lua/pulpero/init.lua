@@ -1,7 +1,7 @@
-local Runner = require('core.model_runner')
-local Setup = require('core.setup')
-local Logger = require('core.logger')
-local Parser = require('core.parser')
+local Runner = require('pulpero.core.model_runner')
+local Setup = require('pulpero.core.setup')
+local Logger = require('pulpero.core.logger')
+local Parser = require('pulpero.core.parser')
 
 local M = {}
 local runner = nil

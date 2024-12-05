@@ -1,1 +1,1 @@
-return { "AgustinAllamanoCosta/Pulpero", lazy = true, opts = {} }
+return { "AgustinAllamanoCosta/Pulpero", opts = {} }
