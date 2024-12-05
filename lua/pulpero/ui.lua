@@ -33,33 +33,6 @@ function UI.restart_loading_window(self)
     }
 end
 
-function UI.create_loading_window(self)
-    local buf = vim.api.nvim_create_buf(false, true)
-
-    if self.main_win and vim.api.nvim_win_is_valid(self.main_win) then
-        vim.api.nvim_win_close(self.main_win, true)
-    end
-
-    if self.footer_win and vim.api.nvim_win_is_valid(self.footer_win) then
-        vim.api.nvim_win_close(self.footer_win, true)
-    end
-
-    local width = 30
-    local height = 1
-    local row = math.floor((vim.o.lines - height) / 2)
-    local col = math.floor((vim.o.columns - width) / 2)
-
-    self.opts.row = row
-    self.opts.height = height
-    self.opts.col = col
-    self.opts.width = width
-    self.opts.title = ' Loading '
-    self.loading_buf = buf
-    self.loading_win = vim.api.nvim_open_win(buf, false, self.opts)
-
-    return buf, self.loading_win
-end
-
 function UI.create_new_window(self, title, content)
     while #content > 0 and content[#content] == "" do
         table.remove(content)
@@ -92,15 +65,39 @@ end
 
 function UI.start_spiner(self)
     self:restart_loading_window()
-    local buf, win = self:create_loading_window()
+
+    local buf = vim.api.nvim_create_buf(false, true)
+
+    if self.main_win and vim.api.nvim_win_is_valid(self.main_win) then
+        vim.api.nvim_win_close(self.main_win, true)
+    end
+
+    if self.footer_win and vim.api.nvim_win_is_valid(self.footer_win) then
+        vim.api.nvim_win_close(self.footer_win, true)
+    end
+
+    local width = 30
+    local height = 1
+    local row = math.floor((vim.o.lines - height) / 2)
+    local col = math.floor((vim.o.columns - width) / 2)
+
+    self.opts.row = row
+    self.opts.height = height
+    self.opts.col = col
+    self.opts.width = width
+    self.opts.title = ' Loading '
+
+    local win = vim.api.nvim_open_win(buf, false, self.opts)
+
     self.timer = vim.loop.new_timer()
     local current_frame = 1
     local frames = self.frames
 
+    self.loading_win = win
+    self.loading_buf = buf
     self.timer:start(0, 100, vim.schedule_wrap(function()
         if vim.api.nvim_buf_is_valid(buf) then
-            vim.api.nvim_buf_set_lines(buf, 0, -1, false,{string.format("  %s  Analyzing code...", frames[current_frame])})
-            current_frame = (current_frame % #frames) + 1
+            vim.api.nvim_buf_set_lines(buf, 0, -1, false,"Analyzing code...")
         else
             self:stop_spiner()
         end

@@ -31,6 +31,7 @@ function M.setup()
     logger:clear_logs()
     setup = Setup.new(logger)
     local config = setup:configure_plugin()
+    logger:debug("Configuration ", config)
     setup:prepear_env()
 
     parser = Parser.new(config)
@@ -42,14 +43,20 @@ function M.setup()
         local filetype = vim.bo.filetype
 
         ui:start_spiner()
-        local success, error = runner:explain_function(filetype, selected_code)
-        if success then
-            ui:show_explanation(success)
-        else
-            ui:show_error(error)
-        end
-        ui:stop_spiner()
-    end, {})
+        vim.schedule(function()
+            local success, result = pcall(function()
+                return runner:explain_function(filetype, selected_code)
+            end)
+
+            ui:stop_spiner()
+
+            if success then
+                ui:show_explanation(result)
+            else
+                ui:show_error(result)
+            end
+        end)
+    end, { range = true })
 end
 
 return M
