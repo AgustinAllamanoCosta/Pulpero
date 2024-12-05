@@ -2,12 +2,14 @@ local Runner = require('pulpero.core.model_runner')
 local Setup = require('pulpero.core.setup')
 local Logger = require('pulpero.core.logger')
 local Parser = require('pulpero.core.parser')
+local UI = require('pulpero.ui')
 
 local M = {}
 local runner = nil
 local parser = nil
 local logger = nil
 local setup = nil
+local ui = nil
 
 local function get_visual_selection()
     local start_pos = vim.fn.getpos("'<")
@@ -33,21 +35,21 @@ function M.setup()
 
     parser = Parser.new(config)
     runner = Runner.new(config, logger, parser)
+    ui = UI.new(config)
 
     vim.api.nvim_create_user_command('ExpFn', function()
-        M.explain_selection()
-    end, {range = true})
-end
+        local selected_code = get_visual_selection()
+        local filetype = vim.bo.filetype
 
-function M.explain_selection()
-    local selected_code = get_visual_selection()
-    local filetype = vim.bo.filetype
-    local success, result = runner:explain_function(selected_code, filetype)
-    if success then
-        require('pulpero.ui'):show_explanation(result)
-    else
-        require('pulpero.ui'):show_error(result)
-    end
+        ui:start_spiner()
+        local success, error = runner:explain_function(filetype, selected_code)
+        if success then
+            ui:show_explanation(success)
+        else
+            ui:show_error(error)
+        end
+        ui:stop_spiner()
+    end, {})
 end
 
 return M
