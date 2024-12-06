@@ -43,4 +43,3 @@ echo "Installation completed!"
 echo "Please restart your terminal or run 'source $SHELL_CONFIG' to use Lua and LuaRocks"
 
 luarocks install milua
-lua ./core/init.lua
