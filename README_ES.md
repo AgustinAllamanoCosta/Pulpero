@@ -97,6 +97,17 @@ La API actualmente ofrece dos endpoints básicos. Esta API está diseñada princ
 
 *PENDIENTE*
 
+### Compilar la lib del core de menera local
+
+Para compilar la version se pueden ejecutar los siguientes comando con cmake instalado
+
+```bash
+mkdir build
+cd build
+cmake ..
+make
+```
+
 ### Solución de problemas
 
 El plugin genera logs en la carpeta `/tmp` del usuario:

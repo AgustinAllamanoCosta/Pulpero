@@ -97,6 +97,17 @@ The API currently offers two basic endpoints. This API is primarily designed for
 
 *PENDING*
 
+### Build core lib locally:
+
+To build the lib locally you need to execute the next command of cmake
+
+```bash
+mkdir build
+cd build
+cmake ..
+make
+```
+
 ### Troubleshooting
 
 The plugin generates logs in the user's `/tmp` folder:
