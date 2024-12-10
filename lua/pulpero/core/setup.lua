@@ -133,7 +133,7 @@ function Setup.download_model(self)
     end
     self.logger:setup("Downloading TinyLlama model (this may take a while)...")
     local download_command = string.format(
-    'wget -O %s --header="Authorization: Bearer %s" %s',
+    'wget -O "%s" --header="Authorization: Bearer %s" %s',
     model_path,
     self.config.token,
     self.config.model
@@ -175,7 +175,7 @@ function Setup.setup_llama(self)
 
     if not self:file_exist(llama_dir) then
         self.logger:setup("Cloning llama repo")
-        local clone_command = string.format('git clone %s %s', self.config.llama_repo, llama_dir)
+        local clone_command = string.format('git clone %s "%s"', self.config.llama_repo, llama_dir)
         if not self:execute_command_and_dump(clone_command) then
             self.logger:setup("Failed to clone llama.cpp")
             return "", 1
