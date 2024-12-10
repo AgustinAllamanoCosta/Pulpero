@@ -157,9 +157,22 @@ function Setup.setup_llama(self)
         end
         self.logger:setup("CMake installed successfully")
     end
+
+    local platform = self:get_platform()
     local data_dir = self:get_data_path()
-    local llama_dir = data_dir .. '/llama.cpp'
-    local llama_bin = llama_dir .. '/build/bin/llama-cli'
+    local llama_dir = ''
+    local llama_bin = ''
+    local build_dir = ''
+    if platform == 'windows' then
+        llama_dir = data_dir .. '\\llama.cpp'
+        llama_bin = llama_dir .. '\\build\\bin\\llama-cli'
+        build_dir = llama_dir .. '\\build'
+    else
+        llama_dir = data_dir .. '/llama.cpp'
+        llama_bin = llama_dir .. '/build/bin/llama-cli'
+        build_dir = llama_dir .. '/build'
+    end
+
     if not self:file_exist(llama_dir) then
         self.logger:setup("Cloning llama repo")
         local clone_command = string.format('git clone %s %s', self.config.llama_repo, llama_dir)
@@ -170,9 +183,8 @@ function Setup.setup_llama(self)
     else
         self.logger:setup("Llama is already cloned, skipping")
     end
+
     if not self:file_exist(llama_bin) then
-        -- Create build directory
-        local build_dir = llama_dir .. '/build'
         local mkdir_command = package.config:sub(1,1) == '\\' and
         string.format('mkdir "%s"', build_dir) or
         string.format('mkdir -p "%s"', build_dir)
@@ -180,7 +192,6 @@ function Setup.setup_llama(self)
             self.logger:setup("Failed to create build directory")
             return "", 1
         end
-        -- Build with CMake
         local build_commands = string.format(
         'cd "%s" && cmake .. && cmake --build . --config Release',
         build_dir
