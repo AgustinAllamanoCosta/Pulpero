@@ -9,45 +9,57 @@ local config = {
 
 function Logger.new()
     local self = setmetatable({}, { __index = Logger })
-    config.directory = self:getLocalTempFolder()
-    self.debug_path = string.format("%s/%s", config.directory, config.debug_file)
-    self.error_path = string.format("%s/%s", config.directory, config.error_file)
-    self.command_path = string.format("%s/%s", config.directory, config.command_output)
-    self.setup_path = string.format("%s/%s", config.directory, config.setup_file)
+    self:configuredLoggerPathBaseOnOS()
     return self
 end
 
-function Logger.getLocalTempFolder(self)
+function Logger.configuredLoggerPathBaseOnOS(self)
     local os_name = package.config:sub(1,1) == '\\' and 'windows' or 'unix'
 
     if os_name == 'windows' then
         local temp = os.getenv("TEMP")
-        if temp then return temp end
-
-        local tmp = os.getenv("TMP")
-        if tmp then return tmp end
-
-        return "C:\\Windows\\Temp"
-    else
-        local tmp = os.getenv("TMPDIR")
-        if tmp then return tmp end
-
-        local candidates = {
-            "/tmp",
-            "/var/tmp",
-            "/usr/tmp"
-        }
-
-        for _, path in ipairs(candidates) do
-            local file = io.open(path .. "/test_write", "w")
-            if file then
-                file:close()
-                os.remove(path .. "/test_write")
-                return path
+        if temp then 
+            config.directory = temp 
+        else 
+            local tmp = os.getenv("TMP")
+            if tmp then
+                config.directory = tmp
+            else
+                config.directory =  "C:\\Windows\\Temp"
             end
         end
 
-        return "/tmp"
+        self.debug_path = string.format("%s\\%s", config.directory, config.debug_file)
+        self.error_path = string.format("%s\\%s", config.directory, config.error_file)
+        self.command_path = string.format("%s\\%s", config.directory, config.command_output)
+        self.setup_path = string.format("%s\\%s", config.directory, config.setup_file)
+        return
+    else
+        local tmp = os.getenv("TMPDIR")
+        if tmp then 
+            config.directory = tmp 
+        else
+            local candidates = {
+                "/tmp",
+                "/var/tmp",
+                "/usr/tmp"
+            }
+
+            for _, path in ipairs(candidates) do
+                local file = io.open(path .. "/test_write", "w")
+                if file then
+                    file:close()
+                    os.remove(path .. "/test_write")
+                    config.directory = path
+                end
+            end
+        end
+
+        self.debug_path = string.format("%s/%s", config.directory, config.debug_file)
+        self.error_path = string.format("%s/%s", config.directory, config.error_file)
+        self.command_path = string.format("%s/%s", config.directory, config.command_output)
+        self.setup_path = string.format("%s/%s", config.directory, config.setup_file)
+        return
     end
 end
 
