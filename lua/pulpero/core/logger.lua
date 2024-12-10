@@ -10,32 +10,31 @@ local config = {
 function Logger.new()
     local self = setmetatable({}, { __index = Logger })
     self:configuredLoggerPathBaseOnOS()
-    self:setup("Configured logger paths ", config)
     return self
 end
 
-function Logger.configuredLoggerPathBaseOnOS(self)
-    local os_name = package.config:sub(1,1) == '\\' and 'windows' or 'unix'
+function  Logger.getConfig(self)
+    return config
+end
 
-    if os_name == 'windows' then
-        local temp = os.getenv("TEMP")
-        if temp then
-            config.directory = temp
-        else
-            local tmp = os.getenv("TMP")
-            if tmp then
-                config.directory = tmp
-            else
-                config.directory =  "C:\\Windows\\Temp"
-            end
-        end
-
-        self.debug_path = string.format("%s\\%s", config.directory, config.debug_file)
-        self.error_path = string.format("%s\\%s", config.directory, config.error_file)
-        self.command_path = string.format("%s\\%s", config.directory, config.command_output)
-        self.setup_path = string.format("%s\\%s", config.directory, config.setup_file)
-        return
+function Logger.getPlatform()
+    local os_name = "undefine"
+    if package.config:sub(1,1) == '\\' then
+        os_name = "windows"
     else
+        local handle = io.popen("uname")
+        if handle then
+            os_name = handle:read("*l"):lower()
+            handle:close()
+        end
+    end
+    return os_name
+end
+
+function Logger.configuredLoggerPathBaseOnOS(self)
+    local os_name = self:getPlatform()
+
+    if os_name == "linux" then
         local tmp = os.getenv("TMPDIR")
         if tmp then
             config.directory = tmp
@@ -52,6 +51,7 @@ function Logger.configuredLoggerPathBaseOnOS(self)
                     file:close()
                     os.remove(path .. "/test_write")
                     config.directory = path
+                    return
                 end
             end
         end
@@ -60,7 +60,30 @@ function Logger.configuredLoggerPathBaseOnOS(self)
         self.error_path = string.format("%s/%s", config.directory, config.error_file)
         self.command_path = string.format("%s/%s", config.directory, config.command_output)
         self.setup_path = string.format("%s/%s", config.directory, config.setup_file)
-        return
+    elseif os_name == "darwin" then
+
+        self.debug_path = string.format("%s/%s", config.directory, config.debug_file)
+        self.error_path = string.format("%s/%s", config.directory, config.error_file)
+        self.command_path = string.format("%s/%s", config.directory, config.command_output)
+        self.setup_path = string.format("%s/%s", config.directory, config.setup_file)
+    elseif os_name == "windows" then
+
+        local temp = os.getenv("TEMP")
+        if temp then
+            config.directory = temp
+        else
+            local tmp = os.getenv("TMP")
+            if tmp then
+                config.directory = tmp
+            else
+                config.directory =  "C:\\Windows\\Temp"
+            end
+        end
+
+        self.debug_path = string.format("%s\\%s", config.directory, config.debug_file)
+        self.error_path = string.format("%s\\%s", config.directory, config.error_file)
+        self.command_path = string.format("%s\\%s", config.directory, config.command_output)
+        self.setup_path = string.format("%s\\%s", config.directory, config.setup_file)
     end
 end
 
