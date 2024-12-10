@@ -109,7 +109,6 @@ function Setup.create_directory(self, path)
         self:execute_command_and_dump('mkdir -p "' .. path .. '"')
     end
 end
-:
 function Setup.ensure_dir(self, path)
     self.logger:setup("Cheking if file exist " .. path)
     if self:is_directory(path) then
@@ -120,9 +119,9 @@ end
 function Setup.download_model(self)
     self.logger:setup("Prepearing model")
     local data_dir = self:get_data_path()
+    local platform = self:get_platform()
     self:ensure_dir(data_dir)
     local model_path = ''
-    local platform = self:get_platform()
     if platform == 'windows' then
         model_path =  data_dir .. '\\model.gguf'
     else
