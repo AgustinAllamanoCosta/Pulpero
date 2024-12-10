@@ -10,6 +10,7 @@ local config = {
 function Logger.new()
     local self = setmetatable({}, { __index = Logger })
     self:configuredLoggerPathBaseOnOS()
+    self:setup("Configured logger paths ", config)
     return self
 end
 
@@ -18,9 +19,9 @@ function Logger.configuredLoggerPathBaseOnOS(self)
 
     if os_name == 'windows' then
         local temp = os.getenv("TEMP")
-        if temp then 
-            config.directory = temp 
-        else 
+        if temp then
+            config.directory = temp
+        else
             local tmp = os.getenv("TMP")
             if tmp then
                 config.directory = tmp
@@ -36,8 +37,8 @@ function Logger.configuredLoggerPathBaseOnOS(self)
         return
     else
         local tmp = os.getenv("TMPDIR")
-        if tmp then 
-            config.directory = tmp 
+        if tmp then
+            config.directory = tmp
         else
             local candidates = {
                 "/tmp",
