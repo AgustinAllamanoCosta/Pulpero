@@ -1,0 +1,81 @@
+{
+    "name": "pulpero-vscode",
+    "displayName": "Pulpero Code Explainer",
+    "description": "AI-powered code explanation using Pulpero",
+    "version": "1.0.10",
+    "os": [
+        "win32",
+        "linux",
+        "darwin"
+    ],
+    "cpu": [
+        "x64",
+        "arm64"
+    ],
+    "engines": {
+        "vscode": "^1.60.0"
+    },
+    "categories": [
+        "Programming Languages",
+        "Machine Learning"
+    ],
+    "activationEvents": [
+        "onCommand:pulpero.explainCode"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "pulpero.explainCode",
+                "title": "Explain Code with Pulpero"
+            }
+        ],
+        "menus": {
+            "editor/context": [
+                {
+                    "when": "editorHasSelection",
+                    "command": "pulpero.explainCode",
+                    "group": "navigation"
+                }
+            ]
+        },
+        "configuration": {
+            "title": "Pulpero",
+            "properties": {
+                "pulpero.luaPath": {
+                    "type": "string",
+                    "default": "lua",
+                    "description": "Path to Lua executable"
+                },
+                "pulpero.modelSettings": {
+                    "type": "object",
+                    "default": {
+                        "contextWindow": 512,
+                        "temperature": 0.1,
+                        "numThreads": 4
+                    },
+                    "description": "Model configuration settings"
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "npm run clean && tsc -p ./",
+        "clean": "rimraf ./dist && rimraf ./out && rimraf ./pulpero-vscode-*",
+        "watch": "tsc -watch -p ./",
+        "pretest": "npm run compile && npm run lint",
+        "test": "node ./out/test/runTest.js",
+        "package": "vsce package",
+        "publish": "vsce publish"
+    },
+    "devDependencies": {
+        "@types/node": "^16.11.7",
+        "@types/vscode": "^1.60.0",
+        "typescript": "^4.4.4"
+    },
+    "dependencies": {
+        "node-fetch": "^2.6.1",
+        "rimraf": "^6.0.1"
+    }
+}

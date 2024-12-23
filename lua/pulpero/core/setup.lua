@@ -11,6 +11,9 @@ local default_settings = {
 
 function Setup.new(logger)
     local self = setmetatable({}, { __index = Setup })
+    if logger == nil then
+        error("Setup logger can not be nil")
+    end
     self.logger = logger
     self.command_output = logger.command_path
     return self
@@ -208,14 +211,11 @@ end
 
 function Setup.configure_memory(self, total_mem)
     if total_mem and total_mem < 4096 then -- Less than 4GB RAM
-        default_settings.context_window = 256
-        default_settings.num_threads = 2
+        return 256, 2
     elseif total_mem and total_mem < 8192 then -- Less than 8GB RAM
-        default_settings.context_window = 512
-        default_settings.num_threads = 4
+        return 512, 4
     else -- 8GB or more RAM
-        default_settings.context_window = 1024
-        default_settings.num_threads = 6
+        return 1024, 6
     end
 end
 
@@ -233,11 +233,13 @@ end
 
 function Setup.configure_plugin(self)
     local platform = self:get_platform()
+    local context_window = nil
+    local threads = nil
     if platform == "linux" then
         local output = self:execute_command("free -m | grep Mem:")
         if output then
             local memory = tonumber(output:match("Mem:%s+(%d+)"))
-            self:configure_memory(memory)
+            context_window, threads = self:configure_memory(memory)
         end
     elseif platform == "darwin" then
         local output = self:execute_command("sysctl hw.memsize")
@@ -245,7 +247,7 @@ function Setup.configure_plugin(self)
             local bytes = tonumber(output:match("hw.memsize: (%d+)"))
             if bytes then
                 local memory = math.floor(bytes / (1024 * 1024))  -- Convert bytes to MB
-                self:configure_memory(memory)
+                context_window, threads = self:configure_memory(memory)
             end
         end
     elseif platform == "windows" then
@@ -254,12 +256,14 @@ function Setup.configure_plugin(self)
             local bytes = tonumber(output:match("(%d+)"))
             if bytes then
                 local memory = math.floor(bytes / (1024 * 1024))  -- Convert bytes to MB
-                self:configure_memory(memory)
+                context_window, threads = self:configure_memory(memory)
             end
         end
     end
+    default_settings.context_window = context_window
+    default_settings.num_threads = threads
     self.config = default_settings
-    return default_settings
+    return self.config
 end
 
 return Setup

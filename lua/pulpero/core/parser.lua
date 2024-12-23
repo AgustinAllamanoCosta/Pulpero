@@ -2,6 +2,9 @@ local Parser = {}
 
 function Parser.new(config)
     local self = setmetatable({}, { __index = Parser })
+    if config == nil then
+        error("Config in parser can not be nil")
+    end
     self.config = config
     return self
 end

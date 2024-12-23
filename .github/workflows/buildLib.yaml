@@ -1,0 +1,28 @@
+name: Create Core Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Create Core Bundle
+        run: |
+          cd lua/pulpero/core
+          tar -czf core-bundle-${GITHUB_REF#refs/tags/v}.tar.gz ./*
+
+      - name: Update Versions Manifest
+        run: |
+          # Script to update versions.json
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            core-bundle-*.tar.gz
+            versions.json

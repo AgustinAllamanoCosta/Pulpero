@@ -1,7 +1,7 @@
-local Runner = require('core.model_runner')
-local Setup = require('core.setup')
-local Logger = require('core.logger')
-local Parser = require('core.parser')
+local Runner = require('model_runner')
+local Setup = require('setup')
+local Logger = require('logger')
+local Parser = require('parser')
 local app = require('milua')
 
 local runner = nil

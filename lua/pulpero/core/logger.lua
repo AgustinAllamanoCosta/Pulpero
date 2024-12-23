@@ -133,36 +133,31 @@ function Logger.clear_logs(self)
 end
 
 function Logger.setup(self, message, data)
-    local debug_file = io.open(self.setup_path, "a")
-    if debug_file then
-        debug_file:write(os.date("%Y-%m-%d %H:%M:%S") .. ": " .. message .. "\n")
-        if data then
-            debug_file:write("Data: " .. self:toString(data) .. "\n")
-        end
-        debug_file:write("----------------------------------------\n")
-        debug_file:close()
-    end
+    self:writeInLog(self.setup_path, message, data)
 end
 
 function Logger.debug(self, message, data)
-    local debug_file = io.open(self.debug_path, "a")
-    if debug_file then
-        debug_file:write(os.date("%Y-%m-%d %H:%M:%S") .. ": " .. message .. "\n")
-        if data then
-            debug_file:write("Data: " .. self:toString(data) .. "\n")
-        end
-        debug_file:write("----------------------------------------\n")
-        debug_file:close()
-    end
+    self:writeInLog(self.debug_path, message, data)
 end
 
 function Logger.error(self, error_text)
-    local error_file = io.open(self.error_path, "a")
-    if error_file then
-        error_file:write(os.date("%Y-%m-%d %H:%M:%S") .. ": " .. error_text .. "\n")
-        error_file:write("----------------------------------------\n")
-        error_file:close()
-    end
+    self:writeInLog(self.error_path, error_text, nil)
 end
 
+function Logger.writeInLog(self, path, message, data)
+
+    if path == nil then
+        error("Logger path can not be nil")
+    end
+
+    local log_file = io.open(path, "a")
+    if log_file then
+        log_file:write(os.date("%Y-%m-%d %H:%M:%S") .. ": " .. message .. "\n")
+        if data then
+            log_file:write("Data: " .. self:toString(data) .. "\n")
+        end
+        log_file:write("----------------------------------------\n")
+        log_file:close()
+    end
+end
 return Logger
