@@ -87,39 +87,13 @@ function UI.start_spiner(self)
     self.opts.width = width
     self.opts.title = ' Loading '
 
-    local win = vim.api.nvim_open_win(buf, false, self.opts)
+    vim.api.nvim_buf_set_lines(buf, 0, -1, true,"Analyzing code...")
+    self.loading_win = vim.api.nvim_open_win(buf, false, self.opts)
 
-    self.timer = vim.loop.new_timer()
-    local current_frame = 1
-    local frames = self.frames
-
-    self.loading_win = win
-    self.loading_buf = buf
-    self.timer:start(0, 100, vim.schedule_wrap(function()
-        if vim.api.nvim_buf_is_valid(buf) then
-            vim.api.nvim_buf_set_lines(buf, 0, -1, false,"Analyzing code...")
-        else
-            self:stop_spiner()
-        end
-    end))
 end
 
 function UI.stop_spiner(self)
-    if self.timer then
-        self.timer:stop()
-        self.timer:close()
-        self.timer = nil
-    end
-
-    if self.loading_win and vim.api.nvim_win_is_valid(self.loading_win) then
-        vim.api.nvim_win_close(self.loading_win, true)
-        self.loading_win = nil
-    end
-
-    if self.loading_buf and vim.api.nvim_buf_is_valid(self.loading_buf) then
-        vim.api.nvim_buf_delete(self.loading_buf, { force = true })
-        self.loading_buf = nil
-    end
+    vim.api.nvim_win_close(self.loading_win, true)
 end
 
 return UI

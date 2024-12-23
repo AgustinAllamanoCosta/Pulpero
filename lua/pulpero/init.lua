@@ -48,9 +48,25 @@ function M.setup()
 
         ui:start_spiner()
         vim.schedule(function()
-            local success, result = pcall(function()
-                return runner:explain_function(filetype, selected_code)
-            end)
+            local success, result = runner:explain_function(filetype, selected_code)
+
+            ui:stop_spiner()
+
+            if success then
+                ui:show_explanation(result)
+            else
+                ui:show_error(result)
+            end
+        end)
+    end, { range = true })
+
+    vim.api.nvim_create_user_command('Refactor', function()
+        local selected_code = get_visual_selection()
+        local filetype = vim.bo.filetype
+
+        ui:start_spiner()
+        vim.schedule(function()
+            local success, result = runner:refactor_function(filetype, selected_code)
 
             ui:stop_spiner()
 
