@@ -63,6 +63,7 @@ jobs:
 
       - name: Commit version update
         run: |
+          git status
           git add releases/versions.json
           git commit -m "Update versions.json for release ${VERSION}"
           git push
