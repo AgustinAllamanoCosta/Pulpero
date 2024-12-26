@@ -14,7 +14,7 @@ Explain this %s function:
 
 local refactor_prompt = [[
 <|system|>
-You are a sr developer. Analyze this code and provide a refactor of it. Emphasizes in performance and clarity</s>
+You are a sr developer. Analyze this code and provide a refactor of it.</s>
 <|user|>
 Refactor this %s code:
 

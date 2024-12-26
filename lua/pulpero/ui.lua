@@ -87,7 +87,7 @@ function UI.start_spiner(self)
     self.opts.width = width
     self.opts.title = ' Loading '
 
-    vim.api.nvim_buf_set_lines(buf, 0, -1, true,"Analyzing code...")
+    vim.api.nvim_buf_set_lines(buf, 0, -1, true,{ "Analyzing code..." })
     self.loading_win = vim.api.nvim_open_win(buf, false, self.opts)
 
 end
