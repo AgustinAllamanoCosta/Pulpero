@@ -1,14 +1,22 @@
 {
-    "versions": [
-        {
-            "version": "1.0.0",
-            "url": "https://github.com/AgustinAllamanoCosta/pulpero/releases/download/v1.0.0/core-bundle-1.0.0.tar.gz",
-            "checksum": "sha256-hash-here",
-            "releaseDate": "2024-12-14",
-            "minEditorVersion": "1.0.0",
-            "breaking": false
-        }
-    ],
-    "latest": "1.0.0",
-    "minimumSupported": "1.0.0"
+  "versions": [
+    {
+      "version": "1.0.0",
+      "url": "https://github.com/AgustinAllamanoCosta/pulpero/releases/download/v1.0.0/core-bundle-1.0.0.tar.gz",
+      "checksum": "sha256-hash-here",
+      "releaseDate": "2024-12-14",
+      "minEditorVersion": "1.0.0",
+      "breaking": false
+    },
+    {
+      "version": "v5.3.0",
+      "url": "https://github.com/AgustinAllamanoCosta/pulpero/releases/download/v5.3.0/core-bundle-5.3.0.tar.gz",
+      "checksum": "944938625b9779dce0afa90d177e9aa6f4db1308a1d49508f55435caa6ad1acb",
+      "releaseDate": "2024-12-26T17:42:52Z",
+      "minEditorVersion": "5.0.0",
+      "breaking": false
+    }
+  ],
+  "latest": "1.0.0",
+  "minimumSupported": "1.0.0"
 }
