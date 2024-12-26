@@ -69,7 +69,7 @@ jobs:
             breaking: false
           }')
           jq --argjson new "$JSON_STRING" '.versions += [$new]' releases/version.json > temp.json && mv temp.json releases/version.json
-          jq ".latest = \"${VERSION#v}\"" releases/versions.json > temp.json && mv temp.json releases/versions.jso
+          jq ".latest = \"${VERSION#v}\"" releases/version.json > temp.json && mv temp.json releases/version.json
 
       - name: Configure Git
         run: |
