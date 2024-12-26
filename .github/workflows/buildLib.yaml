@@ -31,7 +31,6 @@ jobs:
       - name: Check version existence
         id: version_check
         run: |
-
           VERSION_WITHOUT_V="${VERSION#v}"
           if jq -e --arg version "$VERSION_WITHOUT_V" '.versions[] | select(.version == $version)' releases/versions.json > /dev/null; then
             echo "Version $VERSION_WITHOUT_V already exists in versions.json"
@@ -81,7 +80,7 @@ jobs:
           git status
           git add releases/version.json
           git commit -m "Update versions.json for release ${VERSION}"
-          git push
+          git push origin HEAD:main
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
