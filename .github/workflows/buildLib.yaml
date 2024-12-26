@@ -2,6 +2,11 @@ name: Create Core Release
 
 on:
   workflow_dispatch:
+    inputs:
+      version_tag:
+        description: 'Version tag to release (e.g., v1.0.0)'
+        required: true
+        type: string
   push:
     tags:
       - 'v*'
@@ -12,31 +17,47 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Set version variable
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "VERSION=${{ github.event.inputs.version_tag }}" >> $GITHUB_ENV
+          else
+            echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          fi
+
       - name: Create Core Bundle
         run: |
           cd lua/pulpero/core
-          tar -czf core-bundle-${GITHUB_REF#refs/tags/v}.tar.gz ./*
+          tar -czf core-bundle-${VERSION#v}.tar.gz ./*
+          mv "core-bundle-${VERSION#v}.tar.gz" ../../..
 
       - name: Update Versions Manifest
         run: |
-          sudo apt-get install jq
-          FILENAME=core-bundle-${GITHUB_REF#refs/tags/v}.tar.gz
-          CHECKSUM=$(shasum -a256 core-bundle-${GITHUB_REF#refs/tags/v}.tar.gz)
-          VERSION=${GITHUB_REF#refs/tags/v}
-          DATE=$(date)
+          sudo apt-get update && sudo apt-get install -y jq
+          FILENAME="core-bundle-${VERSION#v}.tar.gz"
+          CHECKSUM=$(sha256sum "$FILENAME" | cut -d' ' -f1)
+          DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           JSON_STRING=$( jq -n \
-          --arg cs "$CHEckSUM" \
+          --arg cs "$CHECKSUM" \
           --arg vs "$VERSION" \
           --arg fn "$FILENAME" \
           --arg dt "$DATE" \
-          '{ version: $vs, url: "https://github.com/AgustinAllamanoCosta/pulpero/releases/download/$vs/$fn", checksum: $cs, releaseDate: $dt, minEditorVersion: "5.0.0", breaking: false}')
-          NEW_VERSION=$(cat ./releases/version.json | jq '.versions[.versions | lenght] |= . + ${JSON_STRING}')
-          rm ./releases/version.json
-          echo $NEW_VERSION > ./releases/version.json
+          --arg url "https://github.com/AgustinAllamanoCosta/pulpero/releases/download/$VERSION/$FILENAME" \
+          '{ 
+            version: $vs, 
+            url: $url, 
+            checksum: $cs, 
+            releaseDate: $dt, 
+            minEditorVersion: "5.0.0", 
+            breaking: false
+          }')
+          jq --argjson new "$JSON_STRING" '.versions += [$new]' releases/versions.json > temp.json && mv temp.json releases/versions.json
+          jq ".latest = \"${VERSION#v}\""
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: ${{ env.VERSION }}
           files: |
             core-bundle-*.tar.gz
             versions.json
