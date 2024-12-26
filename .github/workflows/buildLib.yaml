@@ -51,10 +51,8 @@ jobs:
             minEditorVersion: "5.0.0",
             breaking: false
           }')
-          jq --argjson new "$JSON_STRING" '.versions += [$new]' releases/versions.json > temp.json && mv temp.json releases/versions.json
+          jq --argjson new "$JSON_STRING" '.versions += [$new]' releases/version.json > temp.json && mv temp.json releases/version.json
           jq ".latest = \"${VERSION#v}\""
-          pwd
-          ls
 
       - name: Configure Git
         run: |
@@ -64,7 +62,7 @@ jobs:
       - name: Commit version update
         run: |
           git status
-          git add releases/versions.json
+          git add releases/version.json
           git commit -m "Update versions.json for release ${VERSION}"
           git push
 
@@ -74,4 +72,4 @@ jobs:
           tag_name: ${{ env.VERSION }}
           files: |
             core-bundle-*.tar.gz
-            ./releases/versions.json
+            ./releases/version.json
