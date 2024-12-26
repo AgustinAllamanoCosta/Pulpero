@@ -43,16 +43,27 @@ jobs:
           --arg fn "$FILENAME" \
           --arg dt "$DATE" \
           --arg url "https://github.com/AgustinAllamanoCosta/pulpero/releases/download/$VERSION/$FILENAME" \
-          '{ 
-            version: $vs, 
-            url: $url, 
-            checksum: $cs, 
-            releaseDate: $dt, 
-            minEditorVersion: "5.0.0", 
+          '{
+            version: $vs,
+            url: $url,
+            checksum: $cs,
+            releaseDate: $dt,
+            minEditorVersion: "5.0.0",
             breaking: false
           }')
           jq --argjson new "$JSON_STRING" '.versions += [$new]' releases/versions.json > temp.json && mv temp.json releases/versions.json
           jq ".latest = \"${VERSION#v}\""
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+      - name: Commit version update
+        run: |
+          git add releases/versions.json
+          git commit -m "Update versions.json for release ${VERSION}"
+          git push
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -60,4 +71,4 @@ jobs:
           tag_name: ${{ env.VERSION }}
           files: |
             core-bundle-*.tar.gz
-            versions.json
+            ./releases/versions.json
