@@ -53,6 +53,8 @@ jobs:
           }')
           jq --argjson new "$JSON_STRING" '.versions += [$new]' releases/versions.json > temp.json && mv temp.json releases/versions.json
           jq ".latest = \"${VERSION#v}\""
+          pwd
+          ls
 
       - name: Configure Git
         run: |
