@@ -28,6 +28,20 @@ jobs:
             echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
           fi
 
+      - name: Check version existence
+        id: version_check
+        run: |
+
+          VERSION_WITHOUT_V="${VERSION#v}"
+          if jq -e --arg version "$VERSION_WITHOUT_V" '.versions[] | select(.version == $version)' releases/versions.json > /dev/null; then
+            echo "Version $VERSION_WITHOUT_V already exists in versions.json"
+            echo "::set-output name=exists::true"
+            exit 1
+          else
+            echo "Version $VERSION_WITHOUT_V is new"
+            echo "::set-output name=exists::false"
+          fi
+
       - name: Create Core Bundle
         run: |
           cd lua/pulpero/core
@@ -72,7 +86,8 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
+          token: ${{ secrets.PAT_TOKEN }}
           tag_name: ${{ env.VERSION }}
           files: |
             core-bundle-*.tar.gz
-            ./releases/version.json
+            releases/version.json
