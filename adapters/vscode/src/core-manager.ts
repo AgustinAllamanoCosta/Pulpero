@@ -15,7 +15,7 @@ interface VersionInfo {
 
 export class CoreManager {
     private readonly storageUri: vscode.Uri;
-    private readonly versionsUrl = 'https://raw.githubusercontent.com/AgustinAllamanoCosta/pulpero/main/releases/versions.json';
+    private readonly versionsUrl = 'https://raw.githubusercontent.com/AgustinAllamanoCosta/pulpero/main/releases/version.json';
     private readonly coreDir: string;
 
     constructor(context: vscode.ExtensionContext) {
