@@ -1,5 +1,5 @@
-local json = require('cjson')
 local Runner = require('runner')
+local json = require('json')
 local Parser = require('parser')
 local Logger = require('logger')
 local Setup = require('setup')
