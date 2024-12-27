@@ -37,8 +37,8 @@ export class CoreManager {
 
     private async getLatestVersionInfo(): Promise<VersionInfo> {
         const response = await fetch(this.versionsUrl);
-        const versions: VersionInfo[] = await response.json();
-        return versions[0];
+        const { versions } = await response.json();
+        return versions[versions.length - 1];
     }
 
     private async downloadAndExtractCore(versionInfo: VersionInfo): Promise<void> {
@@ -48,12 +48,14 @@ export class CoreManager {
         fs.mkdirSync(path.dirname(tmpFile), { recursive: true });
 
         const fileStream = fs.createWriteStream(tmpFile);
+
         await new Promise((resolve, reject) => {
             response.body.pipe(fileStream);
             response.body.on('error', reject);
             fileStream.on('finish', resolve);
         });
 
+        fs.mkdirSync(this.coreDir, { recursive: true });
         await tar.x({
             file: tmpFile,
             cwd: this.coreDir,

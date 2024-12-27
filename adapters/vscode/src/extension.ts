@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { PulperoService } from './service';
+import { CoreManager } from './core-manager';
 
 export async function activate(context: vscode.ExtensionContext) {
 
@@ -9,7 +11,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const service = new PulperoService({
         luaPath: vscode.workspace.getConfiguration('pulpero').get('luaPath') || 'lua',
-        servicePath: context.asAbsolutePath('service.lua')
+        servicePath: path.join(corePath, 'service.lua')
     });
 
     service.start().catch(console.error);
