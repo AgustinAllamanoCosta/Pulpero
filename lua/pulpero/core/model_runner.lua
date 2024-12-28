@@ -51,8 +51,24 @@ function Runner.new(config, logger, parser)
     return self
 end
 
-function Runner.run_local_model(self, context, language, promtp)
+function Runner.generate_prompt_file(self, promtp)
+    self.logger:debug("Creating temp file with prompt")
+    local tmp_prompt = os.tmpname()
+    local tmp_prompt_file = io.open(tmp_prompt, 'w')
 
+    if not tmp_prompt_file then
+        self.logger:error(error_file_permission)
+        return error_file_permission
+    end
+
+    tmp_prompt_file:write(promtp)
+    tmp_prompt_file:close()
+    self.logger:debug("File created", { tmp_prompt })
+    return tmp_prompt
+end
+
+function Runner.run_local_model(self, context, language, promtp)
+    self.logger:debug("Configuration ",self.config)
     if context == nil then
         error("Code to analize can not be nil")
     end
@@ -64,22 +80,12 @@ function Runner.run_local_model(self, context, language, promtp)
         language = language,
         context_length = #context
     })
-
     local full_prompt = string.format(promtp, language, context)
 
     self.logger:debug("Generated prompt", {prompt = full_prompt})
+    local tmp_prompt = self:generate_prompt_file(full_prompt)
 
-    local tmp_prompt = os.tmpname()
-    local tmp_prompt_file = io.open(tmp_prompt, 'w')
-
-    if not tmp_prompt_file then
-        self.logger:error(error_file_permission)
-        return error_file_permission
-    end
-
-    tmp_prompt_file:write(full_prompt)
-    tmp_prompt_file:close()
-
+    self.logger:debug("Formating command to execute")
     local command = string.format(
     '%s -m %s --temp %d -f %s -n 512 --ctx-size %d --threads %d --top_p %d 2>>%s',
     self.config.llama_cpp_path,
@@ -92,7 +98,6 @@ function Runner.run_local_model(self, context, language, promtp)
     self.logger.command_path)
 
     self.logger:debug("Executing command", {command = command})
-
     local handle = io.popen(command)
 
     if not handle then
@@ -109,7 +114,6 @@ function Runner.run_local_model(self, context, language, promtp)
         exit_type = exit_type,
         exit_code = exit_code
     })
-
     os.remove(tmp_prompt)
 
     if result == nil or result == ''then
@@ -121,6 +125,7 @@ function Runner.run_local_model(self, context, language, promtp)
         result = result
     })
 
+    self.logger:debug("Parsing result")
     result = self.parser.clean_model_output(result)
 
     if result == nil or result == ''then
@@ -135,47 +140,34 @@ function Runner.run_local_model(self, context, language, promtp)
     return result
 end
 
-function Runner.explain_function(self, language, context)
-    self.logger:debug("Configuration ",self.config)
-    local function execute_analysis()
+function Runner.process_result(self, success, result)
+    if success then
+        return true, result
+    else
         local error_path  = self.logger:getConfig().directory
-        local success, result = pcall(function()
-            return self:run_local_model(context, language, explain_prompt)
-        end)
-        if success then
-            return true, result
-        else
-            local error_message = string.format(
-                error_message_template,
-                tostring(result),
-                self.config.model_path,
-                self.config.llama_cpp_path,
-                error_path)
-            return false ,error_message
-        end
+        self.logger:error("An error happen when we try to execute the function run_local_model ", { result })
+        local error_message = string.format(
+        error_message_template,
+        tostring(result),
+        self.config.model_path,
+        self.config.llama_cpp_path,
+        error_path)
+        return false ,error_message
     end
-    return execute_analysis()
+end
+
+function Runner.explain_function(self, language, context)
+    local success, result = pcall(function()
+        return self:run_local_model(context, language, explain_prompt)
+    end)
+    return self:process_result(success, result)
 end
 
 function Runner.refactor_function(self, language, context)
-    self.logger:debug("Configuration ",self.config)
-    local function execute_refactor()
-        local error_path  = self.logger:getConfig().directory
-        local success, result = pcall(function()
-            return self:run_local_model(context, language, refactor_prompt)
-        end)
-        if success then
-            return true, result
-        else
-            local error_message = string.format(
-                error_message_template,
-                tostring(result),
-                self.config.model_path,
-                self.config.llama_cpp_path,
-                error_path)
-            return false ,error_message
-        end
-    end
-    return execute_refactor()
+    local success, result = pcall(function()
+        return self:run_local_model(context, language, refactor_prompt)
+    end)
+    return self:process_result(success, result)
 end
+
 return Runner
