@@ -63,7 +63,7 @@ function Runner.generate_prompt_file(self, promtp)
 
     tmp_prompt_file:write(promtp)
     tmp_prompt_file:close()
-    self.logger:debug("File created", { tmp_prompt })
+    self.logger:debug("File created", { tmp_file = tmp_prompt })
     return tmp_prompt
 end
 
@@ -145,28 +145,26 @@ function Runner.process_result(self, success, result)
         return true, result
     else
         local error_path  = self.logger:getConfig().directory
-        self.logger:error("An error happen when we try to execute the function run_local_model ", { result })
+        self.logger:error("An error happen when we try to execute the function run_local_model ", { error = result })
+        self.logger:debug("Formating error message to render on UI")
         local error_message = string.format(
         error_message_template,
         tostring(result),
         self.config.model_path,
         self.config.llama_cpp_path,
         error_path)
+        self.logger:debug("Error message to show ", error_message)
         return false ,error_message
     end
 end
 
 function Runner.explain_function(self, language, context)
-    local success, result = pcall(function()
-        return self:run_local_model(context, language, explain_prompt)
-    end)
+    local success, result = pcall(self.run_local_model, self, context, language, explain_prompt)
     return self:process_result(success, result)
 end
 
 function Runner.refactor_function(self, language, context)
-    local success, result = pcall(function()
-        return self:run_local_model(context, language, refactor_prompt)
-    end)
+    local success, result = pcall(self.run_local_model, self, context, language, refactor_prompt)
     return self:process_result(success, result)
 end
 

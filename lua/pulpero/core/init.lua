@@ -31,12 +31,10 @@ local function start()
     "/explain",
     function (captures, query, headers, body)
         local lang = query.lang
-        local success,  error = runner:explain_function(body, lang)
-        if success then
-            return success
-        else
-            return error
-        end
+        logger:debug("Processing request by API ")
+        local success,  message = runner:explain_function(body, lang)
+        logger:debug("request processed ", { response = message,  success = success })
+        return message
     end)
     app.start()
 end

@@ -43,6 +43,7 @@ function M.setup()
     ui = UI.new(config)
 
     vim.api.nvim_create_user_command('ExpFn', function()
+        logger:debug("Processing request by native lua plugin")
         local selected_code = get_visual_selection()
         local filetype = vim.bo.filetype
 
@@ -58,6 +59,7 @@ function M.setup()
                 ui:show_error(result)
             end
         end)
+        logger:debug("Processing completed")
     end, { range = true })
 
     vim.api.nvim_create_user_command('Refactor', function()

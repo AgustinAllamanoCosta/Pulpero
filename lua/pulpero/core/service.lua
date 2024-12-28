@@ -11,6 +11,7 @@ local parser = Parser.new(config)
 local runner = Runner.new(config, logger, parser)
 
 local function process_request(request_str)
+    logger:debug("Processing request by service in core ", { request = request_str })
     local success, request = pcall(json.decode, request_str)
     if not success then
         return json.encode({
@@ -21,6 +22,7 @@ local function process_request(request_str)
     local response = {
         requestId = request.id
     }
+    logger:debug("Decoded request", { request = request})
 
     if request.method == "explain_function" then
         local success, result = runner:explain_function(
@@ -36,6 +38,7 @@ local function process_request(request_str)
         response.error = "Unknown method"
     end
 
+    logger:debug("Rquest processed ", { id = response.requestId })
     return json.encode(response)
 end
 
