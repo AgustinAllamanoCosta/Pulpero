@@ -10,13 +10,12 @@ local function encode_value(value, stack)
     elseif val_type == "boolean" then
         return tostring(value)
     elseif val_type == "string" then
-        return string.format("%q", value)
+        return string.format('"%s"', value):gsub('[%c]*', '')
     elseif val_type == "table" then
         if stack[value] then
             error("circular reference detected")
         end
         stack[value] = true
-
 
         local is_array = true
         local max_index = 0
@@ -40,7 +39,7 @@ local function encode_value(value, stack)
             parts = {}
             for k, v in pairs(value) do
                 if type(k) == "string" then
-                    parts[#parts + 1] = string.format("%q", k) .. ":" .. encode_value(v, stack)
+                    parts[#parts + 1] = string.format('"%s"', k) .. ":" .. encode_value(v, stack)
                 end
             end
             stack[value] = nil
@@ -53,7 +52,6 @@ end
 function json.encode(value)
     return encode_value(value, {})
 end
-
 
 local function skip_whitespace(str, pos)
     while pos <= #str and str:sub(pos, pos):match("%s") do

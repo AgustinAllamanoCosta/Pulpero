@@ -38,8 +38,9 @@ local function process_request(request_str)
         response.error = "Unknown method"
     end
 
-    logger:debug("Rquest processed ", { id = response.requestId })
-    return json.encode(response)
+    local encodeResponse = json.encode(response)
+    logger:debug("Rquest processed ", { id = response.requestId, encodedRespnse = encodeResponse })
+    return encodeResponse
 end
 
 setup:prepear_env()

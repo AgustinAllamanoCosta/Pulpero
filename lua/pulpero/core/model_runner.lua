@@ -87,7 +87,7 @@ function Runner.run_local_model(self, context, language, promtp)
 
     self.logger:debug("Formating command to execute")
     local command = string.format(
-    '%s -m %s --temp %d -f %s -n 512 --ctx-size %d --threads %d --top_p %d 2>>%s',
+    '%s -m %s --temp %s -f %s -n 512 --ctx-size %d --threads %s --top_p %s 2>>%s',
     self.config.llama_cpp_path,
     self.config.model_path,
     self.config.temp,
@@ -109,7 +109,6 @@ function Runner.run_local_model(self, context, language, promtp)
     local success, exit_type, exit_code = handle:close()
 
     self.logger:debug("Command execution completed", {
-        result = result,
         success = success,
         exit_type = exit_type,
         exit_code = exit_code
@@ -120,10 +119,6 @@ function Runner.run_local_model(self, context, language, promtp)
         self.logger:error("The result is nil or empty")
         return nil_or_empty_response
     end
-
-    self.logger:debug("Command result", {
-        result = result
-    })
 
     self.logger:debug("Parsing result")
     result = self.parser.clean_model_output(result)
@@ -153,7 +148,7 @@ function Runner.process_result(self, success, result)
         self.config.model_path,
         self.config.llama_cpp_path,
         error_path)
-        self.logger:debug("Error message to show ", error_message)
+        self.logger:debug("Error message to show ", { error_message = error_message })
         return false ,error_message
     end
 end
