@@ -17,10 +17,14 @@ export class CoreManager {
     private readonly storageUri: vscode.Uri;
     private readonly versionsUrl = 'https://raw.githubusercontent.com/AgustinAllamanoCosta/pulpero/main/releases/version.json';
     private readonly coreDir: string;
+    private readonly isLocal: boolean;
+    private readonly pathToLocalCore: string;
 
-    constructor(context: vscode.ExtensionContext) {
+    constructor(context: vscode.ExtensionContext, isLocal: boolean = false, pathToLocalCore: string = "") {
         this.storageUri = context.globalStorageUri;
         this.coreDir = path.join(this.storageUri.fsPath, 'core');
+        this.isLocal = isLocal;
+        this.pathToLocalCore = pathToLocalCore;
     }
 
     private async getCurrentVersion(): Promise<string | null> {
@@ -36,38 +40,33 @@ export class CoreManager {
     }
 
     private async getLatestVersionInfo(): Promise<VersionInfo> {
-        const response = await fetch(this.versionsUrl);
-        const { versions } = await response.json();
-        return versions[versions.length - 1];
+        if (this.isLocal) {
+            console.debug("Looking for the local version file");
+            const tmpVersionFile = path.join(this.pathToLocalCore, 'local-version.json');
+            const rawData = fs.readFileSync(tmpVersionFile);
+            const { versions } = JSON.parse(rawData.toString());
+            return versions[versions.length - 1];
+
+        } else {
+            const response = await fetch(this.versionsUrl);
+            const { versions } = await response.json();
+            return versions[versions.length - 1];
+        }
     }
 
-    private async downloadAndExtractCore(versionInfo: VersionInfo): Promise<void> {
-        const response = await fetch(versionInfo.url);
-        const tmpFile = path.join(this.storageUri.fsPath, 'core-download.tar.gz');
-
-        fs.mkdirSync(path.dirname(tmpFile), { recursive: true });
-
-        const fileStream = fs.createWriteStream(tmpFile);
-
-        await new Promise((resolve, reject) => {
-            response.body.pipe(fileStream);
-            response.body.on('error', reject);
-            fileStream.on('finish', resolve);
-        });
+    private async extractLocalFile(filePath: string, version: string): Promise<void> {
 
         fs.mkdirSync(this.coreDir, { recursive: true });
         await tar.x({
-            file: tmpFile,
+            file: filePath,
             cwd: this.coreDir,
             strip: 1
         });
 
         fs.writeFileSync(
             path.join(this.coreDir, 'version'),
-            versionInfo.version
+            version
         );
-
-        fs.unlinkSync(tmpFile);
     }
 
     public async ensureCore(): Promise<string> {
@@ -82,9 +81,33 @@ export class CoreManager {
                     cancellable: false
                 },
                 async (progress) => {
-                    progress.report({ message: "Downloading..." });
-                    await this.downloadAndExtractCore(latestVersion);
-                    progress.report({ message: "Installation complete" });
+                    if (this.isLocal) {
+                        progress.report({ message: "Sync is in process..." });
+                        const tmpFile = path.join(this.pathToLocalCore, 'core-local.tar.gz');
+                        console.debug("Looking for the core in local forlder ", tmpFile);
+                        console.debug("Local version information", latestVersion);
+                        this.extractLocalFile(tmpFile, latestVersion.version);
+                        progress.report({ message: "Sync is complete" });
+
+                    } else {
+                        progress.report({ message: "Downloading..." });
+                        const response = await fetch(latestVersion.url);
+                        const tmpFile = path.join(this.storageUri.fsPath, 'core-download.tar.gz');
+
+                        const fileStream = fs.createWriteStream(tmpFile);
+
+                        fs.mkdirSync(path.dirname(tmpFile), { recursive: true });
+
+                        await new Promise((resolve, reject) => {
+                            response.body.pipe(fileStream);
+                            response.body.on('error', reject);
+                            fileStream.on('finish', resolve);
+                        });
+                        await this.extractLocalFile(tmpFile, latestVersion.version)
+
+                        fs.unlinkSync(tmpFile);
+                        progress.report({ message: "Installation complete" });
+                    }
                 }
             );
         }
