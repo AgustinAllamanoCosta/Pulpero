@@ -3,6 +3,7 @@ export interface ServiceOptions {
     servicePath?: string;
     maxBuffer?: number;
     timeout?: number;
+    corePath?: string;
 }
 
 export interface ServiceRequest {
@@ -22,6 +23,33 @@ export interface PendingRequest {
     reject: (reason?: any) => void;
 }
 
+interface LuaPaths {
+    LUA_PATH: string;
+    LUA_CPATH: string;
+}
+
+function getPlatformPaths(coreUri: string): LuaPaths {
+    const isWindows = process.platform === 'win32';
+    const isMac = process.platform === 'darwin';
+
+    if (isWindows) {
+        return {
+            LUA_PATH: `C:\\Program Files\\Lua\\?.lua;C:\\Program Files\\Lua\\?\\init.lua;${coreUri}\\?.lua`,
+            LUA_CPATH: `C:\\Program Files\\Lua\\?.dll;C:\\Program Files\\Lua\\loadall.dll`
+        };
+    } else if (isMac) {
+        return {
+            LUA_PATH: `/usr/local/share/lua/5.1/?.lua;/usr/local/share/lua/5.1/?/init.lua;${coreUri}/?.lua`,
+            LUA_CPATH: `/usr/local/lib/lua/5.1/?.so;/usr/local/lib/lua/5.1/loadall.so`
+        };
+    } else {
+        return {
+            LUA_PATH: `/usr/share/lua/5.1/?.lua;/usr/share/lua/5.1/?/init.lua;${coreUri}/?.lua`,
+            LUA_CPATH: `/usr/lib/lua/5.1/?.so;/usr/lib/x86_64-linux-gnu/lua/5.1/?.so`
+        };
+    }
+}
+
 import { spawn, ChildProcess } from 'child_process';
 import * as path from 'path';
 import { EventEmitter } from 'events';
@@ -38,7 +66,8 @@ export class PulperoService extends EventEmitter {
             luaPath: options.luaPath || 'lua',
             servicePath: options.servicePath || path.join(__dirname, 'service.lua'),
             maxBuffer: options.maxBuffer || 1024 * 1024 * 10,
-            timeout: options.timeout || 30000
+            timeout: options.timeout || 30000,
+            corePath: options.corePath || __dirname
         };
         this.process = null;
         this.requestQueue = new Map();
@@ -50,11 +79,17 @@ export class PulperoService extends EventEmitter {
             return;
         }
 
+        const platformPaths = getPlatformPaths(this.options.corePath);
+        const env = {
+            ...process.env,
+            ...platformPaths
+        };
+
         return new Promise<void>((resolve, reject) => {
             try {
                 this.process = spawn(this.options.luaPath, [this.options.servicePath], {
                     stdio: ['pipe', 'pipe', 'pipe'],
-                    env: { ...process.env }
+                    env: env
                 });
 
                 if (!this.process.stdout || !this.process.stderr || !this.process.stdin) {
@@ -63,23 +98,20 @@ export class PulperoService extends EventEmitter {
 
                 this.process.stdout.on('data', (data: Buffer) => {
                     try {
-                        const messages = data.toString().trim().split('\n');
-                        messages.forEach(msg => {
-                            if (msg) {
-                                const response = JSON.parse(msg) as ServiceResponse;
-                                const { requestId, result, error } = response;
-
-                                const pending = this.requestQueue.get(requestId);
-                                if (pending) {
-                                    this.requestQueue.delete(requestId);
-                                    if (error) {
-                                        pending.reject(new Error(error));
-                                    } else {
-                                        pending.resolve(result);
-                                    }
-                                }
+                        const message = data.toString().trim();
+                        console.log("Raw core response ", data.toString());
+                        const response = JSON.parse(message) as ServiceResponse;
+                        console.log("Parse core response ", response);
+                        const { requestId, result, error } = response;
+                        const pending = this.requestQueue.get(requestId);
+                        if (pending) {
+                            this.requestQueue.delete(requestId);
+                            if (error) {
+                                pending.reject(new Error(error));
+                            } else {
+                                pending.resolve(result);
                             }
-                        });
+                        }
                     } catch (err) {
                         console.error('Error processing response:', err);
                     }

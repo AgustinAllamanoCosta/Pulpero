@@ -2,7 +2,7 @@
     "name": "pulpero-vscode",
     "displayName": "Pulpero Code Explainer",
     "description": "AI-powered code explanation using Pulpero",
-    "version": "1.0.20",
+    "version": "1.1.4",
     "os": [
         "win32",
         "linux",
@@ -47,14 +47,15 @@
                     "default": "lua",
                     "description": "Path to Lua executable"
                 },
-                "pulpero.modelSettings": {
-                    "type": "object",
-                    "default": {
-                        "contextWindow": 512,
-                        "temperature": 0.1,
-                        "numThreads": 4
-                    },
-                    "description": "Model configuration settings"
+                "pulpero.local": {
+                    "type": "boolean",
+                    "default": "false",
+                    "description": "If it is true, the plugin looks for a local version of the core to execute"
+                },
+                "pulpero.corePath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Path to the local tar file with the core code, it is use when local is true"
                 }
             }
         }

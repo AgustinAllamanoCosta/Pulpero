@@ -5,13 +5,16 @@ import { CoreManager } from './core-manager';
 
 export async function activate(context: vscode.ExtensionContext) {
 
-    const coreManager = new CoreManager(context);
+    const isLocal: boolean = vscode.workspace.getConfiguration('pulpero').get('local') || false;
+    const localCorePath: string = vscode.workspace.getConfiguration('pulpero').get('corePath') || "";
+    const coreManager = new CoreManager(context, isLocal, localCorePath);
 
     const corePath = await coreManager.ensureCore();
 
     const service = new PulperoService({
         luaPath: vscode.workspace.getConfiguration('pulpero').get('luaPath') || 'lua',
-        servicePath: path.join(corePath, 'service.lua')
+        servicePath: path.join(corePath, 'service.lua'),
+        corePath: corePath
     });
 
     service.start().catch(console.error);
