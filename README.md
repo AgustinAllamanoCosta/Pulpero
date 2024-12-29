@@ -122,24 +122,24 @@ Logs are recreated with each request to maintain a controlled size and facilitat
 
 ### TODO List
 
-- [] Do the IntelliJ adapter
+- [ ] Do the IntelliJ adapter
 - [x] Do VSCode adapter
-- [] Improve VSCode UI
-- [] Do WebStorm adapter
+- [ ] Improve VSCode UI
+- [ ] Do WebStorm adapter
 - [x] Improve core performance
-- [] Add a refactor query
-- [] Improve response format
-- [] Add a live chat to interact with the model
-- [] Add context of the current file for better understanding
-- [] Add query history
-- [] Add live feedback
-- [] Add paring mode as a companion for developing a feature
-- [] Add unit test generation base of function and context
-- [] Create a docker image of the core
-- [] Add the docker build and publish process to the CI pipeline
-- [] Add unit test of the core functions
-- [] Add integration test of the core functions
-- [] Add test on the CI pipeline
+- [ ] Add a refactor query
+- [ ] Improve response format
+- [ ] Add a live chat to interact with the model
+- [ ] Add context of the current file for better understanding
+- [ ] Add query history
+- [ ] Add live feedback
+- [ ] Add paring mode as a companion for developing a feature
+- [ ] Add unit test generation base of function and context
+- [ ] Create a docker image of the core
+- [ ] Add the docker build and publish process to the CI pipeline
+- [ ] Add unit test of the core functions
+- [ ] Add integration test of the core functions
+- [ ] Add test on the CI pipeline
 
 ## How does it work?
 
