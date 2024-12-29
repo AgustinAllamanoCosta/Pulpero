@@ -63,8 +63,16 @@
       "releaseDate": "2024-12-28T21:47:19Z",
       "minEditorVersion": "5.0.0",
       "breaking": false
+    },
+    {
+      "version": "v5.5.0",
+      "url": "https://github.com/AgustinAllamanoCosta/pulpero/releases/download/v5.5.0/core-bundle-5.5.0.tar.gz",
+      "checksum": "2b7994bff8e95672baa44a904bb19165df54cd6adb0818b218d4b00a20c3da5a",
+      "releaseDate": "2024-12-29T19:04:52Z",
+      "minEditorVersion": "5.0.0",
+      "breaking": false
     }
   ],
-  "latest": "5.4.5",
+  "latest": "5.5.0",
   "minimumSupported": "4.0.0"
 }
