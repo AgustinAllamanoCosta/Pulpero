@@ -10,7 +10,7 @@ local function encode_value(value, stack)
     elseif val_type == "boolean" then
         return tostring(value)
     elseif val_type == "string" then
-        return string.format('"%s"', value):gsub('[%c]*', '')
+        return string.format("%q", value):gsub('[%c]*', ''):gsub('[\\ ]$', '')
     elseif val_type == "table" then
         if stack[value] then
             error("circular reference detected")
