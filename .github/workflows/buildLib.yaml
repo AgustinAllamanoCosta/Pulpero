@@ -70,6 +70,12 @@ jobs:
           jq --argjson new "$JSON_STRING" '.versions += [$new]' releases/version.json > temp.json && mv temp.json releases/version.json
           jq ".latest = \"${VERSION#v}\"" releases/version.json > temp.json && mv temp.json releases/version.json
 
+      - name: Create Visual Studio Code adapter package
+        run: |
+          cd adapters/vscode
+          npm ci
+          npm run package
+
       - name: Configure Git
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
@@ -89,4 +95,5 @@ jobs:
           tag_name: ${{ env.VERSION }}
           files: |
             core-bundle-*.tar.gz
+            adapters/vscode/pulpero-vscode-*.vsix
             releases/version.json
