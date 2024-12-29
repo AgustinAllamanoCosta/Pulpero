@@ -20,7 +20,7 @@ Pulpero refers to the Pulperías (old general stores) of old Buenos Aires. The p
 
 ### Requirements
 
-Lua lastest version
+Lua latest version
 
 ### Local Installation
 
@@ -73,13 +73,18 @@ The second option will keep you updated with the latest version of the repositor
 ### Configuration for other IDEs
 
 *IntelliJ*: PENDING
+
 *VScode*:
 
-To install the adapter for VScode exist a .vsix file on the releas package to install manually (the vscode version is not publish yet)
+To install the adapter for VScode you need to download a .vsix file to install manually (the vscode version is not publish yet on the VScode marketplace)
 
-Then the plugin prepear the environment, download the latest version of the core and run the setup functions.
+To download a vsix file go to `https://github.com/AgustinAllamanoCosta/Pulpero/releases`
 
-If you want to run a specfici version of the core, you can download it from the repo and then in the settings section of the plugin you need to:
+Once you have the .vsix file open VScode and go to Extension then next to the `Extension` title you have ... icon, click on it and then click in the `Install from VSIX...` on the dropdown menu. Then on the file explorer select the .vsix file and that its!
+
+The plugi adapter will prepear the environment, download the latest version of the core, run the setup functions and spawn a lua process with the service interface for the core.
+
+If you want to run a specific version of the core, you can download it from the repo and then in the settings section of the plugin you need to:
 
 - Tick Pulpero: Local
 - Configured Pulpero: Core Path with the absolute path to the folder where you download the tar.gz of the core. e.g `/Users/agustinallamanocosta/repo/personal/AI/Pulpero/`
