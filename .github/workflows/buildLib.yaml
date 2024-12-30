@@ -73,7 +73,8 @@ jobs:
       - name: Create Visual Studio Code adapter package
         run: |
           cd adapters/vscode
-          npm i
+          npm install
+          npm install -g @vscode/vsce
           npm run package
 
       - name: Configure Git
