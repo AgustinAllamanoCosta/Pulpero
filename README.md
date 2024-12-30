@@ -1,5 +1,3 @@
-<body>
-
 # Pulpero
 
 ### Important Responsibility Notice
@@ -88,7 +86,7 @@ This will start the server at http://localhost:8080/. To verify it's working, ac
 
 ### Setup flow chart
 
-   <div class="mermaid">
+```mermaid
    flowchart LR
       Start[Check OS and prepear logs paths]
       Error[Write log and Exit]
@@ -111,7 +109,7 @@ This will start the server at http://localhost:8080/. To verify it's working, ac
       Core2-->Core3-->Core4-->De3
       De3-->|Yes| Stop
       De3-->|No| Error
-   </div>
+```
 
 <div id="NeoVim" />
 
@@ -245,7 +243,7 @@ The presentation of responses may vary depending on the adapter or interface use
 
 ### General Interaction Diagram
 
-   <div class="mermaid">
+```mermaid
    sequenceDiagram
       participant Adapter
       participant Core
@@ -262,8 +260,4 @@ The presentation of responses may vary depending on the adapter or interface use
       llama.cpp-->>-Core: parse response
       Core-->>-Adapter: return { success: boolean, error: string, response: string ,id: number }
       Note right of Core: Loggs are written <br/> to the tmp folder
-   </div>
-   <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js">
-   mermaid.initialize({ startOnLoad: true });
-   </script>
-</body>
+```
