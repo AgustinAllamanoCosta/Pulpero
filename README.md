@@ -1,4 +1,5 @@
 <body>
+
 # Pulpero
 
 ### Important Responsibility Notice
@@ -103,7 +104,7 @@ This will start the server at http://localhost:8080/. To verify it's working, ac
       Start-->OS
       OS-->De1
       De1-->|Yes| Core1
-      De1-->|No| Error 
+      De1-->|No| Error
       Core1-->De2
       De2-->|No| Error
       De2-->|Yes| Core2
