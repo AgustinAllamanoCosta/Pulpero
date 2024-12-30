@@ -1,3 +1,4 @@
+<body>
 # Pulpero
 
 ### Important Responsibility Notice
@@ -8,19 +9,49 @@
 
 This repository contains code for a multi-IDE and multi-platform plugin that analyzes code and its functionality. It's designed to be native to Neovim but includes adapters for IDEs such as IntelliJ, WebStorm, and VScode. The goal is to offer an experience similar to Copilot but without requiring an internet connection or exposing your code to third parties.
 
+## Content
+
+- [The Name](#The-Name)
+- [Requirements](#Requirements)
+- [Installation](#Installation)
+    - [Lazy (Neovim)](#NeoVim)
+    - [Adapters](#Adapter)
+      - [VScode](#VScode)
+      - [IntelliJ](#IntelliJ)
+      - [WebStorm](#WebStorm)
+   - [REST API](#API)
+   - [Docker](#Docker)
+   - [Troubleshooting](#Logs)
+- [The future](#TODO)
+- [How It works](#Explanation)
+
+<div id="The-Name" />
+
 ### Why the name Pulpero?
 
 Pulpero refers to the Pulperías (old general stores) of old Buenos Aires. The pulperos were the owners of these establishments who used to give advice to people who came to drink or spend time in their store. I thought it was an appropriate name for an AI that offers code advice.
 
+<div id="How-To-Use-It" />
+
 ## How to use it?
 
-- In IDEs: Highlight the code you want to analyze, right-click, and select "analyze".
+- In IDEs: Highlight the code you want to analyze, right-click, and select "Explain Code With Pulpero".
 - In Neovim: Select the code in visual mode and execute the ExpFn command.
 - Using the REST API: Make a POST request to http://localhost:8080/explain. The body should contain the code to analyze, and the query param 'lang' should specify the language.
 
+**Note**: For the moment, the maximum number of lines to analyze is 20, this is due to a constraint in the context size of the model.
+
+<div id="Requirements" />
+
 ### Requirements
 
-Lua latest version
+- Lua latest version
+- A minimum of 4 GB of RAM Free
+- Git latest version
+- Wget latest version
+- Have already CMake installed is a plus
+
+<div id="Installation" />
 
 ### Local Installation
 
@@ -54,6 +85,35 @@ lua ./lua/pulpero/core/init.lua
 
 This will start the server at http://localhost:8080/. To verify it's working, access the base URL, which should respond with the message "The server is running".
 
+### Setup flow chart
+
+   <div class="mermaid">
+   flowchart LR
+      Start[Check OS and prepear logs paths]
+      Error[Write log and Exit]
+      Core1[Configure core service]
+      Core2[Clone Llama Cpp repo]
+      Core3[Download Model from HuggingFace]
+      Core4{{Compile external code}}
+      De1{Is RAM available ?}
+      De2{Is CMake and Git <br/>installed ?}
+      De3{Are the llama <br/>and model compiled <br/>successfully ?}
+      Stop((Finish))
+      OS[Read the available RAM]
+      Start-->OS
+      OS-->De1
+      De1-->|Yes| Core1
+      De1-->|No| Error 
+      Core1-->De2
+      De2-->|No| Error
+      De2-->|Yes| Core2
+      Core2-->Core3-->Core4-->De3
+      De3-->|Yes| Stop
+      De3-->|No| Error
+   </div>
+
+<div id="NeoVim" />
+
 ### Lazy Configuration for Neovim
 
 There are two ways to install the repository with Lazy:
@@ -70,28 +130,39 @@ There are two ways to install the repository with Lazy:
 
 The second option will keep you updated with the latest version of the repository.
 
+<div id="Adapters" />
+
 ### Configuration for other IDEs
 
+<div id="IntelliJ" />
+
 *IntelliJ*: PENDING
+
+<div id="VScode" />
 
 *VScode*:
 
 To install the adapter for VScode you need to download a .vsix file to install manually (the vscode version is not publish yet on the VScode marketplace)
 
-To download a vsix file go to `https://github.com/AgustinAllamanoCosta/Pulpero/releases`
+To download a vsix file go to the [releases section](https://github.com/AgustinAllamanoCosta/Pulpero/releases)
 
-Once you have the .vsix file open VScode and go to Extension then next to the `Extension` title you have ... icon, click on it and then click in the `Install from VSIX...` on the dropdown menu. Then on the file explorer select the .vsix file and that its!
+Once you have the .vsix file open VScode and go to Extension then next to the `Extension` title you have `...` icon, click on it and then click in the `Install from VSIX...` on the dropdown menu. Then on the file explorer select the .vsix file and that it!
 
-The plugi adapter will prepear the environment, download the latest version of the core, run the setup functions and spawn a lua process with the service interface for the core.
+The plugin adapter will prepear the environment, download the latest version of the core, run the setup functions and spawn a Lua process with the service interface for the core.
 
 If you want to run a specific version of the core, you can download it from the repo and then in the settings section of the plugin you need to:
 
 - Tick Pulpero: Local
 - Configured Pulpero: Core Path with the absolute path to the folder where you download the tar.gz of the core. e.g `/Users/agustinallamanocosta/repo/personal/AI/Pulpero/`
+- Rename the downloaded core-{version}-tar.gz file to core-local.tar.gz
 
 With this configuration now the plugin run a local version of the core.
 
+<div id="WebStorm" />
+
 *WebStorm*: PENDING
+
+<div id="API" />
 
 ### REST API
 
@@ -110,13 +181,18 @@ The API currently offers two basic endpoints. This API is primarily designed for
    - Body: String with code to analyze
    - Query params: `lang` (code language type)
 
+<div id="Docker" />
+
 ### Docker Image
 
 *PENDING*
 
+<div id="Logs" />
+
 ### Troubleshooting
 
 The plugin generates logs in the user's `/tmp` folder:
+(The location of the tmp folder is different from each OS you need to look for the correct tmp path base on you OS)
 
 - **pulpero_debug.log**: Records core steps during analysis, configuration, prompts, and model responses.
 - **pulpero_setup.log**: Documents plugin initialization steps.
@@ -125,8 +201,11 @@ The plugin generates logs in the user's `/tmp` folder:
 
 Logs are recreated with each request to maintain a controlled size and facilitate debugging of the last execution.
 
+<div id="TODO" />
+
 ### TODO List
 
+- [ ] Add more configuration options for nvim commands
 - [ ] Do the IntelliJ adapter
 - [x] Do VSCode adapter
 - [ ] Improve VSCode UI
@@ -146,6 +225,8 @@ Logs are recreated with each request to maintain a controlled size and facilitat
 - [ ] Add integration test of the core functions
 - [ ] Add test on the CI pipeline
 
+<div id="Explanation" />
+
 ## How does it work?
 
 Pulpero consists of three main parts:
@@ -155,8 +236,33 @@ Pulpero consists of three main parts:
    - Configuring Llama.cpp as execution engine
    - Managing model parameters
    - Formatting prompts and processing responses
-   - Service to be spawn for the differents addapters
+   - Service to be spawn for the different adapters
 
 2. **IDE Adapters**: IDEs other than Neovim spawn a lua services of the core and send request to it in JSON format.
 
 The presentation of responses may vary depending on the adapter or interface used, but the integrity of the information generated by the model is always maintained.
+
+### General Interaction Diagram
+
+   <div class="mermaid">
+   sequenceDiagram
+      participant Adapter
+      participant Core
+      participant llama.cpp
+      participant model
+      Adapter->>+Core: Analize{ Lang: string, Code: string, id: number }
+      Core->>Core: Decode and validate req
+      Core->>Core: Call explain_function
+      Core->>Core: format prompt
+      Core->>+llama.cpp: format llama cpp command and execute
+      llama.cpp->>llama.cpp: Load the model
+      llama.cpp->>+model: pass to the model context and params in chat format
+      model-->>-llama.cpp: return chat response
+      llama.cpp-->>-Core: parse response
+      Core-->>-Adapter: return { success: boolean, error: string, response: string ,id: number }
+      Note right of Core: Loggs are written <br/> to the tmp folder
+   </div>
+   <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js">
+   mermaid.initialize({ startOnLoad: true });
+   </script>
+</body>
