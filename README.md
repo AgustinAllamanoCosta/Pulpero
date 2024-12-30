@@ -249,7 +249,7 @@ The presentation of responses may vary depending on the adapter or interface use
       participant Core
       participant llama.cpp
       participant model
-      Adapter->>+Core: Analize{ Lang: string, Code: string, id: number }
+      Adapter->>+Core: Analyze{ Lang: string, Code: string, id: number }
       Core->>Core: Decode and validate req
       Core->>Core: Call explain_function
       Core->>Core: format prompt
