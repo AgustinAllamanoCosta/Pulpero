@@ -12,10 +12,10 @@ local config = {}
 
 local function start()
     logger = Logger.new()
-    logger:clear_logs()
+    logger:clearLogs()
     setup = Setup.new(logger)
-    config = setup:configure_plugin()
-    setup:prepear_env()
+    config = setup:configurePlugin()
+    setup:prepearEnv()
 
     parser = Parser.new(config)
     runner = Runner.new(config, logger, parser)
