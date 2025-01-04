@@ -6,7 +6,7 @@ local Setup = require('./setup')
 
 local logger = Logger.new()
 local setup = Setup.new(logger)
-local config = setup:configure_plugin()
+local config = setup:configurePlugin()
 local parser = Parser.new(config)
 local runner = Runner.new(config, logger, parser)
 
@@ -39,11 +39,11 @@ local function process_request(request_str)
     end
 
     local encodeResponse = json.encode(response)
-    logger:debug("Rquest processed ", { id = response.requestId, encodedRespnse = encodeResponse })
+    logger:debug("Request processed ", { id = response.requestId, encodedResponse = encodeResponse })
     return encodeResponse
 end
 
-setup:prepear_env()
+setup:prepearEnv()
 
 while true do
     local line = io.read()

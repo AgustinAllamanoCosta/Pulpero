@@ -1,15 +1,27 @@
+local String = require('pulpero.util.String')
+local OSCommands = require('pulpero.util.OSCommands')
 local Logger = {}
 local config = {
     directory = "/tmp",
     debug_file = "pulpero_debug.log",
     setup_file = "pulpero_setup.log",
     command_output = "pulpero_command.log",
-    error_file = "pulpero_error.log"
+    error_file = "pulpero_error.log",
+    debug_path = "",
+    error_path = "",
+    command_path = "",
+    setup_path = "",
+    title_setup = "=== New SetUp Session Started ===\n",
+    title_command = "=== New Command Session Started ===\n",
+    title_error = "=== New Error Session Started ===\n",
+    title_debug = "=== New Debug Session Started ===\n"
 }
 
-function Logger.new()
+function Logger.new(testEnv)
     local self = setmetatable({}, { __index = Logger })
     self:configuredLoggerPathBaseOnOS()
+    self:clearLogs()
+    self.testEnv = testEnv
     return self
 end
 
@@ -17,22 +29,8 @@ function  Logger.getConfig(self)
     return config
 end
 
-function Logger.getPlatform()
-    local os_name = "undefine"
-    if package.config:sub(1,1) == '\\' then
-        os_name = "windows"
-    else
-        local handle = io.popen("uname")
-        if handle then
-            os_name = handle:read("*l"):lower()
-            handle:close()
-        end
-    end
-    return os_name
-end
-
 function Logger.configuredLoggerPathBaseOnOS(self)
-    local os_name = self:getPlatform()
+    local os_name = OSCommands:getPlatform()
 
     if os_name == "linux" then
         local tmp = os.getenv("TMPDIR")
@@ -56,16 +54,16 @@ function Logger.configuredLoggerPathBaseOnOS(self)
             end
         end
 
-        self.debug_path = string.format("%s/%s", config.directory, config.debug_file)
-        self.error_path = string.format("%s/%s", config.directory, config.error_file)
-        self.command_path = string.format("%s/%s", config.directory, config.command_output)
-        self.setup_path = string.format("%s/%s", config.directory, config.setup_file)
+        config.debug_path = string.format("%s/%s", config.directory, config.debug_file)
+        config.error_path = string.format("%s/%s", config.directory, config.error_file)
+        config.command_path = string.format("%s/%s", config.directory, config.command_output)
+        config.setup_path = string.format("%s/%s", config.directory, config.setup_file)
     elseif os_name == "darwin" then
 
-        self.debug_path = string.format("%s/%s", config.directory, config.debug_file)
-        self.error_path = string.format("%s/%s", config.directory, config.error_file)
-        self.command_path = string.format("%s/%s", config.directory, config.command_output)
-        self.setup_path = string.format("%s/%s", config.directory, config.setup_file)
+        config.debug_path = string.format("%s/%s", config.directory, config.debug_file)
+        config.error_path = string.format("%s/%s", config.directory, config.error_file)
+        config.command_path = string.format("%s/%s", config.directory, config.command_output)
+        config.setup_path = string.format("%s/%s", config.directory, config.setup_file)
     elseif os_name == "windows" then
 
         local temp = os.getenv("TEMP")
@@ -80,84 +78,63 @@ function Logger.configuredLoggerPathBaseOnOS(self)
             end
         end
 
-        self.debug_path = string.format("%s\\%s", config.directory, config.debug_file)
-        self.error_path = string.format("%s\\%s", config.directory, config.error_file)
-        self.command_path = string.format("%s\\%s", config.directory, config.command_output)
-        self.setup_path = string.format("%s\\%s", config.directory, config.setup_file)
+        config.debug_path = string.format("%s\\%s", config.directory, config.debug_file)
+        config.error_path = string.format("%s\\%s", config.directory, config.error_file)
+        config.command_path = string.format("%s\\%s", config.directory, config.command_output)
+        config.setup_path = string.format("%s\\%s", config.directory, config.setup_file)
     end
 end
 
-function Logger.toString(self, table)
-    local result = "{"
-    for k, v in pairs(table) do
-        if type(k) == "string" then
-            result = result.."[\""..k.."\"]".."="
-        end
-
-        if type(v) == "table" then
-            result = result .. self:toString(v)
-        elseif type(v) == "boolean" then
-            result = result .. tostring(v)
-        else
-            result = result .. "\"" .. v .. "\""
-        end
-        result = result .. ","
-    end
-    if result ~= "{" then
-        result = result:sub(1, result:len()-1)
-    end
-    return result .. "}"
-end
-
-function Logger.clear_logs(self)
-    local debug_file = io.open(self.debug_path, "w")
-    if debug_file then
-        debug_file:write("=== New Debug Session Started ===\n")
-        debug_file:close()
-    end
-    local error_file = io.open(self.error_path, "w")
-    if error_file then
-        error_file:write("=== New Error Session Started ===\n")
-        error_file:close()
-    end
-    local command_file = io.open(self.command_path, "w")
-    if command_file then
-        command_file:write("=== New Command Session Started ===\n")
-        command_file:close()
-    end
-    local setup_file = io.open(self.setup_path, "w")
-    if setup_file then
-        setup_file:write("=== New SetUp Session Started ===\n")
-        setup_file:close()
-    end
+function Logger.clearLogs(self)
+    self:clearLogFile(config.debug_path, config.title_debug)
+    self:clearLogFile(config.error_path, config.title_error)
+    self:clearLogFile(config.setup_path, config.title_setup)
+    self:clearLogFile(config.command_path, config.title_command)
 end
 
 function Logger.setup(self, message, data)
-    self:writeInLog(self.setup_path, message, data)
+    self:writeInLog(config.setup_path, message, data)
 end
 
 function Logger.debug(self, message, data)
-    self:writeInLog(self.debug_path, message, data)
+    self:writeInLog(config.debug_path, message, data)
 end
 
 function Logger.error(self, error_text)
-    self:writeInLog(self.error_path, error_text, nil)
+    self:writeInLog(config.error_path, error_text, nil)
+end
+
+function Logger.commandOutput(self, output, data)
+    self:writeInLog(config.command_path, output, data)
+end
+
+function Logger.clearLogFile(self, file_path, file_title)
+    local file = io.open(file_path, "w")
+    if file then
+        file:write(file_title)
+        file:close()
+    end
 end
 
 function Logger.writeInLog(self, path, message, data)
-
     if path == nil then
         error("Logger path can not be nil")
     end
-
     local log_file = io.open(path, "a")
-    if log_file then
-        log_file:write(os.date("%Y-%m-%d %H:%M:%S") .. ": " .. message .. "\n")
-        if data then
-            log_file:write("Data: " .. self:toString(data) .. "\n")
-        end
-        log_file:write("----------------------------------------\n")
-        log_file:close()
+    local message_template = [[
+%s: %s
+Data: %s
+----------------------------------------
+]]
+    if data then
+        log_file:write(string.format(message_template, os.date("%Y-%m-%d %H:%M:%S"), message, String:toString(data)))
+    else
+        log_file:write(string.format(message_template, os.date("%Y-%m-%d %H:%M:%S"), message, ""))
+    end
+    log_file:close()
+    if self.testEnv then
+        print(message)
     end
 end
+
 return Logger

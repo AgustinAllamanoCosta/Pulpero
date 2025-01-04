@@ -1,3 +1,4 @@
+local Util = require('pulpero.util.OSCommands')
 local Runner = require('pulpero.core.model_runner')
 local Setup = require('pulpero.core.setup')
 local Logger = require('pulpero.core.logger')
@@ -28,15 +29,15 @@ end
 
 function M.setup()
     logger = Logger.new()
-    logger:clear_logs()
+    logger:clearLogs()
     local logger_config = logger:getConfig()
     setup = Setup.new(logger)
-    local config = setup:configure_plugin()
-    local current_os = setup:get_platform()
+    local config = setup:configurePlugin()
+    local current_os = Util:getPlatform()
     logger:setup("Current OS " .. current_os)
     logger:setup("Configuration ", config)
     logger:setup("Configuration logger", logger_config)
-    setup:prepear_env()
+    setup:prepearEnv()
 
     parser = Parser.new(config)
     runner = Runner.new(config, logger, parser)
@@ -46,38 +47,28 @@ function M.setup()
         logger:debug("Processing request by native lua plugin")
         local selected_code = get_visual_selection()
         local filetype = vim.bo.filetype
-
         ui:start_spiner()
-        vim.schedule(function()
-            local success, result = runner:explain_function(filetype, selected_code)
-
-            ui:stop_spiner()
-
-            if success then
-                ui:show_explanation(result)
-            else
-                ui:show_error(result)
-            end
-        end)
+        local success, result = runner:explain_function(filetype, selected_code)
+        ui:stop_spiner()
+        if success then
+            ui:show_explanation(result)
+        else
+            ui:show_error(result)
+        end
         logger:debug("Processing completed")
     end, { range = true })
 
     vim.api.nvim_create_user_command('Refactor', function()
         local selected_code = get_visual_selection()
         local filetype = vim.bo.filetype
-
         ui:start_spiner()
-        vim.schedule(function()
-            local success, result = runner:refactor_function(filetype, selected_code)
-
-            ui:stop_spiner()
-
-            if success then
-                ui:show_explanation(result)
-            else
-                ui:show_error(result)
-            end
-        end)
+        local success, result = runner:refactor_function(filetype, selected_code)
+        ui:stop_spiner()
+        if success then
+            ui:show_explanation(result)
+        else
+            ui:show_error(result)
+        end
     end, { range = true })
 end
 
