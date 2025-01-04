@@ -55,6 +55,11 @@ function Runner.runLocalModel(self, context, language, prompt)
     if language == nil then
         error("Language of the code to analyze can not be nil")
     end
+
+    if #context > self.config.context_window then
+        return "The code is to large to be analyze, try with a small section"
+    end
+
     self.logger:debug("Starting function explanation", {
         language = language,
         context_length = #context
@@ -86,13 +91,13 @@ function Runner.runLocalModel(self, context, language, prompt)
     })
     os.remove(tmp_prompt)
 
-    if result == nil or result == ''then
+    if success == nil or success == ''then
         self.logger:error("The result is nil or empty")
         return nil_or_empty_response
     end
 
-    self.logger:debug("Parsing result", { result = result })
-    local result = self.parser:cleanModelOutput(result)
+    self.logger:debug("Parsing result", { result = success })
+    local result = self.parser:cleanModelOutput(success)
 
     if result == nil or result == ''then
         self.logger:error("Parser return nil or ''")
