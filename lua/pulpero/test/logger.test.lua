@@ -1,14 +1,14 @@
-local Util = require('pulpero.util.OSCommands')
+local OSCommands = require('util.OSCommands')
 local luaunit = require('luaunit')
-local Logger = require('pulpero.core.logger')
+local Logger = require('logger')
 local logger = Logger.new()
 
 function testCreateLogsFilesAtStart()
   local config = logger:getConfig()
-  local debug_file = Util:fileExists(config.debug_path)
-  local error_file = Util:fileExists(config.error_path)
-  local setup_file = Util:fileExists(config.setup_path)
-  local command_file = Util:fileExists(config.command_path)
+  local debug_file = OSCommands:fileExists(config.debug_path)
+  local error_file = OSCommands:fileExists(config.error_path)
+  local setup_file = OSCommands:fileExists(config.setup_path)
+  local command_file = OSCommands:fileExists(config.command_path)
 
   luaunit.assertTrue(debug_file)
   luaunit.assertTrue(error_file)
@@ -19,10 +19,10 @@ end
 function testWriteStartMessageAfterCleanLogs()
   local config = logger:getConfig()
   logger:clearLogs()
-  local debug_text = Util:getFileContent(config.debug_path)
-  local error_text = Util:getFileContent(config.error_path)
-  local setup_text = Util:getFileContent(config.setup_path)
-  local command_text = Util:getFileContent(config.command_path)
+  local debug_text = OSCommands:getFileContent(config.debug_path)
+  local error_text = OSCommands:getFileContent(config.error_path)
+  local setup_text = OSCommands:getFileContent(config.setup_path)
+  local command_text = OSCommands:getFileContent(config.command_path)
 
   luaunit.assertStrIContains(debug_text,config.title_debug)
   luaunit.assertStrIContains(error_text,config.title_error)
@@ -35,7 +35,7 @@ function testWriteInDebugFile()
   local messageToLog = "Some log message"
   logger:clearLogs()
   logger:debug(messageToLog)
-  local debug_text = Util:getFileContent(config.debug_path)
+  local debug_text = OSCommands:getFileContent(config.debug_path)
 
   luaunit.assertStrIContains(debug_text,messageToLog)
 end
@@ -45,7 +45,7 @@ function testWriteInSetupFile()
   local messageToLog = "Some log message"
   logger:clearLogs()
   logger:setup(messageToLog)
-  local setup_text = Util:getFileContent(config.setup_path)
+  local setup_text = OSCommands:getFileContent(config.setup_path)
 
   luaunit.assertStrIContains(setup_text,messageToLog)
 end
@@ -55,7 +55,7 @@ function testWriteInErrorFile()
   local messageToLog = "Some log message"
   logger:clearLogs()
   logger:error(messageToLog)
-  local error_text = Util:getFileContent(config.error_path)
+  local error_text = OSCommands:getFileContent(config.error_path)
 
   luaunit.assertStrIContains(error_text,messageToLog)
 end
@@ -67,12 +67,14 @@ function testWriteInFileAMessageWithFormat()
   local expectedContent = [[
 === New Command Session Started ===
 %s: Some log message
-Data: {["message"]="some data"}
+Data: {
+"message" = "some data",
+}
 ----------------------------------------
 ]]
   logger:clearLogs()
   logger:writeInLog(config.command_path, messageToLog, objectToLog)
-  local command_text = Util:getFileContent(config.command_path)
+  local command_text = OSCommands:getFileContent(config.command_path)
 
   luaunit.assertIs(command_text, string.format(expectedContent,os.date("%Y-%m-%d %H:%M:%S")))
 end

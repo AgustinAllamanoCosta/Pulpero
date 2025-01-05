@@ -1,11 +1,13 @@
 local luaunit = require('luaunit')
 local Setup = require('pulpero.core.setup')
 local Logger = require('pulpero.core.logger')
-local OSCommands = require('pulpero.util.OSCommands')
+local OSCommands = require('pulpero.core.util.OSCommands')
+
+local loggerConsoleOutput = false
 
 -- Test run manually
 function testShouldDownloadLlamaAndTheModel()
-    local logger = Logger.new(true)
+    local logger = Logger.new(loggerConsoleOutput)
     logger:clearLogs()
     local setup = Setup.new(logger)
     setup:configurePlugin()
@@ -27,7 +29,7 @@ function testShouldNotDownloadLlamaAndTheModelIfTheFolderAndModelFileExists()
     local model_log_message = "Model already exist skipping download"
     local llama_log_message = "Llama is already cloned, skipping"
 
-    local logger = Logger.new(true)
+    local logger = Logger.new(loggerConsoleOutput)
     logger:clearLogs()
     local config = logger:getConfig()
     local setup = Setup.new(logger)
