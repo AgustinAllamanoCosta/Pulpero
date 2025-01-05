@@ -1,5 +1,5 @@
 local luaunit = require('luaunit')
-local Parser = require('core.parser')
+local Parser = require('parser')
 local ModelResponse = [[<|system|>
 You are a code explanation expert. Provide concise, non-repetitive explanations focusing on the key functionality.
 <|user|>
@@ -35,7 +35,9 @@ local parser = Parser.new(config)
 
 function testParseAModelMessageDifferentFromNil()
     local parserResult = parser:cleanModelOutput(ModelResponse)
+    local line = parserResult:sub(1,parserResult:find('\n'))
     luaunit.assertNotNil(parserResult)
+    luaunit.assertTrue(#line <= config.maxLineLength)
 end
 
 function testReturnNilFromAnEmptyString()
