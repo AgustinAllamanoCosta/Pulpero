@@ -3,97 +3,88 @@ local UI = {}
 function UI.new(config)
     local self = setmetatable({}, { __index = UI })
     self.config = config
+    self.chat_win = nil
+    self.chat_buf = nil
     return self
 end
 
-function UI.restart_loading_window(self)
-    local width = math.min(120, vim.o.columns - 4)
-    local height = 10
-    local row = math.floor((vim.o.lines - height) / 2)
-    local col = math.floor((vim.o.columns - width) / 2)
+function UI.create_chat_sidebar(self)
+    local width = math.floor(vim.o.columns * 0.3)
+    local height = vim.o.lines - 4  -- Leave some space for status line
+    local row = 0
+    local col = vim.o.columns - width
 
-    self.min_height = height
-    self.frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
-    self.current_frame = 1
-    self.timer = nil
-    self.opts = {
+    if not self.chat_buf or not vim.api.nvim_buf_is_valid(self.chat_buf) then
+        self.chat_buf = vim.api.nvim_create_buf(false, true)
+    end
+
+    vim.api.nvim_buf_set_option(self.chat_buf, 'buftype', 'nofile')
+    vim.api.nvim_buf_set_option(self.chat_buf, 'bufhidden', 'hide')
+    vim.api.nvim_buf_set_option(self.chat_buf, 'swapfile', false)
+    vim.api.nvim_buf_set_option(self.chat_buf, 'modifiable', false)
+
+    local opts = {
         relative = 'editor',
         row = row,
         col = col,
         width = width,
         height = height,
         style = 'minimal',
-        anchor = 'NW',
-        title = '',
-        title_pos = 'center',
         border = { "╔", "═" ,"╗", "║", "╝", "═", "╚", "║" },
+        title = ' Pulpero ',
+        title_pos = 'center',
         focusable = true,
-        footer = 'Note: This explanation is AI-generated and should be verified for accuracy.',
+        footer = ':q or <Escape> to close the chat when is focus',
         footer_pos = 'center'
     }
-end
 
-function UI.create_new_window(self, title, content)
-    while #content > 0 and content[#content] == "" do
-        table.remove(content)
-    end
-    local buffer = vim.api.nvim_create_buf(false, true)
-    self.opts.title = title
+    if not self.chat_win or not vim.api.nvim_win_is_valid(self.chat_win) then
+        self.chat_win = vim.api.nvim_open_win(self.chat_buf, false, opts)
 
-    vim.api.nvim_buf_set_lines(buffer, 0, -1, true, content)
-
-    local win_id = vim.api.nvim_open_win(buffer, false, self.opts)
-
-    vim.api.nvim_buf_set_keymap(buffer, 'n', 'q', ':q<CR>', {
-        noremap = true,
-        silent = true
-    })
-    vim.api.nvim_buf_set_keymap(buffer, 'n', '<Esc>','<cmd>lua vim.api.nvim_win_close(' .. win_id .. ', true)<CR>', {silent = true, noremap = true})
-end
-
-function UI.show_explanation(self, text)
-    self:restart_loading_window()
-    local lines = vim.split(text, '\n')
-    self:create_new_window(' Code Analysis ',lines)
-end
-
-function UI.show_error(self, message)
-    self:restart_loading_window()
-    local lines = vim.split(message, '\n')
-    self:create_new_window(' Error message ',lines)
-end
-
-function UI.start_spiner(self)
-    self:restart_loading_window()
-
-    local buf = vim.api.nvim_create_buf(false, true)
-
-    if self.main_win and vim.api.nvim_win_is_valid(self.main_win) then
-        vim.api.nvim_win_close(self.main_win, true)
+        vim.api.nvim_win_set_option(self.chat_win, 'wrap', true)
+        vim.api.nvim_win_set_option(self.chat_win, 'cursorline', true)
+        vim.api.nvim_win_set_option(self.chat_win, 'winhighlight', 'Normal:Normal,FloatBorder:FloatBorder')
+    else
+        vim.api.nvim_win_set_config(self.chat_win, opts)
     end
 
-    if self.footer_win and vim.api.nvim_win_is_valid(self.footer_win) then
-        vim.api.nvim_win_close(self.footer_win, true)
-    end
+    -- Set up keymaps for the chat window
+    local keymap_opts = { noremap = true, silent = true }
+    vim.api.nvim_buf_set_keymap(self.chat_buf, 'n', 'q',
+        '<cmd>lua vim.api.nvim_win_close(' .. self.chat_win .. ', true)<CR>',
+        keymap_opts)
+    vim.api.nvim_buf_set_keymap(self.chat_buf, 'n', '<Esc>',
+        '<cmd>lua vim.api.nvim_win_close(' .. self.chat_win .. ', true)<CR>',
+        keymap_opts)
 
-    local width = 30
-    local height = 1
-    local row = math.floor((vim.o.lines - height) / 2)
-    local col = math.floor((vim.o.columns - width) / 2)
-
-    self.opts.row = row
-    self.opts.height = height
-    self.opts.col = col
-    self.opts.width = width
-    self.opts.title = ' Loading '
-
-    vim.api.nvim_buf_set_lines(buf, 0, -1, true,{ "Analyzing code..." })
-    self.loading_win = vim.api.nvim_open_win(buf, false, self.opts)
-
+    return self.chat_win, self.chat_buf
 end
 
-function UI.stop_spiner(self)
-    vim.api.nvim_win_close(self.loading_win, true)
+function UI.update_chat_content(self, messages)
+    if not self.chat_buf or not vim.api.nvim_buf_is_valid(self.chat_buf) then
+        return
+    end
+
+    vim.api.nvim_buf_set_option(self.chat_buf, 'modifiable', true)
+
+    messages = vim.split(messages, '\n')
+    local is_second_line  = false
+    local formatted_messages = {}
+    for _, msg in ipairs(messages) do
+        if is_second_line then
+            table.insert(formatted_messages, "")
+        end
+        is_second_line = true
+        if msg ~= " " and msg ~= "" then
+            table.insert(formatted_messages, "► " .. msg)
+        end
+    end
+    table.insert(formatted_messages, " ")
+    table.insert(formatted_messages, "!!! " .. "Note: This explanation is AI-generated and should be verified for accuracy." .. "!!!")
+
+    vim.api.nvim_buf_set_lines(self.chat_buf, 0, -1, false, formatted_messages)
+
+    vim.api.nvim_buf_set_option(self.chat_buf, 'modifiable', false)
 end
 
 return UI
