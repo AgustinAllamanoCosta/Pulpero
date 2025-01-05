@@ -41,7 +41,6 @@ export class CoreManager {
 
     private async getLatestVersionInfo(): Promise<VersionInfo> {
         if (this.isLocal) {
-            console.debug("Looking for the local version file");
             const tmpVersionFile = path.join(this.pathToLocalCore, 'local-version.json');
             const rawData = fs.readFileSync(tmpVersionFile);
             const { versions } = JSON.parse(rawData.toString());
@@ -84,8 +83,6 @@ export class CoreManager {
                     if (this.isLocal) {
                         progress.report({ message: "Sync is in process..." });
                         const tmpFile = path.join(this.pathToLocalCore, 'core-local.tar.gz');
-                        console.debug("Looking for the core in local folder ", tmpFile);
-                        console.debug("Local version information", latestVersion);
                         this.extractLocalFile(tmpFile, latestVersion.version);
                         progress.report({ message: "Sync is complete" });
 

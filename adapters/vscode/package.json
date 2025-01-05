@@ -2,7 +2,7 @@
     "name": "pulpero-vscode",
     "displayName": "Pulpero Code Explainer",
     "description": "AI-powered code explanation using Pulpero",
-    "version": "1.4.2",
+    "version": "1.5.5",
     "os": [
         "win32",
         "linux",

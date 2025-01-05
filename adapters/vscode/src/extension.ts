@@ -28,12 +28,12 @@ export async function activate(context: vscode.ExtensionContext) {
             if (editor) {
                 const selection = editor.document.getText(editor.selection);
                 try {
-                    chatView.addMessage('user', 'Selected code:\n```' + selection + '```');
+                    chatView.addMessageAndRecord({role: 'user', content: 'Selected code:\n```' + selection + '```'});
                     const explanation = await service.explainFunction(
                         editor.document.languageId,
                         selection
                     );
-                    chatView.addMessage('assistant', explanation);
+                    chatView.addMessageAndRecord({ role: 'assistant', content: explanation});
                 } catch (error) {
                     vscode.window.showErrorMessage(
                         `Failed to explain code: ${error instanceof Error ? error.message : String(error)}`
