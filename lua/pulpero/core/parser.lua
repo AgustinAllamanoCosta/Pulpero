@@ -83,7 +83,11 @@ function Parser.cleanModelOutput(self, raw_output)
         local subLines = self:formatResponse(line)
         for i = 1, #subLines do
             if subLines and subLines[i] then
-                formattedResponse = formattedResponse .."\n" .. subLines[i]
+                if #formattedResponse == 0 then 
+                    formattedResponse = formattedResponse .. subLines[i]
+                else
+                    formattedResponse = formattedResponse .."\n" .. subLines[i]
+                end
             end
         end
     end
