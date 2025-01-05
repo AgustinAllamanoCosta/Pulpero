@@ -149,7 +149,7 @@ Once you have the .vsix file open VScode and go to Extension then next to the `E
 
 The plugin adapter will prepare the environment, download the latest version of the core, run the setup functions and spawn a Lua process with the service interface for the core.
 
-If all went well you now can access the chat in the right side bar.
+If all went well you now can access the chat in the left side bar.
 
 <img src="./VSCodeExample.png" alt="vscode" height="600" width="500"/>
 
@@ -218,7 +218,7 @@ Logs are recreated with each request to maintain a controlled size and facilitat
 - [x] Improve response format
 - [ ] Add a live chat to interact with the model
 - [ ] Add context of the current file for better understanding
-- [ ] Add query history
+- [x] Add query history
 - [ ] Add live feedback
 - [ ] Add pairing mode as a companion for developing a feature
 - [x] Add unit test generation base of function and context
