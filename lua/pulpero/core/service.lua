@@ -1,8 +1,8 @@
-local Runner = require('./model_runner')
-local json = require('./json')
-local Parser = require('./parser')
-local Logger = require('./logger')
-local Setup = require('./setup')
+local Runner = require('model_runner')
+local json = require('util.JSON')
+local Parser = require('parser')
+local Logger = require('logger')
+local Setup = require('setup')
 
 local logger = Logger.new()
 local setup = Setup.new(logger)

@@ -1,5 +1,5 @@
-local String = require('pulpero.util.String')
-local OSCommands = require('pulpero.util.OSCommands')
+local String = require('util.String')
+local OSCommands = require('util.OSCommands')
 local Logger = {}
 local config = {
     directory = "/tmp",
