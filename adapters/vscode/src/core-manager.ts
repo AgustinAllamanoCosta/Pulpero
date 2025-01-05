@@ -84,7 +84,7 @@ export class CoreManager {
                     if (this.isLocal) {
                         progress.report({ message: "Sync is in process..." });
                         const tmpFile = path.join(this.pathToLocalCore, 'core-local.tar.gz');
-                        console.debug("Looking for the core in local forlder ", tmpFile);
+                        console.debug("Looking for the core in local folder ", tmpFile);
                         console.debug("Local version information", latestVersion);
                         this.extractLocalFile(tmpFile, latestVersion.version);
                         progress.report({ message: "Sync is complete" });
