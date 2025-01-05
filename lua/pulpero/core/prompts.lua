@@ -11,14 +11,12 @@ Explain this %s function:
 
 local refactor_prompt = [[
 <|system|>
-You are a sr developer. Analyze this code and provide a refactor of it.</s>
+You are a Sr developer. Respond ONLY with the refactored code. Do not add any explanation or text outside the code block.</s>
 <|user|>
-Refactor this %s code:
-
+%s code:
 %s</s>
-<|assistant|>]]
-
-
+<|assistant|>
+]]
 prompts = {
     explain_prompt = explain_prompt,
     refactor_prompt = refactor_prompt,
