@@ -1,9 +1,9 @@
-local Util = require('pulpero.util.OSCommands')
-local Runner = require('pulpero.core.model_runner')
-local Setup = require('pulpero.core.setup')
-local Logger = require('pulpero.core.logger')
-local Parser = require('pulpero.core.parser')
-local UI = require('pulpero.ui')
+local OSCommands = require('util.OSCommands')
+local Runner = require('model_runner')
+local Setup = require('setup')
+local Logger = require('logger')
+local Parser = require('parser')
+local UI = require('ui')
 
 local M = {}
 local runner = nil
@@ -11,6 +11,8 @@ local parser = nil
 local logger = nil
 local setup = nil
 local ui = nil
+local chat_win = nil
+local chat_buff = nil
 
 local function get_visual_selection()
     local start_pos = vim.fn.getpos("'<")
@@ -27,13 +29,25 @@ local function get_visual_selection()
     return table.concat(lines, "\n")
 end
 
+local function execute_function_and_show(function_ex)
+    logger:debug("Processing request by native lua plugin")
+    local selected_code = get_visual_selection()
+    local filetype = vim.bo.filetype
+    local success, result = function_ex(runner, filetype, selected_code)
+    if chat_win == nil then
+        chat_win, chat_buff = ui:create_chat_sidebar()
+    end
+    ui:update_chat_content(result)
+    logger:debug("Processing completed")
+end
+
 function M.setup()
     logger = Logger.new()
     logger:clearLogs()
     local logger_config = logger:getConfig()
     setup = Setup.new(logger)
     local config = setup:configurePlugin()
-    local current_os = Util:getPlatform()
+    local current_os = OSCommands:getPlatform()
     logger:setup("Current OS " .. current_os)
     logger:setup("Configuration ", config)
     logger:setup("Configuration logger", logger_config)
@@ -44,31 +58,11 @@ function M.setup()
     ui = UI.new(config)
 
     vim.api.nvim_create_user_command('ExpFn', function()
-        logger:debug("Processing request by native lua plugin")
-        local selected_code = get_visual_selection()
-        local filetype = vim.bo.filetype
-        ui:start_spiner()
-        local success, result = runner:explain_function(filetype, selected_code)
-        ui:stop_spiner()
-        if success then
-            ui:show_explanation(result)
-        else
-            ui:show_error(result)
-        end
-        logger:debug("Processing completed")
+        execute_function_and_show(runner.explain_function)
     end, { range = true })
 
     vim.api.nvim_create_user_command('Refactor', function()
-        local selected_code = get_visual_selection()
-        local filetype = vim.bo.filetype
-        ui:start_spiner()
-        local success, result = runner:refactor_function(filetype, selected_code)
-        ui:stop_spiner()
-        if success then
-            ui:show_explanation(result)
-        else
-            ui:show_error(result)
-        end
+        execute_function_and_show(runner.refactor_function)
     end, { range = true })
 end
 
