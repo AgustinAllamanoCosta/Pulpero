@@ -2,9 +2,9 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { PulperoService } from './service';
 import { CoreManager } from './core-manager';
+import { activateChatView } from './chat-panel';
 
 export async function activate(context: vscode.ExtensionContext) {
-
     const isLocal: boolean = vscode.workspace.getConfiguration('pulpero').get('local') || false;
     const localCorePath: string = vscode.workspace.getConfiguration('pulpero').get('corePath') || "";
     const coreManager = new CoreManager(context, isLocal, localCorePath);
@@ -17,20 +17,23 @@ export async function activate(context: vscode.ExtensionContext) {
         corePath: corePath
     });
 
-    service.start().catch(console.error);
+    await service.start().catch(console.error);
 
-    let disposable = vscode.commands.registerCommand(
+    const chatView = activateChatView(context);
+
+    let explainDisposable = vscode.commands.registerCommand(
         'pulpero.explainCode',
         async () => {
             const editor = vscode.window.activeTextEditor;
             if (editor) {
                 const selection = editor.document.getText(editor.selection);
                 try {
+                    chatView.addMessage('user', 'Selected code:\n```' + selection + '```');
                     const explanation = await service.explainFunction(
                         editor.document.languageId,
                         selection
                     );
-                    vscode.window.showInformationMessage(explanation);
+                    chatView.addMessage('assistant', explanation);
                 } catch (error) {
                     vscode.window.showErrorMessage(
                         `Failed to explain code: ${error instanceof Error ? error.message : String(error)}`
@@ -40,9 +43,7 @@ export async function activate(context: vscode.ExtensionContext) {
         }
     );
 
-    context.subscriptions.push(disposable);
-
-    context.subscriptions.push({
+    context.subscriptions.push(explainDisposable, {
         dispose: () => service.stop()
     });
 

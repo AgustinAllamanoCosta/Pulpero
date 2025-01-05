@@ -2,7 +2,7 @@
     "name": "pulpero-vscode",
     "displayName": "Pulpero Code Explainer",
     "description": "AI-powered code explanation using Pulpero",
-    "version": "1.1.4",
+    "version": "1.4.2",
     "os": [
         "win32",
         "linux",
@@ -20,7 +20,8 @@
         "Machine Learning"
     ],
     "activationEvents": [
-        "onCommand:pulpero.explainCode"
+        "onCommand:pulpero.explainCode",
+        "onCommand:pulpero.openChat"
     ],
     "main": "./out/extension.js",
     "contributes": {
@@ -28,6 +29,10 @@
             {
                 "command": "pulpero.explainCode",
                 "title": "Explain Code with Pulpero"
+            },
+            {
+                "command": "pulpero.openChat",
+                "title": "Open Pulpero Chat"
             }
         ],
         "menus": {
@@ -36,6 +41,24 @@
                     "when": "editorHasSelection",
                     "command": "pulpero.explainCode",
                     "group": "navigation"
+                }
+            ]
+        },
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "pulpero-sidebar",
+                    "title": "Pulpero",
+                    "icon": "$(comment-discussion)"
+                }
+            ]
+        },
+        "views": {
+            "pulpero-sidebar": [
+                {
+                    "type": "webview",
+                    "id": "pulpero.chatView",
+                    "name": "Chat"
                 }
             ]
         },
