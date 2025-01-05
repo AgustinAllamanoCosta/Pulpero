@@ -1,12 +1,24 @@
 import * as vscode from 'vscode';
 
+type ChatRecordMessage = {
+    role:'user' | 'assistant';
+    content: string;
+}
+
+type ChatRecord = {
+    messages: Array<ChatRecordMessage>
+}
+
 class ChatViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'pulpero.chatView';
     private _view?: vscode.WebviewView;
+    private recordKey: string = "pulperoChatReacord";
 
     constructor(
-        private readonly _extensionUri: vscode.Uri,
-    ) {}
+        private readonly _extContext: vscode.ExtensionContext,
+        private memento: vscode.Memento,
+    ) {
+    }
 
     public resolveWebviewView(
         webviewView: vscode.WebviewView,
@@ -17,7 +29,7 @@ class ChatViewProvider implements vscode.WebviewViewProvider {
 
         webviewView.webview.options = {
             enableScripts: true,
-            localResourceRoots: [this._extensionUri]
+            localResourceRoots: [this._extContext.extensionUri]
         };
 
         webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
@@ -25,28 +37,52 @@ class ChatViewProvider implements vscode.WebviewViewProvider {
         webviewView.webview.onDidReceiveMessage(async data => {
             switch (data.type) {
                 case 'message':
-                    // Handle user message
                     if (data.value) {
-                        // Here you would process the message with your service
-                        this.addMessage('user', data.value);
-                        // Example response:
+                        const message: ChatRecordMessage = { role: 'user', content: data.value }; 
+                        this.addMessageAndRecord(message);
                         setTimeout(() => {
-                            this.addMessage('assistant', `Received: ${data.value}`);
+                            const message: ChatRecordMessage = { role: 'assistant', content: `Received: ${data.value}`}; 
+                            this.addMessageAndRecord(message);
                         }, 1000);
                     }
+                    break;
+                case 'requestHistory':
+                    this.loadRecords();
                     break;
             }
         });
     }
 
-    public addMessage(role: 'user' | 'assistant', content: string) {
+    public addMessage({role, content }: ChatRecordMessage) {
         if (this._view) {
             this._view.webview.postMessage({
                 type: 'addMessage',
                 role,
                 content
             });
+            return true;
         }
+        return false;
+    }
+
+    public addMessageAndRecord({role, content }: ChatRecordMessage) {
+        const wasPublished: boolean = this.addMessage({role, content});
+        if (wasPublished) {
+            const recordMessage: ChatRecordMessage = {
+                role,
+                content
+            };
+            const record: ChatRecord = this.memento.get<ChatRecord>(this.recordKey, { messages: [] });
+            record.messages.push(recordMessage);
+            this.memento.update(this.recordKey, record);
+        }
+    }
+
+    public loadRecords() {
+        const records: ChatRecord = this.memento.get<ChatRecord>(this.recordKey, { messages: [] });
+        records.messages.forEach((message: ChatRecordMessage) => {
+            this.addMessage(message);
+        });
     }
 
     private _getHtmlForWebview(_webview: vscode.Webview) {
@@ -124,6 +160,11 @@ class ChatViewProvider implements vscode.WebviewViewProvider {
                             break;
                     }
                 });
+                document.addEventListener('DOMContentLoaded', () => {
+                vscode.postMessage({
+                    type: 'requestHistory',
+                    });
+                });
             </script>
         </body>
         </html>`;
@@ -131,7 +172,7 @@ class ChatViewProvider implements vscode.WebviewViewProvider {
 }
 
 export function activateChatView(context: vscode.ExtensionContext) {
-    const chatViewProvider = new ChatViewProvider(context.extensionUri);
+    const chatViewProvider = new ChatViewProvider(context, context.workspaceState);
 
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider(

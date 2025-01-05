@@ -99,7 +99,6 @@ export class PulperoService extends EventEmitter {
                 this.process.stdout.on('data', (data: Buffer) => {
                     try {
                         const message = data.toString().trim();
-                        console.log("Raw core response ", data.toString());
                         const response = JSON.parse(message) as ServiceResponse;
                         const { requestId, result, error } = response;
                         const pending = this.requestQueue.get(requestId);
