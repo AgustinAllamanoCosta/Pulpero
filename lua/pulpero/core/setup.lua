@@ -2,14 +2,14 @@ local OSCommands = require('util.OSCommands')
 local Setup = {}
 local default_settings = {
     context_window = 1024,
-    temp = "0.4",
+    temp = "0.1",
     num_threads = "4",
     top_p = "0.4",
     token="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",
     model = "https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
     llama_repo = "https://github.com/ggerganov/llama.cpp.git",
-    maxLineLength = 200,
-    os = OSCommands:getPlatform()
+    os = OSCommands:getPlatform(),
+    response_size = "1024"
 }
 
 function Setup.new(logger)

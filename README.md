@@ -34,11 +34,11 @@ Pulpero refers to the Pulperías (old general stores) of old Buenos Aires. The p
 
 ## 🤨 How to use it?
 
-- In IDEs: Highlight the code you want to analyze, right-click, and select "Explain Code With Pulpero".
+- In IDEs: Highlight the code you want to analyze, right-click, and select "Explain Code With Pulpero". Or you can query the model with the live-chat
 - In Neovim: Select the code in visual mode and execute the ExpFn command.
 - Using the REST API: Make a POST request to http://localhost:8080/explain. The body should contain the code to analyze, and the query param 'lang' should specify the language.
 
-**Note**: For the moment, the maximum number of lines to analyze is 20, this is due to a constraint in the context size of the model.
+**Note**: For the moment, the maximum number of lines to analyze is 100, this is due to a constraint in the context size of the model.
 
 <div id="Requirements" />
 
@@ -129,18 +129,57 @@ There are two ways to install the repository with Lazy:
 
 The second option will keep you updated with the latest version of the repository.
 
+### 💻 Nvim Commands
+<details>
+  <summary> Some useful commands you can use</summary>
+
+To tell to the model to explain some line/s of code, you can highlight it and execute "PulperoExpFn"
+
+```
+:PulperoExpFn
+```
+
+To open the chat bar "PulperoOpenChat"
+
+```
+:PulperoOpenChat
+```
+
+<img src="./NeovimExample.png" alt="nvim" height="600" width="400"/>
+
+To close the chat bar "PulperoClosenChat"
+
+```
+:PulperoCloseChat
+```
+
+To send the inputs characters in to the chat model use "PulperoSendChat"
+
+```
+:PulperoSendChat
+```
+
+To clear the model cache you can use "PulperoClearModelCache"
+
+```
+:PulperoClearModelCache
+```
+</details>
+
 <div id="Adapters" />
 
 ### ⭐️ Configuration for other IDEs
 
 <div id="IntelliJ" />
-
-*IntelliJ*: PENDING
+<details>
+  <summary>IntelliJ:</summary>
+PENDING
+</details>
+ 
 
 <div id="VScode" />
-
-*VScode*:
-
+<details>
+  <summary>VScode:</summary>
 To install the adapter for VScode you need to download a .vsix file to install manually (the vscode version is not publish yet on the VScode marketplace)
 
 To download a vsix file go to the [releases section](https://github.com/AgustinAllamanoCosta/Pulpero/releases)
@@ -161,9 +200,13 @@ If you want to run a specific version of the core, you can download it from the 
 
 With this configuration now the plugin run a local version of the core.
 
-<div id="WebStorm" />
+</details>
 
-*WebStorm*: PENDING
+<div id="WebStorm" />
+<details>
+  <summary>WebStorm:</summary>
+PENDING
+</details>
 
 <div id="API" />
 
@@ -172,6 +215,9 @@ With this configuration now the plugin run a local version of the core.
 The API currently offers two basic endpoints. This API is primarily designed for testing and development, IT IS NOT RECOMMENDED FOR PRODUCTION ENVIRONMENTS as it does not implement security validations.
 
 #### 🛜 Available Endpoints:
+
+<details>
+  <summary>Definition</summary>
 
 1. **Healthcheck**
    - URL: `http://localhost:8080/`
@@ -183,6 +229,7 @@ The API currently offers two basic endpoints. This API is primarily designed for
    - Method: POST
    - Body: String with code to analyze
    - Query params: `lang` (code language type)
+</details>
 
 <div id="Docker" />
 
@@ -218,14 +265,17 @@ Logs are recreated with each request to maintain a controlled size and facilitat
 - ✅ Add a refactor query
 - ✅ Add unit test of the core functions
 - ✅ Add integration test of the core functions
-- ❌ Add more configuration options for nvim commands
+- ✅ Add more configuration options for nvim commands
 - ❌ Add unit test generation base of function and context
-- 🚧 Add a live chat to interact with the model
+- ✅ Add a live chat to interact with the model
 - ❌ Add context of the current file for better understanding
 - ❌ Add live feedback
 - ❌ Add pairing mode as a companion for developing a feature
 - ❌ Add the docker build and publish process to the CI pipeline
 - ❌ Add test on the CI pipeline
+- ❌ Train a new model base on TinyLlama for code completion
+- ❌ Train a new model base on TinyLlama for agile practices
+- ❌ Add live feedback with audio for coding
 
 *References*:
 
