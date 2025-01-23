@@ -10,3 +10,4 @@ local_build.sh
 run_core_test.sh
 local-version.json
 .vscode/**
+prompt.bin
