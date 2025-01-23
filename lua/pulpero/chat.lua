@@ -9,7 +9,7 @@ function Chat.new(ui, runner, config)
 
     local keymap_opts        = { noremap = true, silent = false }
     vim.api.nvim_buf_set_keymap(self.ui.input_buf, 'i', '<CR>',
-        '<Esc>:SendChat<CR>',
+        '<Esc>:PulperoSendChat<CR>',
         keymap_opts)
     return self
 end
