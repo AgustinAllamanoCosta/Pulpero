@@ -36,7 +36,7 @@ Pulpero refers to the Pulperías (old general stores) of old Buenos Aires. The p
 ## 🤨 How to use it?
 
 - In IDEs: Highlight the code you want to analyze, right-click, and select "Explain Code With Pulpero". Or you can query the model with the live-chat
-- In Neovim: Select the code in visual mode and execute the ExpFn command.
+- In Neovim: Select the code in visual mode and execute the PulperoExpFn command. To open the chat you can use the commands PulperoOpenChat.
 - Using the REST API: Make a POST request to http://localhost:8080/explain. The body should contain the code to analyze, and the query param 'lang' should specify the language.
 
 **Note**: For the moment, the maximum number of lines to analyze is 100, this is due to a constraint in the context size of the model.
@@ -193,7 +193,7 @@ To clear the model cache you can use "PulperoClearModelCache"
   <summary>IntelliJ:</summary>
 PENDING
 </details>
- 
+
 
 <div id="VScode" />
 <details>
