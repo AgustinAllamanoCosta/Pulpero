@@ -61,7 +61,6 @@ function Runner.runLocalModel(self, prompt, config)
         .. ' --prompt-cache prompt.bin'                           -- Cache the prompt for faster loading
         .. ' -ngl 1'                                              -- Use GPU for better performance
         .. ' -b 512'                                              -- Batch size for processing
-        .. ' --color'                                             -- Better visual feedback
         .. ' -r "User:" --in-prefix " " --in-suffix "Assistant:"' -- Better chat handling
         .. ' -f %s 1> %s 2> %s',                                  -- Input file at the end
         config.llama_cpp_path,

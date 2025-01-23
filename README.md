@@ -11,6 +11,7 @@ This repository contains code for a multi-IDE and multi-platform plugin that ana
 ## 😌 Content
 
 - [The Name](#The-Name)
+- [The Model](#The-Model)
 - [Requirements](#Requirements)
 - [Installation](#Installation)
     - [Lazy (Neovim)](#NeoVim)
@@ -40,6 +41,8 @@ Pulpero refers to the Pulperías (old general stores) of old Buenos Aires. The p
 
 **Note**: For the moment, the maximum number of lines to analyze is 100, this is due to a constraint in the context size of the model.
 
+<div id="The-Model" />
+
 ## 🤖 The model
 
 Currently Pulpero use TinyLlama 1b model as an experiment to run in almost any machine and in multiple IDEs. Thanks to *TheBloc*k at Huggingface to provide this model in gguf format.
@@ -57,6 +60,13 @@ Currently Pulpero use TinyLlama 1b model as an experiment to run in almost any m
 - Git latest version
 - Wget latest version
 - Have CMake already installed is a plus
+
+<details>
+  <summary>Performance</summary>
+
+PENDING: Testing is in progress 🫣 (On my MAC works)
+
+</details>
 
 <div id="Installation" />
 
@@ -281,8 +291,7 @@ Logs are recreated with each request to maintain a controlled size and facilitat
 - ❌ Add pairing mode as a companion for developing a feature
 - ❌ Add the docker build and publish process to the CI pipeline
 - ❌ Add test on the CI pipeline
-- ❌ Train a new model base on TinyLlama for code completion
-- ❌ Train a new model base on TinyLlama for agile practices
+- ❌ Migrate to a CodeLlama
 - ❌ Add live feedback with audio for coding
 
 *References*:
