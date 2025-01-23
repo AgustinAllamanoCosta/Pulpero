@@ -6,7 +6,7 @@ function UI.new(config)
     local chat_height  = vim.o.lines - 6 -- Leave some space for status line
     local row          = 0
     local col          = vim.o.columns - width
-    local input_height = 1
+    local input_height = 3
 
     self.config        = config
     self.chat_buf      = vim.api.nvim_create_buf(false, true)
@@ -21,9 +21,7 @@ function UI.new(config)
         border = { "╔", "═", "╗", "║", "╝", "═", "╚", "║" },
         title = ' Pulpero ',
         title_pos = 'center',
-        focusable = true,
-        footer = ':q or <Escape> to close the chat when is focus',
-        footer_pos = 'center'
+        focusable = true
     }
     self.input_options = {
         relative = 'editor',
@@ -36,6 +34,8 @@ function UI.new(config)
         title = ' Message ',
         title_pos = 'center',
         focusable = true,
+        footer = 'Execute :PulperoCloseChat to close',
+        footer_pos = 'center'
     }
 
     self.chat_win      = nil
