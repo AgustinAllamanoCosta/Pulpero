@@ -40,6 +40,14 @@ Pulpero refers to the Pulperías (old general stores) of old Buenos Aires. The p
 
 **Note**: For the moment, the maximum number of lines to analyze is 100, this is due to a constraint in the context size of the model.
 
+## 🤖 The model
+
+Currently Pulpero use TinyLlama 1b model as an experiment to run in almost any machine and in multiple IDEs. Thanks to *TheBloc*k at Huggingface to provide this model in gguf format.
+
+[URL to the model](https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF)
+
+**Note**: We have plan to migrate to CodeLLama 7b in the future.
+
 <div id="Requirements" />
 
 ### 📋 Requirements
