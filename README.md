@@ -286,10 +286,10 @@ Logs are recreated with each request to maintain a controlled size and facilitat
 - ✅ Add more configuration options for nvim commands
 - ❌ Add unit test generation base of function and context
 - ✅ Add a live chat to interact with the model
-- ❌ Add context of the current file for better understanding
-- ❌ Add live feedback
+- 🚧 Add context of the current file for better understanding
+- 🚧 Add live feedback
 - ❌ Add pairing mode as a companion for developing a feature
-- ❌ Add the docker build and publish process to the CI pipeline
+- 🚧 Add the docker build and publish process to the CI pipeline
 - ❌ Add test on the CI pipeline
 - ❌ Migrate to a CodeLlama
 - ❌ Add live feedback with audio for coding
