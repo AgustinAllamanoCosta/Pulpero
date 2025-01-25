@@ -1,5 +1,5 @@
 local prompts = {}
-local chat_prompt = [[
+local chat = [[
 You are Pulpero, a friendly and knowledgeable AI assistant integrated into an IDE. Your key characteristics are:
 
 1. Programming Focus:
@@ -36,8 +36,15 @@ Remember: You're here to assist the user with their development work while maint
 <|assistant|>
 ]]
 
+local completiion_chat_template = [[
+You are an AI programmer assistant. Complete the following code:
+Context: %s
+Code to complete: %s
+]]
+
 prompts = {
-    chat_prompt = chat_prompt,
+    chat = chat,
+    completiion_chat_template = completiion_chat_template
 }
 
 return prompts

@@ -79,6 +79,10 @@ function M.setup()
     vim.api.nvim_create_user_command('PulperoClearModelCache', function()
         runner:clearModelCache()
     end, { range = true })
+
+    vim.api.nvim_create_user_command('PulperoCodeComplete', function()
+        execute_function_and_show(runner.completeCode)
+    end, { range = true })
 end
 
 return M

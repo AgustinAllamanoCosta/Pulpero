@@ -21,7 +21,7 @@ function Parser.cleanModelOutput(self, output)
 
         if in_assistant_response then
             if line ~= "" and not line:match("^<|.*|>$") then
-                table.insert(response_lines, line .. "\n")
+                table.insert(response_lines, line:gsub("%[end of text]", " ") .. "\n")
             end
         end
         ::continue::

@@ -3,7 +3,7 @@ local UI = {}
 function UI.new(config)
     local self         = setmetatable({}, { __index = UI })
     local width        = math.floor(vim.o.columns * 0.3)
-    local chat_height  = vim.o.lines - 6 -- Leave some space for status line
+    local chat_height  = vim.o.lines - 9
     local row          = 0
     local col          = vim.o.columns - width
     local input_height = 3
@@ -25,7 +25,7 @@ function UI.new(config)
     }
     self.input_options = {
         relative = 'editor',
-        row = chat_height + 1,
+        row = chat_height + 2,
         col = col,
         width = width,
         height = input_height,
@@ -45,6 +45,7 @@ function UI.new(config)
     vim.api.nvim_buf_set_option(self.chat_buf, 'bufhidden', 'hide')
     vim.api.nvim_buf_set_option(self.chat_buf, 'swapfile', false)
     vim.api.nvim_buf_set_option(self.chat_buf, 'modifiable', false)
+
     vim.api.nvim_buf_set_option(self.input_buf, 'buftype', 'nofile')
     vim.api.nvim_buf_set_option(self.input_buf, 'bufhidden', 'hide')
     vim.api.nvim_buf_set_option(self.input_buf, 'swapfile', false)
