@@ -47,9 +47,9 @@ end
 function Runner.createNewChatContext(self)
     return {
         messages = {},
-        max_messages = 10,     -- Keep last 10 messages for context
+        max_messages = 10, -- Keep last 10 messages for context
         current_tokens = 0,
-        max_tokens = 2048      -- Match your model's context window
+        max_tokens = 2048  -- Match your model's context window
     }
 end
 
@@ -158,12 +158,9 @@ function Runner.talkWithModel(self, message)
     self:updateChatContext("user", message)
 
     local chat_history = self:buildChatHistory()
-    if self.current_file then
-        local context = string.format("\nContext from current file:\n```\n%s\n```\n", self.current_file)
-    end
     local dynamic_prompt = string.format(prompts.chat, chat_history)
 
-    self.logger:debug("Full prompt", {prompt = dynamic_prompt})
+    self.logger:debug("Full prompt", { prompt = dynamic_prompt })
     local success, result = pcall(self.runLocalModel, self, dynamic_prompt, self.model_parameters)
 
     if success then
@@ -208,17 +205,37 @@ function Runner.runStandardQuery(self, language, context, query)
 end
 
 function Runner.explainFunction(self, language, context)
-    local user_message = "Explain what this code does. Langua: %s Code: %s "
+    local user_message = "Explain what this code does. Language: %s Code: %s "
     return self:runStandardQuery(language, context, user_message)
 end
 
 function Runner.refactorFunction(self, language, context)
-    local user_message = "Explain what this code does. Langua: %s Code: %s "
+    local user_message =
+    "Show a refactor of this code, focusing in performance improvement and good practices. Language: %s Code: %s "
     return self:runStandardQuery(language, context, user_message)
 end
 
 function Runner.completeCode(self, language, context)
-    return self:runStandardQuery(language, context, prompts.completiion_chat_template)
+    -- Check the amount of token from the file and avoid to complete the code if the file is to big
+    if self.current_file and #self.current_file > 0 then
+        local full_query = string.format(prompts.completion_chat_template, self.current_file, language, context,
+            "Please complete the code")
+        self.logger:debug("Code completion query ", { prompt = full_query })
+        local success, result = pcall(self.runLocalModel, self, full_query, self.model_parameters)
+        if success then
+            local code = result:match("<code>(.-)</code>")
+            if code then
+                self.logger:debug("Code found ", { code = code })
+                return true, code
+            else
+                self.logger:debug("The code to be use as a completion was not found", { code = code })
+                return false, nil
+            end
+        end
+    else
+        self.logger:debug("The current file context is nil or is not found", { context = self.current_file })
+        return false, nil
+    end
 end
 
 return Runner

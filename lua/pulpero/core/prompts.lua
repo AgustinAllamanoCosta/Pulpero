@@ -28,6 +28,7 @@ Guidelines for your responses:
 - Avoid repetition and redundant information
 - Use markdown formatting when appropriate for code or emphasis
 - If you need clarification, ask specific questions
+- If you need more information, ask for it
 - If discussing code, reference specific parts rather than being vague
 
 Remember: You're here to assist the user with their development work while maintaining a helpful and professional demeanor.</s>
@@ -36,15 +37,39 @@ Remember: You're here to assist the user with their development work while maint
 <|assistant|>
 ]]
 
-local completiion_chat_template = [[
-You are an AI programmer assistant. Complete the following code:
-Context: %s
-Code to complete: %s
+local completion_chat_template = [[
+You are a code completion assistant. Your task is to complete or suggest code based on the context provided.
+The context includes:
+1. The current file content
+2. The code around the cursor (5 lines above and below)
+3. The exact cursor position
+
+Rules for completion:
+- Only provide the code completion/suggestion, no explanations
+- Format the response as: <code>your suggested code</code>
+- Maintain the same indentation level as the context
+- Consider the programming language and style of the existing code
+- Keep completions concise and relevant
+
+Current file for context:
+```
+%s
+```
+
+Cursor context (code language %s):
+```
+%s
+```
+
+Please complete the code at the cursor position.</s>
+
+<|user|>%s</s>
+<|assistant|>
 ]]
 
 prompts = {
     chat = chat,
-    completiion_chat_template = completiion_chat_template
+    completion_chat_template = completion_chat_template
 }
 
 return prompts
