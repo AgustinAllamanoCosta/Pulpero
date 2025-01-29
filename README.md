@@ -147,7 +147,7 @@ There are two ways to install the repository with Lazy:
 
 The second option will keep you updated with the latest version of the repository.
 
-### 💻 Nvim Commands
+### 💻 Neovim
 <details>
   <summary> Some useful commands you can use</summary>
 
@@ -163,7 +163,7 @@ To open the chat bar "PulperoOpenChat"
 :PulperoOpenChat
 ```
 
-<img src="./NeovimExample.png" alt="nvim" height="600" width="400"/>
+<img src="./doc/NeovimExample.png" alt="nvim" height="600" width="400"/>
 
 To close the chat bar "PulperoClosenChat"
 
@@ -182,6 +182,39 @@ To clear the model cache you can use "PulperoClearModelCache"
 ```
 :PulperoClearModelCache
 ```
+
+The nexts commands are use to disable or enable the code completion and chat of Pulpero, not the service or code function, if Pulpero is disable the core will still tring to download the model and dep to ensure the correct function when is running.
+
+To disable pulpero use "PulperoDisable"
+
+```
+:PulperoDisable
+```
+
+To enable pulpero use "PulperoEnable"
+
+```
+:PulperoEnable
+```
+
+To use code complete at cursor position use "PulperoCodeComplete"
+
+```
+:PulperoCodeComplete
+```
+
+</details>
+
+
+<details>
+  <summary> Some videos showing the plugin be used</summary>
+
+Using the chat
+
+<video width="500" height="500" controls>
+  <source src="./doc/Pulpero1.mov" type="video/mp4">
+</video>
+
 </details>
 
 <div id="Adapters" />
@@ -208,7 +241,7 @@ The plugin adapter will prepare the environment, download the latest version of 
 
 If all went well you now can access the chat in the left side bar.
 
-<img src="./VSCodeExample.png" alt="vscode" height="600" width="500"/>
+<img src="./doc/VSCodeExample.png" alt="vscode" height="600" width="500"/>
 
 If you want to run a specific version of the core, you can download it from the repo and then in the settings section of the plugin you need to:
 
@@ -272,7 +305,7 @@ Logs are recreated with each request to maintain a controlled size and facilitat
 <div id="TODO" />
 
 ### 🚨 TODO List
-- ❌ Create a docker image of the core
+- 🚧 Create a docker image of the core
 - ❌ Create the IntelliJ adapter
 - ❌ Create WebStorm adapter
 - ✅ Create VSCode adapter
@@ -286,9 +319,9 @@ Logs are recreated with each request to maintain a controlled size and facilitat
 - ✅ Add more configuration options for nvim commands
 - ❌ Add unit test generation base of function and context
 - ✅ Add a live chat to interact with the model
-- 🚧 Add context of the current file for better understanding
-- 🚧 Add live feedback
-- ❌ Add pairing mode as a companion for developing a feature
+- ✅ Add context of the current file for better understanding
+- 🚧 Add live feedback (Blocked until the migration to code llama is complete)
+- 🚧 Add pairing mode as a companion for developing a feature
 - 🚧 Add the docker build and publish process to the CI pipeline
 - ❌ Add test on the CI pipeline
 - ❌ Migrate to a CodeLlama
