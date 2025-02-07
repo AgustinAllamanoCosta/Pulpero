@@ -214,4 +214,5 @@ function Setup.configurePlugin(self)
     return self.config
 end
 
+
 return Setup

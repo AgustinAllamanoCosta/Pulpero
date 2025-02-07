@@ -1,0 +1,877 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 755B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/alpine:latest
+#2 DONE 0.7s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [ 1/14] FROM docker.io/library/alpine:latest@sha256:56fa17d2a7e7f168a043a2712e63aed1f8543aeafdcee47c58dcffe38ed51099
+#4 DONE 0.0s
+
+#5 [ 2/14] WORKDIR /app
+#5 CACHED
+
+#6 [internal] load build context
+#6 transferring context: 625B done
+#6 DONE 0.0s
+
+#7 [ 3/14] COPY lua/pulpero/core core
+#7 DONE 0.0s
+
+#8 [ 4/14] RUN echo "==== Updating repositories ===="
+#8 0.089 ==== Updating repositories ====
+#8 DONE 0.1s
+
+#9 [ 5/14] RUN apk update
+#9 0.111 fetch https://dl-cdn.alpinelinux.org/alpine/v3.21/main/aarch64/APKINDEX.tar.gz
+#9 3.412 fetch https://dl-cdn.alpinelinux.org/alpine/v3.21/community/aarch64/APKINDEX.tar.gz
+#9 4.127 v3.21.2-165-g6048a20cfd7 [https://dl-cdn.alpinelinux.org/alpine/v3.21/main]
+#9 4.127 v3.21.2-166-g432c7d1c856 [https://dl-cdn.alpinelinux.org/alpine/v3.21/community]
+#9 4.127 OK: 25249 distinct packages available
+#9 DONE 4.2s
+
+#10 [ 6/14] RUN echo "==== Installing packages ===="
+#10 0.089 ==== Installing packages ====
+#10 DONE 0.1s
+
+#11 [ 7/14] RUN apk add --no-cache build-base readline-dev unzip curl lua5.3 lua5.3-dev
+#11 0.108 fetch https://dl-cdn.alpinelinux.org/alpine/v3.21/main/aarch64/APKINDEX.tar.gz
+#11 2.819 fetch https://dl-cdn.alpinelinux.org/alpine/v3.21/community/aarch64/APKINDEX.tar.gz
+#11 3.030 (1/45) Installing libgcc (14.2.0-r4)
+#11 3.060 (2/45) Installing jansson (2.14-r4)
+#11 3.085 (3/45) Installing libstdc++ (14.2.0-r4)
+#11 3.142 (4/45) Installing zstd-libs (1.5.6-r2)
+#11 3.195 (5/45) Installing binutils (2.43.1-r1)
+#11 3.370 (6/45) Installing libmagic (5.46-r2)
+#11 3.409 (7/45) Installing file (5.46-r2)
+#11 3.430 (8/45) Installing libgomp (14.2.0-r4)
+#11 3.457 (9/45) Installing libatomic (14.2.0-r4)
+#11 3.479 (10/45) Installing gmp (6.3.0-r2)
+#11 3.504 (11/45) Installing isl26 (0.26-r1)
+#11 3.552 (12/45) Installing mpfr4 (4.2.1-r0)
+#11 3.582 (13/45) Installing mpc1 (1.3.1-r1)
+#11 3.608 (14/45) Installing gcc (14.2.0-r4)
+#11 5.231 (15/45) Installing libstdc++-dev (14.2.0-r4)
+#11 5.375 (16/45) Installing musl-dev (1.2.5-r8)
+#11 5.459 (17/45) Installing g++ (14.2.0-r4)
+#11 5.897 (18/45) Installing make (4.4.1-r2)
+#11 5.925 (19/45) Installing fortify-headers (1.1-r5)
+#11 5.948 (20/45) Installing patch (2.7.6-r10)
+#11 5.973 (21/45) Installing build-base (0.5-r3)
+#11 5.973 (22/45) Installing brotli-libs (1.1.0-r2)
+#11 6.009 (23/45) Installing c-ares (1.34.3-r0)
+#11 6.039 (24/45) Installing libunistring (1.2-r0)
+#11 6.084 (25/45) Installing libidn2 (2.3.7-r0)
+#11 6.112 (26/45) Installing nghttp2-libs (1.64.0-r0)
+#11 6.138 (27/45) Installing libpsl (0.21.5-r3)
+#11 6.167 (28/45) Installing libcurl (8.11.1-r0)
+#11 6.200 (29/45) Installing curl (8.11.1-r0)
+#11 6.227 (30/45) Installing linenoise (1.0-r5)
+#11 6.251 (31/45) Installing lua5.3-libs (5.3.6-r6)
+#11 6.280 (32/45) Installing lua5.3 (5.3.6-r6)
+#11 6.309 (33/45) Installing pkgconf (2.3.0-r0)
+#11 6.338 (34/45) Installing lua5.3-dev (5.3.6-r6)
+#11 6.382 (35/45) Installing libhistory (8.2.13-r0)
+#11 6.410 (36/45) Installing ncurses-terminfo-base (6.5_p20241006-r3)
+#11 6.440 (37/45) Installing libncursesw (6.5_p20241006-r3)
+#11 6.469 (38/45) Installing libformw (6.5_p20241006-r3)
+#11 6.495 (39/45) Installing libmenuw (6.5_p20241006-r3)
+#11 6.521 (40/45) Installing libpanelw (6.5_p20241006-r3)
+#11 6.544 (41/45) Installing libncurses++ (6.5_p20241006-r3)
+#11 6.573 (42/45) Installing ncurses-dev (6.5_p20241006-r3)
+#11 6.603 (43/45) Installing readline (8.2.13-r0)
+#11 6.669 (44/45) Installing readline-dev (8.2.13-r0)
+#11 6.701 (45/45) Installing unzip (6.0-r15)
+#11 6.736 Executing busybox-1.37.0-r9.trigger
+#11 6.747 OK: 239 MiB in 60 packages
+#11 DONE 6.9s
+
+#12 [ 8/14] RUN echo "==== Checking available lua packages ===="
+#12 0.124 ==== Checking available lua packages ====
+#12 DONE 0.1s
+
+#13 [ 9/14] RUN apk search lua
+#13 0.356 accel-ppp-1.13.0-r0
+#13 0.364 acf-lib-lua5.1-0.11.1-r0
+#13 0.364 acf-lib-lua5.2-0.11.1-r0
+#13 0.364 acf-lib-lua5.3-0.11.1-r0
+#13 0.364 acf-lib-lua5.4-0.11.1-r0
+#13 0.364 apache2-lua-2.4.62-r0
+#13 0.364 ardour-8.10.0-r2
+#13 0.364 bcc-lua-0.32.0-r0
+#13 0.364 certbot-dns-luadns-3.0.1-r0
+#13 0.364 collectd-lua-5.12.0-r21
+#13 0.364 coq-8.20.0-r0
+#13 0.364 dnsdist-luajit-1.9.7-r0
+#13 0.364 dovecot-lua-2.3.21.1-r0
+#13 0.364 fcitx5-lua-5.0.13-r0
+#13 0.364 fcitx5-lua-dev-5.0.13-r0
+#13 0.364 fcitx5-lua-lang-5.0.13-r0
+#13 0.364 fennel-lua-1.5.1-r1
+#13 0.364 fnlfmt-lua-0.3.2-r0
+#13 0.364 geany-plugins-geanylua-2.0-r1
+#13 0.364 haserl-lua5.1-0.9.36-r4
+#13 0.364 haserl-lua5.2-0.9.36-r4
+#13 0.364 haserl-lua5.3-0.9.36-r4
+#13 0.364 haserl-lua5.4-0.9.36-r4
+#13 0.364 hypermail-2.4.0-r3
+#13 0.364 john-1.9.0-r7
+#13 0.364 kamailio-lua-5.8.4-r0
+#13 0.364 lua-alt-getopt-0.8.0-r1
+#13 0.364 lua-ansicolors-1.0.2-r2
+#13 0.364 lua-aports-1.2.1-r0
+#13 0.364 lua-argparse-0.7.1-r0
+#13 0.364 lua-asn1-2.2.0-r1
+#13 0.364 lua-augeas-0.1.2-r7
+#13 0.364 lua-b64-0.1-r5
+#13 0.364 lua-basexx-0.4.1-r2
+#13 0.364 lua-bcrypt-2.3-r0
+#13 0.364 lua-binaryheap-0.4-r0
+#13 0.364 lua-bit32-5.3.0-r6
+#13 0.364 lua-bitop-1.0.2-r1
+#13 0.364 lua-brieflz-0.2.0-r2
+#13 0.364 lua-busted-2.2.0-r0
+#13 0.364 lua-cjson-2.1.0-r11
+#13 0.364 lua-cliargs-3.0.2-r0
+#13 0.364 lua-cmsgpack-0.4.0-r2
+#13 0.364 lua-compat53-0.13-r0
+#13 0.364 lua-compat53-dev-0.13-r0
+#13 0.364 lua-connman_dbus-0.5.0-r1
+#13 0.364 lua-connman_dbus-doc-0.5.0-r1
+#13 0.364 lua-copas-4.7.1-r0
+#13 0.364 lua-coxpcall-1.17.0-r1
+#13 0.364 lua-cqueues-20200726-r6
+#13 0.364 lua-cqueues-pushy-0.20180530-r1
+#13 0.364 lua-crypt-1.1.0-r0
+#13 0.364 lua-curl-0.3.13-r1
+#13 0.364 lua-date-2.2.1-r0
+#13 0.364 lua-dbi-0.7.4-r0
+#13 0.364 lua-dbus_proxy-0.10.3-r1
+#13 0.364 lua-dbus_proxy-doc-0.10.3-r1
+#13 0.364 lua-depgraph-0.2.0-r1
+#13 0.364 lua-discount-1.2.10.1-r8
+#13 0.364 lua-discount-doc-1.2.10.1-r8
+#13 0.364 lua-dmvpn-1.4.0-r3
+#13 0.364 lua-dns-20080404-r4
+#13 0.364 lua-dromozoa-utf8-1.18-r0
+#13 0.364 lua-etlua-1.3.0-r4
+#13 0.364 lua-evdev-2.2.1-r3
+#13 0.364 lua-expat-1.5.1-r1
+#13 0.364 lua-feedparser-0.71-r3
+#13 0.364 lua-fifo-0.2-r2
+#13 0.364 lua-file-magic-0.2-r5
+#13 0.364 lua-filesize-0.1.1-r2
+#13 0.364 lua-filesystem-1.8.0-r4
+#13 0.364 lua-fun-0.1.3-r11
+#13 0.364 lua-glob-pattern-0.2.1.20120406-r1
+#13 0.364 lua-gversion-0.2.0-r3
+#13 0.364 lua-hashids-1.0.6-r4
+#13 0.364 lua-hiredis-0.2.1-r6
+#13 0.364 lua-http-0.4-r2
+#13 0.364 lua-iconv-7-r4
+#13 0.364 lua-inspect-3.1.3-r0
+#13 0.364 lua-inspect-doc-3.1.3-r0
+#13 0.364 lua-json4-1.0.1-r0
+#13 0.364 lua-jsonschema-0.9.9-r1
+#13 0.364 lua-language-server-3.13.0-r0
+#13 0.364 lua-language-server-doc-3.13.0-r0
+#13 0.364 lua-lapis-1.16.0-r1
+#13 0.364 lua-lapis-annotate-1.2.1-r1
+#13 0.364 lua-lapis-annotate-doc-1.2.1-r1
+#13 0.364 lua-lapis-bayes-1.3.0-r0
+#13 0.364 lua-lapis-bayes-doc-1.3.0-r0
+#13 0.364 lua-lapis-console-1.2.0-r1
+#13 0.364 lua-lapis-console-doc-1.2.0-r1
+#13 0.364 lua-lapis-doc-1.16.0-r1
+#13 0.364 lua-lapis-eswidget-1.4.0-r1
+#13 0.364 lua-lapis-eswidget-doc-1.4.0-r1
+#13 0.364 lua-lapis-exceptions-2.4.0-r1
+#13 0.364 lua-lapis-exceptions-doc-2.4.0-r1
+#13 0.364 lua-ldap-1.3.1-r1
+#13 0.364 lua-ldbus-20150430-r4
+#13 0.364 lua-lgi-0.9.2_git20230827-r0
+#13 0.364 lua-lgi-doc-0.9.2_git20230827-r0
+#13 0.364 lua-linotify-0.5-r2
+#13 0.364 lua-loadkit-1.1.0-r2
+#13 0.364 lua-lpeg-1.1.0-r0
+#13 0.364 lua-lpeg-dev-1.1.0-r0
+#13 0.364 lua-lpeg_patterns-0.5-r2
+#13 0.364 lua-lsqlite3-0.9.6-r1
+#13 0.364 lua-luaphonenumber-1.0.1-r3
+#13 0.364 lua-luassert-1.9.0-r0
+#13 0.364 lua-luatz-0.4.1-r0
+#13 0.364 lua-luautf8-0.1.5-r0
+#13 0.364 lua-luaxml-2.0.0-r1
+#13 0.364 lua-lub-1.1.0-r3
+#13 0.364 lua-lume-2.3.0-r1
+#13 0.364 lua-lunit-0.5-r1
+#13 0.364 lua-lunix-20190403-r0
+#13 0.364 lua-lustache-1.3.1-r3
+#13 0.364 lua-luv-1.45.0.0-r0
+#13 0.364 lua-luv-dev-1.45.0.0-r0
+#13 0.364 lua-luv-static-1.45.0.0-r0
+#13 0.364 lua-lxc-3.0.2-r2
+#13 0.364 lua-lyaml-6.2.8-r1
+#13 0.364 lua-lzlib-0.4.3-r2
+#13 0.364 lua-lzmq-0.4.4-r6
+#13 0.364 lua-maxminddb-0.1-r4
+#13 0.364 lua-md5-1.3-r2
+#13 0.364 lua-mediator-1.1.2-r2
+#13 0.364 lua-microlight-1.1.1-r4
+#13 0.364 lua-middleclass-4.1.1-r2
+#13 0.364 lua-mimetypes-0_git20240207-r0
+#13 0.364 lua-mimetypes-doc-0_git20240207-r0
+#13 0.364 lua-mmdb-0.2-r0
+#13 0.364 lua-mosquitto-0.4.1-r3
+#13 0.364 lua-mpack-1.0.12-r0
+#13 0.364 lua-mqtt-publish-0.5-r0
+#13 0.364 lua-net-url-1.1-r0
+#13 0.364 lua-net-url-doc-1.1-r0
+#13 0.364 lua-openrc-0.2-r6
+#13 0.364 lua-optarg-0.4-r0
+#13 0.364 lua-optparse-1.5-r0
+#13 0.364 lua-ossl-20220711-r2
+#13 0.364 lua-pc-1.0.0-r12
+#13 0.364 lua-penlight-1.14.0-r0
+#13 0.364 lua-penlight-doc-1.14.0-r0
+#13 0.364 lua-pgmoon-1.16.0-r0
+#13 0.364 lua-pgsql-1.6.7-r0
+#13 0.364 lua-pingu-1.5.1-r0
+#13 0.364 lua-posix-36.2.1-r0
+#13 0.364 lua-posixtz-0.5-r4
+#13 0.364 lua-pty-1.2.2-r3
+#13 0.364 lua-rapidjson-0.7.1-r0
+#13 0.364 lua-redis-2.0.4-r4
+#13 0.364 lua-resty-core-0.1.29-r0
+#13 0.364 lua-resty-dns-0.18-r2
+#13 0.364 lua-resty-hmac-0.06-r1
+#13 0.364 lua-resty-http-0.17.2-r0
+#13 0.364 lua-resty-jwt-0.2.3-r2
+#13 0.364 lua-resty-lock-0.09-r2
+#13 0.364 lua-resty-lrucache-0.13-r1
+#13 0.364 lua-resty-mail-1.0.2-r1
+#13 0.364 lua-resty-openidc-1.7.5-r1
+#13 0.364 lua-resty-openssl-1.5.1-r0
+#13 0.364 lua-resty-postgres-0_git20130420-r1
+#13 0.364 lua-resty-session-3.10-r0
+#13 0.364 lua-resty-string-0.15-r0
+#13 0.364 lua-rex-2.9.2-r0
+#13 0.364 lua-rex-pcre2-2.9.2-r0
+#13 0.364 lua-rex-posix-2.9.2-r0
+#13 0.364 lua-rrd-1.9.0-r0
+#13 0.364 lua-say-1.4.1-r0
+#13 0.364 lua-schema-0_git20170304-r2
+#13 0.364 lua-sec-1.3.2-r0
+#13 0.364 lua-sec-doc-1.3.2-r0
+#13 0.364 lua-signal-1.200-r2
+#13 0.364 lua-sircbot-0.4-r7
+#13 0.364 lua-sleep-0.1-r2
+#13 0.364 lua-soap-3.0-r1
+#13 0.364 lua-socket-3.1.0-r1
+#13 0.364 lua-sql-2.6.0-r5
+#13 0.364 lua-sql-mysql-2.6.0-r5
+#13 0.364 lua-sql-odbc-2.6.0-r5
+#13 0.364 lua-sql-postgres-2.6.0-r5
+#13 0.364 lua-sql-sqlite3-2.6.0-r5
+#13 0.364 lua-sqlite-0.9.5-r6
+#13 0.364 lua-stacktraceplus-0.1.2-r0
+#13 0.364 lua-stdlib-41.2.2-r2
+#13 0.364 lua-stdlib-debug-1.0.1-r1
+#13 0.364 lua-stdlib-doc-41.2.2-r2
+#13 0.364 lua-stdlib-normalize-2.0.3-r1
+#13 0.364 lua-stringy-0.5.1-r3
+#13 0.364 lua-struct-0.2-r4
+#13 0.364 lua-subprocess-0_git20230625-r1
+#13 0.364 lua-system-0.4.4-r3
+#13 0.364 lua-tableshape-2.6.0-r0
+#13 0.364 lua-term-0.07-r2
+#13 0.364 lua-timerwheel-1.0.2-r1
+#13 0.364 lua-toml-2.0.0-r2
+#13 0.364 lua-turbo-2.1.3-r10
+#13 0.364 lua-turbo-openrc-2.1.3-r10
+#13 0.364 lua-unbound-1.0.0-r0
+#13 0.364 lua-unit-3.4-r0
+#13 0.364 lua-uuid-0.3-r0
+#13 0.364 lua-xctrl-2015.04.10-r4
+#13 0.364 lua-xctrl-doc-2015.04.10-r4
+#13 0.364 lua-yaml-1.1.2-r7
+#13 0.364 lua5.1-5.1.5-r13
+#13 0.364 lua5.1-alt-getopt-0.8.0-r1
+#13 0.364 lua5.1-ansicolors-1.0.2-r2
+#13 0.364 lua5.1-augeas-0.1.2-r7
+#13 0.364 lua5.1-basexx-0.4.1-r2
+#13 0.364 lua5.1-bcrypt-2.3-r0
+#13 0.364 lua5.1-bit32-5.3.0-r6
+#13 0.364 lua5.1-bitop-1.0.2-r1
+#13 0.364 lua5.1-brieflz-0.2.0-r2
+#13 0.364 lua5.1-busted-2.2.0-r0
+#13 0.364 lua5.1-cjson-2.1.0-r11
+#13 0.364 lua5.1-compat53-0.13-r0
+#13 0.364 lua5.1-coxpcall-1.17.0-r1
+#13 0.364 lua5.1-cqueues-20200726-r6
+#13 0.364 lua5.1-crypt-1.1.0-r0
+#13 0.364 lua5.1-curl-0.3.13-r1
+#13 0.364 lua5.1-dbg-5.1.5-r13
+#13 0.364 lua5.1-dbi-mysql-0.7.4-r0
+#13 0.364 lua5.1-dbi-postgresql-0.7.4-r0
+#13 0.364 lua5.1-dbi-sqlite3-0.7.4-r0
+#13 0.364 lua5.1-dbus_proxy-0.10.3-r1
+#13 0.364 lua5.1-depgraph-0.2.0-r1
+#13 0.364 lua5.1-dev-5.1.5-r13
+#13 0.364 lua5.1-discount-1.2.10.1-r8
+#13 0.364 lua5.1-doc-5.1.5-r13
+#13 0.364 lua5.1-etlua-1.3.0-r4
+#13 0.364 lua5.1-evdev-2.2.1-r3
+#13 0.364 lua5.1-expat-1.5.1-r1
+#13 0.364 lua5.1-fifo-0.2-r2
+#13 0.364 lua5.1-filesize-0.1.1-r2
+#13 0.364 lua5.1-filesystem-1.8.0-r4
+#13 0.364 lua5.1-glob-pattern-0.2.1.20120406-r1
+#13 0.364 lua5.1-hashids-1.0.6-r4
+#13 0.364 lua5.1-hiredis-0.2.1-r6
+#13 0.364 lua5.1-http-0.4-r2
+#13 0.364 lua5.1-iconv-7-r4
+#13 0.364 lua5.1-jsonschema-0.9.9-r1
+#13 0.364 lua5.1-lapis-1.16.0-r1
+#13 0.364 lua5.1-lapis-annotate-1.2.1-r1
+#13 0.364 lua5.1-lapis-bayes-1.3.0-r0
+#13 0.364 lua5.1-lapis-console-1.2.0-r1
+#13 0.364 lua5.1-lapis-eswidget-1.4.0-r1
+#13 0.364 lua5.1-lapis-exceptions-2.4.0-r1
+#13 0.364 lua5.1-lapis-openrc-1.16.0-r1
+#13 0.364 lua5.1-ldap-1.3.1-r1
+#13 0.364 lua5.1-ldbus-20150430-r4
+#13 0.364 lua5.1-lgi-0.9.2_git20230827-r0
+#13 0.364 lua5.1-libs-5.1.5-r13
+#13 0.364 lua5.1-linotify-0.5-r2
+#13 0.364 lua5.1-loadkit-1.1.0-r2
+#13 0.364 lua5.1-lpeg-1.1.0-r0
+#13 0.364 lua5.1-lpeg_patterns-0.5-r2
+#13 0.364 lua5.1-lsqlite3-0.9.6-r1
+#13 0.364 lua5.1-luaphonenumber-1.0.1-r3
+#13 0.364 lua5.1-luasrcdiet-1.0.0-r2
+#13 0.364 lua5.1-luassert-1.9.0-r0
+#13 0.364 lua5.1-luatz-0.4.1-r0
+#13 0.364 lua5.1-luautf8-0.1.5-r0
+#13 0.364 lua5.1-lume-2.3.0-r1
+#13 0.364 lua5.1-lunit-0.5-r1
+#13 0.364 lua5.1-lunix-20190403-r0
+#13 0.364 lua5.1-luv-1.45.0.0-r0
+#13 0.364 lua5.1-lxc-3.0.2-r2
+#13 0.364 lua5.1-lyaml-6.2.8-r1
+#13 0.364 lua5.1-lzlib-0.4.3-r2
+#13 0.364 lua5.1-lzmq-0.4.4-r6
+#13 0.364 lua5.1-maxminddb-0.1-r4
+#13 0.364 lua5.1-md5-1.3-r2
+#13 0.364 lua5.1-mediator-1.1.2-r2
+#13 0.364 lua5.1-microlight-1.1.1-r4
+#13 0.364 lua5.1-middleclass-4.1.1-r2
+#13 0.364 lua5.1-mmdb-0.2-r0
+#13 0.364 lua5.1-moonscript-0.5.0-r3
+#13 0.364 lua5.1-mosquitto-0.4.1-r3
+#13 0.364 lua5.1-mpack-1.0.12-r0
+#13 0.364 lua5.1-mqtt-publish-0.5-r0
+#13 0.364 lua5.1-net-url-1.1-r0
+#13 0.364 lua5.1-openrc-0.2-r6
+#13 0.364 lua5.1-optarg-0.4-r0
+#13 0.364 lua5.1-optparse-1.5-r0
+#13 0.364 lua5.1-ossl-20220711-r2
+#13 0.364 lua5.1-pc-1.0.0-r12
+#13 0.364 lua5.1-penlight-1.14.0-r0
+#13 0.364 lua5.1-pgmoon-1.16.0-r0
+#13 0.364 lua5.1-pgsql-1.6.7-r0
+#13 0.364 lua5.1-posix-36.2.1-r0
+#13 0.364 lua5.1-posixtz-0.5-r4
+#13 0.364 lua5.1-pty-1.2.2-r3
+#13 0.364 lua5.1-rapidjson-0.7.1-r0
+#13 0.364 lua5.1-redis-2.0.4-r4
+#13 0.364 lua5.1-resty-dns-0.18-r2
+#13 0.364 lua5.1-rex-pcre2-2.9.2-r0
+#13 0.364 lua5.1-rex-posix-2.9.2-r0
+#13 0.364 lua5.1-say-1.4.1-r0
+#13 0.364 lua5.1-sec-1.3.2-r0
+#13 0.364 lua5.1-sircbot-0.4-r7
+#13 0.364 lua5.1-socket-3.1.0-r1
+#13 0.364 lua5.1-sql-mysql-2.6.0-r5
+#13 0.364 lua5.1-sql-odbc-2.6.0-r5
+#13 0.364 lua5.1-sql-postgres-2.6.0-r5
+#13 0.364 lua5.1-sql-sqlite3-2.6.0-r5
+#13 0.364 lua5.1-sqlite-0.9.5-r6
+#13 0.364 lua5.1-stdlib-41.2.2-r2
+#13 0.364 lua5.1-stringy-0.5.1-r3
+#13 0.364 lua5.1-struct-0.2-r4
+#13 0.364 lua5.1-subprocess-0_git20230625-r1
+#13 0.364 lua5.1-system-0.4.4-r3
+#13 0.364 lua5.1-tableshape-2.6.0-r0
+#13 0.364 lua5.1-term-0.07-r2
+#13 0.364 lua5.1-toml-2.0.0-r2
+#13 0.364 lua5.1-unbound-1.0.0-r0
+#13 0.364 lua5.1-unit-3.4-r0
+#13 0.364 lua5.1-uuid-0.3-r0
+#13 0.364 lua5.1-xctrl-2015.04.10-r4
+#13 0.364 lua5.1-yaml-1.1.2-r7
+#13 0.364 lua5.2-5.2.4-r13
+#13 0.364 lua5.2-alt-getopt-0.8.0-r1
+#13 0.364 lua5.2-ansicolors-1.0.2-r2
+#13 0.364 lua5.2-augeas-0.1.2-r7
+#13 0.364 lua5.2-b64-0.1-r5
+#13 0.364 lua5.2-basexx-0.4.1-r2
+#13 0.364 lua5.2-bcrypt-2.3-r0
+#13 0.364 lua5.2-bit32-5.3.0-r6
+#13 0.364 lua5.2-bitop-1.0.2-r1
+#13 0.364 lua5.2-brieflz-0.2.0-r2
+#13 0.364 lua5.2-busted-2.2.0-r0
+#13 0.364 lua5.2-cjson-2.1.0-r11
+#13 0.364 lua5.2-compat53-0.13-r0
+#13 0.364 lua5.2-connman_dbus-0.5.0-r1
+#13 0.364 lua5.2-coxpcall-1.17.0-r1
+#13 0.364 lua5.2-cqueues-20200726-r6
+#13 0.364 lua5.2-cqueues-pushy-0.20180530-r1
+#13 0.364 lua5.2-crypt-1.1.0-r0
+#13 0.364 lua5.2-curl-0.3.13-r1
+#13 0.364 lua5.2-dbg-5.2.4-r13
+#13 0.364 lua5.2-dbi-mysql-0.7.4-r0
+#13 0.364 lua5.2-dbi-postgresql-0.7.4-r0
+#13 0.364 lua5.2-dbi-sqlite3-0.7.4-r0
+#13 0.364 lua5.2-dbus_proxy-0.10.3-r1
+#13 0.364 lua5.2-depgraph-0.2.0-r1
+#13 0.364 lua5.2-dev-5.2.4-r13
+#13 0.364 lua5.2-discount-1.2.10.1-r8
+#13 0.364 lua5.2-doc-5.2.4-r13
+#13 0.364 lua5.2-etlua-1.3.0-r4
+#13 0.364 lua5.2-evdev-2.2.1-r3
+#13 0.364 lua5.2-expat-1.5.1-r1
+#13 0.364 lua5.2-fifo-0.2-r2
+#13 0.364 lua5.2-file-magic-0.2-r5
+#13 0.364 lua5.2-filesize-0.1.1-r2
+#13 0.364 lua5.2-filesystem-1.8.0-r4
+#13 0.364 lua5.2-glob-pattern-0.2.1.20120406-r1
+#13 0.364 lua5.2-hashids-1.0.6-r4
+#13 0.364 lua5.2-hiredis-0.2.1-r6
+#13 0.364 lua5.2-http-0.4-r2
+#13 0.364 lua5.2-iconv-7-r4
+#13 0.364 lua5.2-jsonschema-0.9.9-r1
+#13 0.364 lua5.2-lapis-1.16.0-r1
+#13 0.364 lua5.2-lapis-annotate-1.2.1-r1
+#13 0.364 lua5.2-lapis-bayes-1.3.0-r0
+#13 0.364 lua5.2-lapis-console-1.2.0-r1
+#13 0.364 lua5.2-lapis-eswidget-1.4.0-r1
+#13 0.364 lua5.2-lapis-exceptions-2.4.0-r1
+#13 0.364 lua5.2-lapis-openrc-1.16.0-r1
+#13 0.364 lua5.2-ldap-1.3.1-r1
+#13 0.364 lua5.2-ldbus-20150430-r4
+#13 0.364 lua5.2-lgi-0.9.2_git20230827-r0
+#13 0.364 lua5.2-libs-5.2.4-r13
+#13 0.364 lua5.2-linotify-0.5-r2
+#13 0.364 lua5.2-loadkit-1.1.0-r2
+#13 0.364 lua5.2-lpeg-1.1.0-r0
+#13 0.364 lua5.2-lpeg_patterns-0.5-r2
+#13 0.364 lua5.2-lsqlite3-0.9.6-r1
+#13 0.364 lua5.2-luaphonenumber-1.0.1-r3
+#13 0.364 lua5.2-luasrcdiet-1.0.0-r2
+#13 0.364 lua5.2-luassert-1.9.0-r0
+#13 0.364 lua5.2-luatz-0.4.1-r0
+#13 0.364 lua5.2-luautf8-0.1.5-r0
+#13 0.364 lua5.2-luaxml-2.0.0-r1
+#13 0.364 lua5.2-lume-2.3.0-r1
+#13 0.364 lua5.2-lunit-0.5-r1
+#13 0.364 lua5.2-lunix-20190403-r0
+#13 0.364 lua5.2-lxc-3.0.2-r2
+#13 0.364 lua5.2-lyaml-6.2.8-r1
+#13 0.364 lua5.2-lzlib-0.4.3-r2
+#13 0.364 lua5.2-lzmq-0.4.4-r6
+#13 0.364 lua5.2-maxminddb-0.1-r4
+#13 0.364 lua5.2-md5-1.3-r2
+#13 0.364 lua5.2-mediator-1.1.2-r2
+#13 0.364 lua5.2-microlight-1.1.1-r4
+#13 0.364 lua5.2-middleclass-4.1.1-r2
+#13 0.364 lua5.2-mmdb-0.2-r0
+#13 0.364 lua5.2-moonscript-0.5.0-r3
+#13 0.364 lua5.2-mosquitto-0.4.1-r3
+#13 0.364 lua5.2-mqtt-publish-0.5-r0
+#13 0.364 lua5.2-net-url-1.1-r0
+#13 0.364 lua5.2-openrc-0.2-r6
+#13 0.364 lua5.2-optarg-0.4-r0
+#13 0.364 lua5.2-optparse-1.5-r0
+#13 0.364 lua5.2-ossl-20220711-r2
+#13 0.364 lua5.2-pc-1.0.0-r12
+#13 0.364 lua5.2-penlight-1.14.0-r0
+#13 0.364 lua5.2-pgmoon-1.16.0-r0
+#13 0.364 lua5.2-pgsql-1.6.7-r0
+#13 0.364 lua5.2-posix-36.2.1-r0
+#13 0.364 lua5.2-posixtz-0.5-r4
+#13 0.364 lua5.2-pty-1.2.2-r3
+#13 0.364 lua5.2-rapidjson-0.7.1-r0
+#13 0.364 lua5.2-redis-2.0.4-r4
+#13 0.364 lua5.2-rex-pcre2-2.9.2-r0
+#13 0.364 lua5.2-rex-posix-2.9.2-r0
+#13 0.364 lua5.2-say-1.4.1-r0
+#13 0.364 lua5.2-sec-1.3.2-r0
+#13 0.364 lua5.2-sircbot-0.4-r7
+#13 0.364 lua5.2-socket-3.1.0-r1
+#13 0.364 lua5.2-sql-mysql-2.6.0-r5
+#13 0.364 lua5.2-sql-odbc-2.6.0-r5
+#13 0.364 lua5.2-sql-postgres-2.6.0-r5
+#13 0.364 lua5.2-sql-sqlite3-2.6.0-r5
+#13 0.364 lua5.2-sqlite-0.9.5-r6
+#13 0.364 lua5.2-stdlib-41.2.2-r2
+#13 0.364 lua5.2-stringy-0.5.1-r3
+#13 0.364 lua5.2-struct-0.2-r4
+#13 0.364 lua5.2-subprocess-0_git20230625-r1
+#13 0.364 lua5.2-system-0.4.4-r3
+#13 0.364 lua5.2-tableshape-2.6.0-r0
+#13 0.364 lua5.2-term-0.07-r2
+#13 0.364 lua5.2-toml-2.0.0-r2
+#13 0.364 lua5.2-unbound-1.0.0-r0
+#13 0.364 lua5.2-unit-3.4-r0
+#13 0.364 lua5.2-uuid-0.3-r0
+#13 0.364 lua5.2-yaml-1.1.2-r7
+#13 0.364 lua5.3-5.3.6-r6
+#13 0.364 lua5.3-alt-getopt-0.8.0-r1
+#13 0.364 lua5.3-ansicolors-1.0.2-r2
+#13 0.364 lua5.3-apk-2.14.6-r2
+#13 0.364 lua5.3-augeas-0.1.2-r7
+#13 0.364 lua5.3-b64-0.1-r5
+#13 0.364 lua5.3-basexx-0.4.1-r2
+#13 0.364 lua5.3-bcrypt-2.3-r0
+#13 0.364 lua5.3-bit32-5.3.0-r6
+#13 0.364 lua5.3-bitop-1.0.2-r1
+#13 0.364 lua5.3-brieflz-0.2.0-r2
+#13 0.364 lua5.3-busted-2.2.0-r0
+#13 0.364 lua5.3-cjson-2.1.0-r11
+#13 0.364 lua5.3-compat53-0.13-r0
+#13 0.364 lua5.3-connman_dbus-0.5.0-r1
+#13 0.364 lua5.3-coxpcall-1.17.0-r1
+#13 0.364 lua5.3-cqueues-20200726-r6
+#13 0.364 lua5.3-cqueues-pushy-0.20180530-r1
+#13 0.364 lua5.3-crypt-1.1.0-r0
+#13 0.364 lua5.3-curl-0.3.13-r1
+#13 0.364 lua5.3-dbg-5.3.6-r6
+#13 0.364 lua5.3-dbi-mysql-0.7.4-r0
+#13 0.364 lua5.3-dbi-postgresql-0.7.4-r0
+#13 0.364 lua5.3-dbi-sqlite3-0.7.4-r0
+#13 0.364 lua5.3-dbus_proxy-0.10.3-r1
+#13 0.364 lua5.3-depgraph-0.2.0-r1
+#13 0.364 lua5.3-dev-5.3.6-r6
+#13 0.364 lua5.3-discount-1.2.10.1-r8
+#13 0.364 lua5.3-doc-5.3.6-r6
+#13 0.364 lua5.3-etlua-1.3.0-r4
+#13 0.364 lua5.3-evdev-2.2.1-r3
+#13 0.364 lua5.3-expat-1.5.1-r1
+#13 0.364 lua5.3-fifo-0.2-r2
+#13 0.364 lua5.3-file-magic-0.2-r5
+#13 0.364 lua5.3-filesize-0.1.1-r2
+#13 0.364 lua5.3-filesystem-1.8.0-r4
+#13 0.364 lua5.3-glob-pattern-0.2.1.20120406-r1
+#13 0.364 lua5.3-hashids-1.0.6-r4
+#13 0.364 lua5.3-hiredis-0.2.1-r6
+#13 0.364 lua5.3-http-0.4-r2
+#13 0.364 lua5.3-iconv-7-r4
+#13 0.364 lua5.3-jsonschema-0.9.9-r1
+#13 0.364 lua5.3-lapis-1.16.0-r1
+#13 0.364 lua5.3-lapis-annotate-1.2.1-r1
+#13 0.364 lua5.3-lapis-bayes-1.3.0-r0
+#13 0.364 lua5.3-lapis-console-1.2.0-r1
+#13 0.364 lua5.3-lapis-eswidget-1.4.0-r1
+#13 0.364 lua5.3-lapis-exceptions-2.4.0-r1
+#13 0.364 lua5.3-lapis-openrc-1.16.0-r1
+#13 0.364 lua5.3-ldap-1.3.1-r1
+#13 0.364 lua5.3-ldbus-20150430-r4
+#13 0.364 lua5.3-lgi-0.9.2_git20230827-r0
+#13 0.364 lua5.3-libs-5.3.6-r6
+#13 0.364 lua5.3-linotify-0.5-r2
+#13 0.364 lua5.3-loadkit-1.1.0-r2
+#13 0.364 lua5.3-lpeg-1.1.0-r0
+#13 0.364 lua5.3-lpeg_patterns-0.5-r2
+#13 0.364 lua5.3-lsqlite3-0.9.6-r1
+#13 0.364 lua5.3-luaphonenumber-1.0.1-r3
+#13 0.364 lua5.3-luasrcdiet-1.0.0-r2
+#13 0.364 lua5.3-luassert-1.9.0-r0
+#13 0.364 lua5.3-luatz-0.4.1-r0
+#13 0.364 lua5.3-luautf8-0.1.5-r0
+#13 0.364 lua5.3-luaxml-2.0.0-r1
+#13 0.364 lua5.3-lume-2.3.0-r1
+#13 0.364 lua5.3-lunit-0.5-r1
+#13 0.364 lua5.3-lunix-20190403-r0
+#13 0.364 lua5.3-lxc-3.0.2-r2
+#13 0.364 lua5.3-lyaml-6.2.8-r1
+#13 0.364 lua5.3-lzlib-0.4.3-r2
+#13 0.364 lua5.3-lzmq-0.4.4-r6
+#13 0.364 lua5.3-maxminddb-0.1-r4
+#13 0.364 lua5.3-md5-1.3-r2
+#13 0.364 lua5.3-mediator-1.1.2-r2
+#13 0.364 lua5.3-microlight-1.1.1-r4
+#13 0.364 lua5.3-middleclass-4.1.1-r2
+#13 0.364 lua5.3-mmdb-0.2-r0
+#13 0.364 lua5.3-moonscript-0.5.0-r3
+#13 0.364 lua5.3-mosquitto-0.4.1-r3
+#13 0.364 lua5.3-mpack-1.0.12-r0
+#13 0.364 lua5.3-mqtt-publish-0.5-r0
+#13 0.364 lua5.3-net-url-1.1-r0
+#13 0.364 lua5.3-openrc-0.2-r6
+#13 0.364 lua5.3-optarg-0.4-r0
+#13 0.364 lua5.3-optparse-1.5-r0
+#13 0.364 lua5.3-ossl-20220711-r2
+#13 0.364 lua5.3-pc-1.0.0-r12
+#13 0.364 lua5.3-penlight-1.14.0-r0
+#13 0.364 lua5.3-pgmoon-1.16.0-r0
+#13 0.364 lua5.3-pgsql-1.6.7-r0
+#13 0.364 lua5.3-posix-36.2.1-r0
+#13 0.364 lua5.3-posixtz-0.5-r4
+#13 0.364 lua5.3-pty-1.2.2-r3
+#13 0.364 lua5.3-rapidjson-0.7.1-r0
+#13 0.364 lua5.3-redis-2.0.4-r4
+#13 0.364 lua5.3-rex-pcre2-2.9.2-r0
+#13 0.364 lua5.3-rex-posix-2.9.2-r0
+#13 0.364 lua5.3-say-1.4.1-r0
+#13 0.364 lua5.3-sec-1.3.2-r0
+#13 0.364 lua5.3-sircbot-0.4-r7
+#13 0.364 lua5.3-socket-3.1.0-r1
+#13 0.364 lua5.3-sql-mysql-2.6.0-r5
+#13 0.364 lua5.3-sql-odbc-2.6.0-r5
+#13 0.364 lua5.3-sql-postgres-2.6.0-r5
+#13 0.364 lua5.3-sql-sqlite3-2.6.0-r5
+#13 0.364 lua5.3-sqlite-0.9.5-r6
+#13 0.364 lua5.3-stdlib-41.2.2-r2
+#13 0.364 lua5.3-stringy-0.5.1-r3
+#13 0.364 lua5.3-struct-0.2-r4
+#13 0.364 lua5.3-subprocess-0_git20230625-r1
+#13 0.364 lua5.3-system-0.4.4-r3
+#13 0.364 lua5.3-tableshape-2.6.0-r0
+#13 0.364 lua5.3-term-0.07-r2
+#13 0.364 lua5.3-toml-2.0.0-r2
+#13 0.364 lua5.3-unbound-1.0.0-r0
+#13 0.364 lua5.3-unit-3.4-r0
+#13 0.364 lua5.3-uuid-0.3-r0
+#13 0.364 lua5.3-yaml-1.1.2-r7
+#13 0.364 lua5.4-5.4.7-r0
+#13 0.364 lua5.4-alt-getopt-0.8.0-r1
+#13 0.364 lua5.4-ansicolors-1.0.2-r2
+#13 0.364 lua5.4-augeas-0.1.2-r7
+#13 0.364 lua5.4-b64-0.1-r5
+#13 0.364 lua5.4-basexx-0.4.1-r2
+#13 0.364 lua5.4-bcrypt-2.3-r0
+#13 0.364 lua5.4-bit32-5.3.0-r6
+#13 0.364 lua5.4-bitop-1.0.2-r1
+#13 0.364 lua5.4-brieflz-0.2.0-r2
+#13 0.364 lua5.4-busted-2.2.0-r0
+#13 0.364 lua5.4-cjson-2.1.0-r11
+#13 0.364 lua5.4-connman_dbus-0.5.0-r1
+#13 0.364 lua5.4-coxpcall-1.17.0-r1
+#13 0.364 lua5.4-cqueues-20200726-r6
+#13 0.364 lua5.4-crypt-1.1.0-r0
+#13 0.364 lua5.4-curl-0.3.13-r1
+#13 0.364 lua5.4-dbg-5.4.7-r0
+#13 0.364 lua5.4-dbi-mysql-0.7.4-r0
+#13 0.364 lua5.4-dbi-postgresql-0.7.4-r0
+#13 0.364 lua5.4-dbi-sqlite3-0.7.4-r0
+#13 0.364 lua5.4-dbus_proxy-0.10.3-r1
+#13 0.364 lua5.4-dev-5.4.7-r0
+#13 0.364 lua5.4-discount-1.2.10.1-r8
+#13 0.364 lua5.4-doc-5.4.7-r0
+#13 0.364 lua5.4-etlua-1.3.0-r4
+#13 0.364 lua5.4-expat-1.5.1-r1
+#13 0.364 lua5.4-file-magic-0.2-r5
+#13 0.364 lua5.4-filesize-0.1.1-r2
+#13 0.364 lua5.4-filesystem-1.8.0-r4
+#13 0.364 lua5.4-graphviz-12.2.0-r0
+#13 0.364 lua5.4-hashids-1.0.6-r4
+#13 0.364 lua5.4-hiredis-0.2.1-r6
+#13 0.364 lua5.4-iconv-7-r4
+#13 0.364 lua5.4-jsonschema-0.9.9-r1
+#13 0.364 lua5.4-lapis-1.16.0-r1
+#13 0.364 lua5.4-lapis-annotate-1.2.1-r1
+#13 0.364 lua5.4-lapis-bayes-1.3.0-r0
+#13 0.364 lua5.4-lapis-console-1.2.0-r1
+#13 0.364 lua5.4-lapis-eswidget-1.4.0-r1
+#13 0.364 lua5.4-lapis-exceptions-2.4.0-r1
+#13 0.364 lua5.4-lapis-openrc-1.16.0-r1
+#13 0.364 lua5.4-ldap-1.3.1-r1
+#13 0.364 lua5.4-lgi-0.9.2_git20230827-r0
+#13 0.364 lua5.4-libs-5.4.7-r0
+#13 0.364 lua5.4-linotify-0.5-r2
+#13 0.364 lua5.4-loadkit-1.1.0-r2
+#13 0.364 lua5.4-lpeg-1.1.0-r0
+#13 0.364 lua5.4-lsqlite3-0.9.6-r1
+#13 0.364 lua5.4-luaphonenumber-1.0.1-r3
+#13 0.364 lua5.4-luassert-1.9.0-r0
+#13 0.364 lua5.4-luautf8-0.1.5-r0
+#13 0.364 lua5.4-luaxml-2.0.0-r1
+#13 0.364 lua5.4-lume-2.3.0-r1
+#13 0.364 lua5.4-lunit-0.5-r1
+#13 0.364 lua5.4-luv-1.45.0.0-r0
+#13 0.364 lua5.4-lxc-3.0.2-r2
+#13 0.364 lua5.4-lyaml-6.2.8-r1
+#13 0.364 lua5.4-lzlib-0.4.3-r2
+#13 0.364 lua5.4-lzmq-0.4.4-r6
+#13 0.364 lua5.4-maxminddb-0.1-r4
+#13 0.364 lua5.4-md5-1.3-r2
+#13 0.364 lua5.4-mediator-1.1.2-r2
+#13 0.364 lua5.4-microlight-1.1.1-r4
+#13 0.364 lua5.4-middleclass-4.1.1-r2
+#13 0.364 lua5.4-moonscript-0.5.0-r3
+#13 0.364 lua5.4-mosquitto-0.4.1-r3
+#13 0.364 lua5.4-mpack-1.0.12-r0
+#13 0.364 lua5.4-mqtt-publish-0.5-r0
+#13 0.364 lua5.4-net-url-1.1-r0
+#13 0.364 lua5.4-openrc-0.2-r6
+#13 0.364 lua5.4-optarg-0.4-r0
+#13 0.364 lua5.4-optparse-1.5-r0
+#13 0.364 lua5.4-ossl-20220711-r2
+#13 0.364 lua5.4-pc-1.0.0-r12
+#13 0.364 lua5.4-penlight-1.14.0-r0
+#13 0.364 lua5.4-pgmoon-1.16.0-r0
+#13 0.364 lua5.4-pgsql-1.6.7-r0
+#13 0.364 lua5.4-posix-36.2.1-r0
+#13 0.364 lua5.4-posixtz-0.5-r4
+#13 0.364 lua5.4-pty-1.2.2-r3
+#13 0.364 lua5.4-rex-pcre2-2.9.2-r0
+#13 0.364 lua5.4-rex-posix-2.9.2-r0
+#13 0.364 lua5.4-say-1.4.1-r0
+#13 0.364 lua5.4-sec-1.3.2-r0
+#13 0.364 lua5.4-sircbot-0.4-r7
+#13 0.364 lua5.4-socket-3.1.0-r1
+#13 0.364 lua5.4-sql-mysql-2.6.0-r5
+#13 0.364 lua5.4-sql-odbc-2.6.0-r5
+#13 0.364 lua5.4-sql-postgres-2.6.0-r5
+#13 0.364 lua5.4-sql-sqlite3-2.6.0-r5
+#13 0.364 lua5.4-sqlite-0.9.5-r6
+#13 0.364 lua5.4-stdlib-41.2.2-r2
+#13 0.364 lua5.4-stringy-0.5.1-r3
+#13 0.364 lua5.4-struct-0.2-r4
+#13 0.364 lua5.4-subprocess-0_git20230625-r1
+#13 0.364 lua5.4-system-0.4.4-r3
+#13 0.364 lua5.4-tableshape-2.6.0-r0
+#13 0.364 lua5.4-term-0.07-r2
+#13 0.364 lua5.4-unbound-1.0.0-r0
+#13 0.364 lua5.4-unit-3.4-r0
+#13 0.364 lua5.4-uuid-0.3-r0
+#13 0.372 lua5.4-yaml-1.1.2-r7
+#13 0.372 luacheck-0.26.1-r0
+#13 0.372 luajit-2.1_p20240815-r0
+#13 0.372 luajit-dev-2.1_p20240815-r0
+#13 0.372 luajit-doc-2.1_p20240815-r0
+#13 0.372 luakit-2.3.6-r0
+#13 0.372 luakit-doc-2.3.6-r0
+#13 0.372 luarocks-3.11.1-r0
+#13 0.372 luarocks5.1-3.11.1-r0
+#13 0.372 luarocks5.2-3.11.1-r0
+#13 0.372 luarocks5.3-3.11.1-r0
+#13 0.372 luarocks5.4-3.11.1-r0
+#13 0.372 luasrcdiet-1.0.0-r2
+#13 0.372 luau-0.621-r0
+#13 0.372 nginx-mod-http-lua-1.26.2-r4
+#13 0.372 nginx-mod-http-lua-upstream-1.26.2-r4
+#13 0.372 openresty-mod-http-lua-1.27.1.1-r1
+#13 0.372 openresty-mod-http-lua-upstream-1.27.1.1-r1
+#13 0.372 opensubdiv-tools-3.6.0-r0
+#13 0.372 pdns-backend-lua2-4.9.2-r0
+#13 0.372 pdns-recursor-luajit-5.1.3-r0
+#13 0.372 php82-pecl-luasandbox-4.1.2-r0
+#13 0.372 php83-pecl-luasandbox-4.1.2-r0
+#13 0.372 postgresql-pllua-2.0.12-r2
+#13 0.372 postgresql-pllua-dev-2.0.12-r2
+#13 0.372 rpm-4.19.1.1-r1
+#13 0.372 snort-3.5.2.0-r0
+#13 0.372 squark-0.6.1-r6
+#13 0.372 stylua-0.20.0-r0
+#13 0.372 teal-0.24.1-r0
+#13 0.372 texlive-binextra-20240210.69778-r8
+#13 0.372 texlive-dev-20240210.69778-r8
+#13 0.372 texlive-dvi-20240210.69778-r8
+#13 0.372 texlive-luatex-20240210.69778-r8
+#13 0.372 texmf-dist-luatex-2024.0-r6
+#13 0.372 texmf-dist-luatex-doc-2024.0-r6
+#13 0.372 texmf-dist-luatex-examples-2024.0-r6
+#13 0.372 tolua++-1.0.93-r5
+#13 0.372 trafficserver9-plugin-lua-9.2.6-r0
+#13 0.372 tree-sitter-lua-0.2.0-r0
+#13 0.402 uwsgi-lua-2.0.27-r0
+#13 0.402 weechat-lua-4.4.4-r0
+#13 0.402 xapian-bindings-lua-1.4.26-r0
+#13 DONE 0.4s
+
+#14 [10/14] RUN echo "==== Installing luarocks ===="
+#14 0.100 ==== Installing luarocks ====
+#14 DONE 0.1s
+
+#15 [11/14] RUN apk add --no-cache lua5.3-luarocks
+#15 0.131 fetch https://dl-cdn.alpinelinux.org/alpine/v3.21/main/aarch64/APKINDEX.tar.gz
+#15 0.313 fetch https://dl-cdn.alpinelinux.org/alpine/v3.21/community/aarch64/APKINDEX.tar.gz
+#15 0.534 ERROR: unable to select packages:
+#15 0.534   lua5.3-luarocks (no such package):
+#15 0.534     required by: world[lua5.3-luarocks]
+#15 ERROR: process "/bin/sh -c apk add --no-cache lua5.3-luarocks" did not complete successfully: exit code: 1
+------
+ > [11/14] RUN apk add --no-cache lua5.3-luarocks:
+0.131 fetch https://dl-cdn.alpinelinux.org/alpine/v3.21/main/aarch64/APKINDEX.tar.gz
+0.313 fetch https://dl-cdn.alpinelinux.org/alpine/v3.21/community/aarch64/APKINDEX.tar.gz
+0.534 ERROR: unable to select packages:
+0.534   lua5.3-luarocks (no such package):
+0.534     required by: world[lua5.3-luarocks]
+------
+Dockerfile:16
+--------------------
+  14 |     
+  15 |     RUN echo "==== Installing luarocks ===="
+  16 | >>> RUN apk add --no-cache lua5.3-luarocks
+  17 |     
+  18 |     # After installing, verify installation
+--------------------
+ERROR: failed to solve: process "/bin/sh -c apk add --no-cache lua5.3-luarocks" did not complete successfully: exit code: 1
+331  /usr/local/bin/dockerd --config-file /run/config/docker/daemon.json --containerd /run/containerd/containerd.sock --pidfile /run/desktop/docker.pid --swarm-default-advertise-addr=192.168.65.3 --host-gateway-ip 192.168.65.254
+github.com/moby/buildkit/executor/runcexecutor.exitError
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/executor/runcexecutor/executor.go:391
+github.com/moby/buildkit/executor/runcexecutor.(*runcExecutor).Run
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/executor/runcexecutor/executor.go:339
+github.com/moby/buildkit/solver/llbsolver/ops.(*ExecOp).Exec
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/solver/llbsolver/ops/exec.go:472
+github.com/moby/buildkit/solver.(*sharedOp).Exec.func2
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/solver/jobs.go:1100
+github.com/moby/buildkit/util/flightcontrol.(*call[...]).run
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/util/flightcontrol/flightcontrol.go:122
+sync.(*Once).doSlow
+	/usr/local/go/src/sync/once.go:74
+sync.(*Once).Do
+	/usr/local/go/src/sync/once.go:65
+runtime.goexit
+	/usr/local/go/src/runtime/asm_arm64.s:1222
+
+87963 v0.19.2-desktop.1 /Users/agustinallamanocosta/.docker/cli-plugins/docker-buildx --debug buildx build . -t pulpero:latest --progress=plain --no-cache
+google.golang.org/grpc.(*ClientConn).Invoke
+	google.golang.org/grpc@v1.66.3/call.go:35
+github.com/moby/buildkit/api/services/control.(*controlClient).Solve
+	github.com/moby/buildkit@v0.18.0/api/services/control/control_grpc.pb.go:88
+github.com/moby/buildkit/client.(*Client).solve.func2
+	github.com/moby/buildkit@v0.18.0/client/solve.go:269
+golang.org/x/sync/errgroup.(*Group).Go.func1
+	golang.org/x/sync@v0.8.0/errgroup/errgroup.go:78
+runtime.goexit
+	runtime/asm_arm64.s:1223
+
+331  /usr/local/bin/dockerd --config-file /run/config/docker/daemon.json --containerd /run/containerd/containerd.sock --pidfile /run/desktop/docker.pid --swarm-default-advertise-addr=192.168.65.3 --host-gateway-ip 192.168.65.254
+github.com/moby/buildkit/solver.(*edge).execOp
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/solver/edge.go:966
+github.com/moby/buildkit/solver/internal/pipe.NewWithFunction[...].func2
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/solver/internal/pipe/pipe.go:78
+runtime.goexit
+	/usr/local/go/src/runtime/asm_arm64.s:1222
+
+87963 v0.19.2-desktop.1 /Users/agustinallamanocosta/.docker/cli-plugins/docker-buildx --debug buildx build . -t pulpero:latest --progress=plain --no-cache
+github.com/moby/buildkit/client.(*Client).solve.func2
+	github.com/moby/buildkit@v0.18.0/client/solve.go:285
+golang.org/x/sync/errgroup.(*Group).Go.func1
+	golang.org/x/sync@v0.8.0/errgroup/errgroup.go:78
+
+331  /usr/local/bin/dockerd --config-file /run/config/docker/daemon.json --containerd /run/containerd/containerd.sock --pidfile /run/desktop/docker.pid --swarm-default-advertise-addr=192.168.65.3 --host-gateway-ip 192.168.65.254
+github.com/moby/buildkit/solver/llbsolver/ops.(*ExecOp).Exec
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/solver/llbsolver/ops/exec.go:493
+github.com/moby/buildkit/solver.(*sharedOp).Exec.func2
+	/root/build-deb/engine/vendor/github.com/moby/buildkit/solver/jobs.go:1100
+

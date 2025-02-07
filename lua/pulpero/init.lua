@@ -1,7 +1,29 @@
+local function addPulperoToPath()
+    local current_file = debug.getinfo(1, "S").source:sub(2)
+    local plugin_root = current_file:match("(.*/)"):sub(1, -2):match("(.*/)"):sub(1, -2)
+
+    local paths = {
+        plugin_root .. "/?.lua",
+        plugin_root .. "/?/init.lua",
+        plugin_root .. "/pulpero/?.lua",
+        plugin_root .. "/pulpero/core/?.lua",
+        plugin_root .. "/pulpero/util/?.lua"
+    }
+
+    for _, path in ipairs(paths) do
+        if not package.path:match(path:gsub("[%.%/]", "%%%1")) then
+            package.path = path .. ";" .. package.path
+        end
+    end
+
+    return plugin_root
+end
+
+local plugin_root = addPulperoToPath()
 local OSCommands = require('core.util.OSCommands')
+local Setup = require('setup')
 local Runner = require('model_runner')
 local Pairing = require('pairing')
-local Setup = require('setup')
 local Logger = require('logger')
 local Parser = require('parser')
 local UI = require('ui')
