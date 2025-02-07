@@ -1,5 +1,6 @@
 local OSCommands = require('core.util.OSCommands')
 local Runner = require('model_runner')
+local Pairing = require('pairing')
 local Setup = require('setup')
 local Logger = require('logger')
 local Parser = require('parser')
@@ -13,6 +14,7 @@ local logger = nil
 local setup = nil
 local ui = nil
 local chat = nil
+local pairing = nil
 local enable = true
 
 function M.setup()
@@ -31,6 +33,7 @@ function M.setup()
     runner = Runner.new(config, logger, parser)
     ui = UI.new(config)
     chat = Chat.new(ui, runner, config)
+    pairing = Pairing.new(ui, runner, config)
     chat:close()
 
     local function get_visual_selection()
@@ -135,28 +138,48 @@ function M.setup()
         end
     end, { range = true })
 
+    vim.api.nvim_create_user_command('PulperoStartPairingSession', function()
+        if enable then
+            pairing:open();
+        end
+    end, { range = true })
+
+    vim.api.nvim_create_user_command('PulperoSubmitFeatDescription', function()
+        if enable then
+            pairing:submit_description();
+        end
+    end, { range = true })
+
+    vim.api.nvim_create_user_command('PulperoEndsPairingSession', function()
+        if enable then
+            runner:endPairingSession()
+        end
+    end, { range = true })
+
     vim.api.nvim_create_user_command('PulperoCodeComplete', function()
-        local cursorInfo = get_cursor_context()
-        local filetype = vim.bo.filetype
-        local success, code = runner:completeCode(filetype, cursorInfo)
-        if success then
-            local cursor_pos = vim.api.nvim_win_get_cursor(0)
-            local line = cursor_pos[1] - 1
-            local col = cursor_pos[2]
+        if enable then
+            local cursorInfo = get_cursor_context()
+            local filetype = vim.bo.filetype
+            local success, code = runner:completeCode(filetype, cursorInfo)
+            if success then
+                local cursor_pos = vim.api.nvim_win_get_cursor(0)
+                local line = cursor_pos[1] - 1
+                local col = cursor_pos[2]
 
-            local completion_lines = vim.split(code, "\n")
+                local completion_lines = vim.split(code, "\n")
 
-            local current_line = vim.api.nvim_get_current_line()
+                local current_line = vim.api.nvim_get_current_line()
 
-            local new_line = current_line:sub(1, col) .. completion_lines[1] .. current_line:sub(col + 1)
-            vim.api.nvim_buf_set_lines(0, line, line + 1, false, { new_line })
+                local new_line = current_line:sub(1, col) .. completion_lines[1] .. current_line:sub(col + 1)
+                vim.api.nvim_buf_set_lines(0, line, line + 1, false, { new_line })
 
-            if #completion_lines > 1 then
-                vim.api.nvim_buf_set_lines(0, line + 1, line + 1, false,
-                    { unpack(completion_lines, 2) })
+                if #completion_lines > 1 then
+                    vim.api.nvim_buf_set_lines(0, line + 1, line + 1, false,
+                        { unpack(completion_lines, 2) })
+                end
+            else
+                logger:debug("Completion failed: ", { result = code })
             end
-        else
-            logger:debug("Completion failed: ", { result = code })
         end
     end, { range = true })
 

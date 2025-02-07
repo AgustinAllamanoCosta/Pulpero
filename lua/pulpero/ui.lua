@@ -11,6 +11,7 @@ function UI.new(config)
     self.config        = config
     self.chat_buf      = vim.api.nvim_create_buf(false, true)
     self.input_buf     = vim.api.nvim_create_buf(false, true)
+    self.desc_buf      = vim.api.nvim_create_buf(false, true)
     self.chat_options  = {
         relative = 'editor',
         row = row,
@@ -20,6 +21,19 @@ function UI.new(config)
         style = 'minimal',
         border = { "╔", "═", "╗", "║", "╝", "═", "╚", "║" },
         title = ' Pulpero ',
+        title_pos = 'center',
+        focusable = true
+    }
+
+    self.desc_options  = {
+        relative = 'editor',
+        row = row,
+        col = col,
+        width = width,
+        height = chat_height,
+        style = 'minimal',
+        border = { "╔", "═", "╗", "║", "╝", "═", "╚", "║" },
+        title = ' Desc the feature you want to code ',
         title_pos = 'center',
         focusable = true
     }
@@ -40,6 +54,7 @@ function UI.new(config)
 
     self.chat_win      = nil
     self.input_win     = nil
+    self.desc_win      = nil
 
     vim.api.nvim_buf_set_option(self.chat_buf, 'buftype', 'nofile')
     vim.api.nvim_buf_set_option(self.chat_buf, 'bufhidden', 'hide')
@@ -49,6 +64,10 @@ function UI.new(config)
     vim.api.nvim_buf_set_option(self.input_buf, 'buftype', 'nofile')
     vim.api.nvim_buf_set_option(self.input_buf, 'bufhidden', 'hide')
     vim.api.nvim_buf_set_option(self.input_buf, 'swapfile', false)
+
+    vim.api.nvim_buf_set_option(self.desc_buf, 'buftype', 'nofile')
+    vim.api.nvim_buf_set_option(self.desc_buf, 'bufhidden', 'hide')
+    vim.api.nvim_buf_set_option(self.desc_buf, 'swapfile', false)
     return self
 end
 
@@ -71,6 +90,22 @@ end
 function UI.close_chat(self)
     vim.api.nvim_win_close(self.chat_win, true)
     vim.api.nvim_win_close(self.input_win, true)
+end
+
+function UI.create_desc_box(self)
+    self.desc_win = vim.api.nvim_open_win(self.desc_buf, true, self.desc_options)
+
+    vim.api.nvim_win_set_option(self.desc_win, 'wrap', true)
+    vim.api.nvim_win_set_option(self.desc_win, 'cursorline', true)
+    vim.api.nvim_win_set_option(self.desc_win, 'winhighlight', 'Normal:Normal,FloatBorder:FloatBorder')
+end
+
+function UI.open_feat_desc_input(self)
+    self.desc_win = vim.api.nvim_open_win(self.desc_buf, true, self.desc_options)
+end
+
+function UI.close_desc(self)
+    vim.api.nvim_win_close(self.desc_win, true)
 end
 
 return UI

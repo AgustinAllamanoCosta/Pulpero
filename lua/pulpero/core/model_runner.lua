@@ -41,6 +41,11 @@ function Runner.new(config, logger, parser)
         llama_cpp_path = self.config.llama_cpp_path,
         command_debug_output = logger:getConfig().command_path
     }
+    self.pairing_session = {
+        feature = "",
+        running = false
+    }
+
     return self
 end
 
@@ -155,10 +160,17 @@ end
 
 function Runner.talkWithModel(self, message)
     self.logger:debug("New query to the model ", { query = message })
+
     self:updateChatContext("user", message)
 
     local chat_history = self:buildChatHistory()
-    local dynamic_prompt = string.format(prompts.chat, chat_history)
+    local dynamic_prompt = ""
+    if self.pairing_session.running then
+        local file_context = ""
+        dynamic_prompt = string.format(prompts.pairing, self.pairing_session.feature, chat_history, file_context, message)
+    else
+        dynamic_prompt = string.format(prompts.chat, chat_history)
+    end
 
     self.logger:debug("Full prompt", { prompt = dynamic_prompt })
     local success, result = pcall(self.runLocalModel, self, dynamic_prompt, self.model_parameters)
@@ -191,6 +203,23 @@ function Runner.updateCurrentFileContent(self, content)
     end
     self.current_file = content
 end
+
+-- Paring related functions
+
+function Runner.initPairingSession(self, feature_description)
+    self:clearModelCache()
+
+    self.pairing_session.running = true
+    self.pairing_session.feature = feature_description
+end
+
+function Runner.endPairingSession(self)
+    self:clearModelCache()
+
+    self.pairing_session.running = false
+end
+
+---------------------------------------------------
 
 function Runner.runStandardQuery(self, language, context, query)
     if context == nil then
