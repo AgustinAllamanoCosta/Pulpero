@@ -320,11 +320,11 @@ Logs are recreated with each request to maintain a controlled size and facilitat
 - ❌ Add unit test generation base of function and context
 - ✅ Add a live chat to interact with the model
 - ✅ Add context of the current file for better understanding
-- 🚧 Add live feedback (Blocked until the migration to code llama is complete)
+- 🚧 Add live feedback 
 - 🚧 Add pairing mode as a companion for developing a feature
 - 🚧 Add the docker build and publish process to the CI pipeline
 - ❌ Add test on the CI pipeline
-- ❌ Migrate to a CodeLlama
+- ✅ Migrate to a DeepSeek
 - ❌ Add live feedback with audio for coding
 
 *References*:
