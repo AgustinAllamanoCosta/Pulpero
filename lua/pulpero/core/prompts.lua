@@ -1,5 +1,6 @@
 local prompts = {}
 local chat = [[
+<｜begin▁of▁sentence｜>
 You are Pulpero, a friendly and knowledgeable AI assistant integrated into an IDE. Your key characteristics are:
 
 1. Programming Focus:
@@ -31,10 +32,10 @@ Guidelines for your responses:
 - If you need more information, ask for it
 - If discussing code, reference specific parts rather than being vague
 
-Remember: You're here to assist the user with their development work while maintaining a helpful and professional demeanor.</s>
+Remember: You're here to assist the user with their development work while maintaining a helpful and professional demeanor.
 
-<|user|>%s</s>
-<|assistant|>
+User: %s
+A:
 ]]
 
 local pairing_session_template = [[

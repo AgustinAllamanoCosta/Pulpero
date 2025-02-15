@@ -5,8 +5,7 @@ local default_settings = {
     temp = "0.1",
     num_threads = "4",
     top_p = "0.4",
-    token="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",
-    model = "https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+    model_name = "deepseek-coder-v2-lite-instruct.gguf",
     llama_repo = "https://github.com/ggerganov/llama.cpp.git",
     os = OSCommands:getPlatform(),
     response_size = "1024"
@@ -24,7 +23,7 @@ end
 
 function Setup.executeCommandAndDump(self, command)
     local formatted_command
-    if package.config:sub(1,1) == '\\' then
+    if package.config:sub(1, 1) == '\\' then
         formatted_command = string.format('%s >> "%s" 2>>&1', command, self.command_output)
     else
         formatted_command = string.format('%s >> "%s" 2>&1', command, self.command_output)
@@ -60,9 +59,9 @@ end
 
 function Setup.generateLlamaPath(self)
     local dir_info = {
-    llama_dir = "",
-    llama_bin = "",
-    build_dir = ""
+        llama_dir = "",
+        llama_bin = "",
+        build_dir = ""
     }
     if self.config.os == 'windows' then
         dir_info.llama_dir = OSCommands:getDataPath() .. '\\llama.cpp'
@@ -77,39 +76,13 @@ function Setup.generateLlamaPath(self)
 end
 
 function Setup.generateModelPath(self)
-    local data_dir = OSCommands:getDataPath()
-    OSCommands:ensureDir(data_dir)
-    local model_path = ''
+    local source_path = debug.getinfo(1).source:sub(2)
     if self.config.os == 'windows' then
-        model_path =  data_dir .. '\\model.gguf'
+        local plugin_root = source_path:match("(.*)\\"):match("(.*)\\"):match("(.*\\)")
+        return plugin_root .. "pulpero\\core\\model\\"  .. default_settings.model_name
     else
-        model_path =  data_dir .. '/model.gguf'
-    end
-    return  model_path
-end
-
-function Setup.downloadModel(self)
-    self.logger:setup("Prepearing model")
-    local model_path = self:generateModelPath()
-
-    self.logger:setup("Checking if file exist " .. model_path)
-    if OSCommands:fileExists(model_path) then
-        self.logger:setup("Model already exist skipping download")
-        return model_path, 0
-    end
-
-    self.logger:setup("Downloading TinyLlama model (this may take a while)...")
-    local download_command = string.format(
-    'wget -O "%s" --header="Authorization: Bearer %s" %s',
-    model_path,
-    self.config.token,
-    self.config.model)
-    if self:executeCommandAndDump(download_command) then
-        self.logger:setup("Download ended")
-        return model_path, 0
-    else
-        self.logger:setup("Failed to download the model")
-        return "", 1
+        local plugin_root = source_path:match("(.*)/"):match("(.*)/"):match("(.*/)")
+        return plugin_root .. "pulpero/core/model/" .. default_settings.model_name
     end
 end
 
@@ -140,7 +113,8 @@ function Setup.setupLlama(self)
     if not OSCommands:fileExists(dir_info.llama_bin) then
         self.logger:setup("Compile llama cpp repository")
         OSCommands:ensureDir(dir_info.build_dir)
-        local build_commands = string.format('cd "%s" && cmake .. && cmake --build . --config Release', dir_info.build_dir)
+        local build_commands = string.format('cd "%s" && cmake .. && cmake --build . --config Release',
+            dir_info.build_dir)
         if not self:executeCommandAndDump(build_commands) then
             self.logger:setup("Failed to compile llama.cpp")
             return "", 1
@@ -153,22 +127,21 @@ function Setup.setupLlama(self)
 end
 
 function Setup.configureMemory(self, total_mem)
-    if total_mem and total_mem < 4096 then -- Less than 4GB RAM
-        return 256, 2
-    elseif total_mem and total_mem < 8192 then -- Less than 8GB RAM
-        return 512, 4
-    else -- 8GB or more RAM
-        return 3072, 6
+    if total_mem and total_mem < 8192 then      -- Less than 8GB RAM
+        return 512, 2                           -- Conservative settings
+    elseif total_mem and total_mem < 16384 then -- Less than 16GB RAM
+        return 1024, 4
+    else                                        -- 16GB or more RAM
+        return 4096, 8
     end
 end
 
 function Setup.prepearEnv(self)
     self.logger:setup("Prepearing env")
     local llama_path, llama_setup_result = self:setupLlama()
-    local model_path, model_setup_result = self:downloadModel()
-    if llama_setup_result == 0 and model_setup_result == 0 then
+    if llama_setup_result == 0 then
         self.config.llama_cpp_path = llama_path
-        self.config.model_path = model_path
+        self.config.model_path = self:generateModelPath()
     else
         error("Failed to initialize Pulpero")
     end
@@ -191,7 +164,7 @@ function Setup.configurePlugin(self)
         if output then
             local bytes = tonumber(output:match("hw.memsize: (%d+)"))
             if bytes then
-                local memory = math.floor(bytes / (1024 * 1024))  -- Convert bytes to MB
+                local memory = math.floor(bytes / (1024 * 1024)) -- Convert bytes to MB
                 context_window, threads = self:configureMemory(memory)
             end
         end
@@ -200,7 +173,7 @@ function Setup.configurePlugin(self)
         if output then
             local bytes = tonumber(output:match("(%d+)"))
             if bytes then
-                local memory = math.floor(bytes / (1024 * 1024))  -- Convert bytes to MB
+                local memory = math.floor(bytes / (1024 * 1024)) -- Convert bytes to MB
                 context_window, threads = self:configureMemory(memory)
             end
         end
@@ -213,6 +186,5 @@ function Setup.configurePlugin(self)
     self.logger:setup("Memory configured", { config = self.config })
     return self.config
 end
-
 
 return Setup
