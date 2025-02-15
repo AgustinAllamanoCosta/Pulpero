@@ -198,10 +198,22 @@ function Runner.updateCurrentFileContent(self, content)
         return false
     end
     self.current_file_data = {}
-    for file_line in string.gmatch(content, "(.-)%s*") do
-        table.insert(self.current_file_data, { line = file_line, line_number = file_line:len() })
+    local number_of_line = 0
+    for file_line in string.gmatch(content,"([^\n]+)") do
+        number_of_line = number_of_line + 1
+        if file_line ~= "" then
+            table.insert(self.current_file_data, { line = file_line, line_number = number_of_line })
+        end
     end
+
+    self.logger:debug("File length", { number_of_line = number_of_line })
     self.current_file = content
+
+    if number_of_line <= 300 then
+        self.current_raw_file = content
+    else
+        self.logger:debug("File to long to load")
+    end
 end
 
 -- Paring related functions
@@ -245,7 +257,6 @@ function Runner.refactorFunction(self, language, context)
 end
 
 function Runner.completeCode(self, language, context)
-    -- Check the amount of token from the file and avoid to complete the code if the file is to big
     if self.current_file and #self.current_file > 0 then
         local full_query = string.format(prompts.completion_chat_template, self.current_file, language, context,
             "Please complete the code")

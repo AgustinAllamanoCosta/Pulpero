@@ -22,6 +22,10 @@ function Pairing.open(self)
         self.ui:create_desc_box()
     end
     self.modal_open = true
+    local keymap_opts = { noremap = true, silent = false }
+    vim.api.nvim_buf_set_keymap(self.ui.input_buf, 'i', '<CR>',
+        '<Esc>:PulperoSendChat<CR>',
+        keymap_opts)
 end
 
 function Pairing.submit_description(self)

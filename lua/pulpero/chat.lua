@@ -1,16 +1,12 @@
 local Chat = {}
 
 function Chat.new(ui, runner, config)
-    local self               = setmetatable({}, { __index = Chat })
-    self.ui                  = ui
-    self.config              = config
-    self.chat_open           = false
-    self.runner              = runner
+    local self     = setmetatable({}, { __index = Chat })
+    self.ui        = ui
+    self.config    = config
+    self.chat_open = false
+    self.runner    = runner
 
-    local keymap_opts        = { noremap = true, silent = false }
-    vim.api.nvim_buf_set_keymap(self.ui.input_buf, 'i', '<CR>',
-        '<Esc>:PulperoSendChat<CR>',
-        keymap_opts)
     return self
 end
 
@@ -26,7 +22,11 @@ function Chat.open(self)
     else
         self.ui:create_chat_sidebar()
     end
-    self.chat_open = true
+    self.chat_open    = true
+    local keymap_opts = { noremap = true, silent = false }
+    vim.api.nvim_buf_set_keymap(self.ui.input_buf, 'i', '<CR>',
+        '<Esc>:PulperoSendChat<CR>',
+        keymap_opts)
 end
 
 function Chat.append_message(self, sender, content)

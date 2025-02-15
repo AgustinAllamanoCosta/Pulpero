@@ -75,7 +75,7 @@ Your role combines technical expertise with collaborative development practices.
 - Consider the broader feature context when suggesting completions
 
 Current Session Context:
-Feature Scope: 
+Feature Scope:
 %s
 
 Chat History:
