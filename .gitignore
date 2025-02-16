@@ -6,6 +6,7 @@
 **/vscode/package-lock.json
 build/**
 **.tar.gz
+**.gguf
 local_build.sh
 run_core_test.sh
 local-version.json

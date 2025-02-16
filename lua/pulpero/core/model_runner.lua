@@ -29,11 +29,12 @@ function Runner.new(config, logger, parser)
     self.logger = logger
     self.parser = parser
     self.chat_context = self:createNewChatContext()
+    self.is_file_context_available = false
     self.model_parameters = {
         repeat_penalty = "1.2",
         mirostat = "2",
         context_window = "4096",
-        response_size = "512",
+        response_size = "1024",
         temp = "0.2",
         top_p = "0.3",
         num_threads = self.config.num_threads,
@@ -45,7 +46,6 @@ function Runner.new(config, logger, parser)
         feature = "",
         running = false
     }
-
     return self
 end
 
@@ -144,10 +144,10 @@ end
 function Runner:buildChatHistory()
     local history = ""
     for _, msg in ipairs(self.chat_context.messages) do
-        if msg.role == "user" then
-            history = history .. "[INST] " .. msg.content .. " [/INST]"
+        if msg.role == "User" then
+            history = history .. "User:" .. msg.content .. "\n"
         else
-            history = history .. msg.content .. "</s>"
+            history = history .. "Assistant: " ..msg.content .. "</s>"
         end
     end
     return history
@@ -161,22 +161,28 @@ end
 function Runner.talkWithModel(self, message)
     self.logger:debug("New query to the model ", { query = message })
 
-    self:updateChatContext("user", message)
 
     local chat_history = self:buildChatHistory()
     local dynamic_prompt = ""
-    if self.pairing_session.running then
-        local file_context = ""
-        dynamic_prompt = string.format(prompts.pairing, self.pairing_session.feature, chat_history, file_context, message)
-    else
-        dynamic_prompt = string.format(prompts.chat, chat_history)
+    local context_file = ""
+
+    if self.is_file_context_available then
+        context_file = "Current open file code: \n" .. self.current_raw_file
     end
+
+    if self.pairing_session.running then
+        dynamic_prompt = string.format(prompts.pairing, self.pairing_session.feature, context_file, chat_history, message)
+    else
+        dynamic_prompt = string.format(prompts.chat, context_file, chat_history, message)
+    end
+
+    self:updateChatContext("User", message)
 
     self.logger:debug("Full prompt", { prompt = dynamic_prompt })
     local success, result = pcall(self.runLocalModel, self, dynamic_prompt, self.model_parameters)
 
     if success then
-        self:updateChatContext("assistant", result)
+        self:updateChatContext("A", result)
         return true, result
     else
         local error_path = self.logger:getConfig().directory
@@ -193,26 +199,16 @@ function Runner.talkWithModel(self, message)
     end
 end
 
-function Runner.updateCurrentFileContent(self, content)
+function Runner.updateCurrentFileContent(self, content, amount_of_lines)
     if content == nil or content == "" then
-        return false
+        self.is_file_context_available = false
     end
-    self.current_file_data = {}
-    local number_of_line = 0
-    for file_line in string.gmatch(content,"([^\n]+)") do
-        number_of_line = number_of_line + 1
-        if file_line ~= "" then
-            table.insert(self.current_file_data, { line = file_line, line_number = number_of_line })
-        end
-    end
-
-    self.logger:debug("File length", { number_of_line = number_of_line })
-    self.current_file = content
-
-    if number_of_line <= 300 then
+    if amount_of_lines <= 300 then
         self.current_raw_file = content
+        self.is_file_context_available = true
     else
         self.logger:debug("File to long to load")
+        self.is_file_context_available = false
     end
 end
 

@@ -1,4 +1,7 @@
 local Chat = {}
+local pulpero_key = "Pulpero"
+local user_key = "User"
+local system_key = "System"
 
 function Chat.new(ui, runner, config)
     local self     = setmetatable({}, { __index = Chat })
@@ -39,15 +42,19 @@ function Chat.append_message(self, sender, content)
     local message_lines = vim.split(content, '\n')
 
     table.insert(current_lines, "")
-    table.insert(current_lines, sender .. ": " .. message_lines[1])
+
+    if sender == user_key then
+        table.insert(current_lines, "😎 ".. sender .. ": " .. message_lines[1])
+    elseif  sender == pulpero_key then
+        table.insert(current_lines, "🦶 ".. sender .. ": " .. message_lines[1])
+    elseif sender == system_key then
+        table.insert(current_lines, "🤖 ".. sender .. ": " .. message_lines[1])
+    end
 
     for i = 2, #message_lines do
         table.insert(current_lines, "    " .. message_lines[i])
     end
 
-    if sender == "Pulpero" then
-        table.insert(current_lines, "")
-    end
     vim.api.nvim_buf_set_lines(self.ui.chat_buf, 0, -1, false, current_lines)
     vim.api.nvim_win_set_cursor(self.ui.chat_win, { #current_lines, 0 })
     vim.api.nvim_buf_set_option(self.ui.chat_buf, 'modifiable', false)
@@ -59,17 +66,17 @@ function Chat.submit_message(self)
     if message and message ~= "" then
         vim.api.nvim_buf_set_lines(self.ui.input_buf, 0, -1, false, { "" })
 
-        self:append_message("User", message)
+        self:append_message(user_key, message)
 
-        self:append_message("Pulpero", "processing...")
+        self:append_message(pulpero_key, "⏲️  Cooking...")
         vim.schedule(function()
             local success, response = self.runner:talkWithModel(message)
             if success then
-                self:append_message("Pulpero", response)
-                self:append_message("Pulpero",
-                    "! Note: This explanation is AI-generated and should be verified for accuracy. !")
+                self:append_message(pulpero_key, response)
+                self:append_message(system_key,
+                    "🚨 ! Note: This explanation is AI-generated and should be verified for accuracy. ! 🚨")
             else
-                self:append_message("System", "Error: Failed to get response from model")
+                self:append_message(system_key, "🛑 Error: Failed to get response from model")
             end
         end)
     end

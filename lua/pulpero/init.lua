@@ -98,14 +98,13 @@ function M.setup()
     local function get_current_file()
         local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
         local amount_of_lines = table.getn(lines)
-        logger:debug("Amount of lines in current file", { data=amount_of_lines})
-        return table.concat(lines, "\n")
+        return table.concat(lines, "\n"), amount_of_lines
     end
 
     local function update_current_file()
         if should_update_file(vim.api.nvim_get_current_buf()) then
-            local current_file = get_current_file()
-            runner:updateCurrentFileContent(current_file)
+            local current_file, amount_of_lines = get_current_file()
+            runner:updateCurrentFileContent(current_file, amount_of_lines)
         else
             logger:debug('Should not update buffer')
         end
@@ -166,13 +165,14 @@ function M.setup()
 
     vim.api.nvim_create_user_command('PulperoStartPairingSession', function()
         if enable then
-            pairing:open();
+            pairing:open()
         end
     end, { range = true })
 
     vim.api.nvim_create_user_command('PulperoSubmitFeatDescription', function()
         if enable then
-            pairing:submit_description();
+            pairing:submit_description()
+            chat:open()
         end
     end, { range = true })
 
