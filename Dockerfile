@@ -10,13 +10,10 @@ RUN apk update && \
     curl \
     lua5.3 \
     lua5.3-dev \
-    openssl-dev \   
-    luarocks5.3
+    openssl-dev \
+    luarocks
 
-RUN which luarocks-5.3
-
-RUN luarocks-5.3 install luafilesystem
-RUN luarocks-5.3 install milua
+RUN luarocks install luafilesystem milua
 
 EXPOSE 8080
 CMD ["lua5.3","core/init.lua"]
