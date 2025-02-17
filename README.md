@@ -6,7 +6,7 @@
 
 ## 😊 What's in this repo?
 
-This repository contains code for a multi-IDE and multi-platform plugin that analyzes code and its functionality. It's designed to be native to Neovim but includes adapters for IDEs such as IntelliJ, WebStorm, and VScode. The goal is to offer an experience similar to Copilot but without requiring an internet connection or exposing your code to third parties.
+This repository contains local AI assistance able to assist with your daily coding task. It's designed to be native to Neovim but includes adapters for IDEs such as IntelliJ, WebStorm, and VScode. The goal is to offer an experience similar to Copilot but without requiring an internet connection or exposing your code to third parties.
 
 ## 😌 Content
 
@@ -37,19 +37,15 @@ Pulpero refers to the Pulperías (old general stores) of old Buenos Aires. The p
 
 - In IDEs: Highlight the code you want to analyze, right-click, and select "Explain Code With Pulpero". Or you can query the model with the live-chat
 - In Neovim: Select the code in visual mode and execute the PulperoExpFn command. To open the chat you can use the commands PulperoOpenChat.
-- Using the REST API: Make a POST request to http://localhost:8080/explain. The body should contain the code to analyze, and the query param 'lang' should specify the language.
+- Using the REST API: Make a POST request to http://localhost:8080. The body should contain the code to analyze, and the query param 'lang' should specify the language.
 
-**Note**: For the moment, the maximum number of lines to analyze is 100, this is due to a constraint in the context size of the model.
+**Note**: For the moment, the maximum number of lines to analyze is 700, this is due to a constraint in the context size of the model.
 
 <div id="The-Model" />
 
 ## 🤖 The model
 
-Currently Pulpero use TinyLlama 1b model as an experiment to run in almost any machine and in multiple IDEs. Thanks to *TheBloc*k at Huggingface to provide this model in gguf format.
-
-[URL to the model](https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF)
-
-**Note**: We have plan to migrate to CodeLLama 7b in the future.
+Currently Pulpero use DeepSeek Code Instructor model as an experiment to run in almost any machine and in multiple IDEs.
 
 <div id="Requirements" />
 
@@ -151,12 +147,6 @@ The second option will keep you updated with the latest version of the repositor
 <details>
   <summary> Some useful commands you can use</summary>
 
-To tell to the model to explain some line/s of code, you can highlight it and execute "PulperoExpFn"
-
-```
-:PulperoExpFn
-```
-
 To open the chat bar "PulperoOpenChat"
 
 ```
@@ -195,12 +185,6 @@ To enable pulpero use "PulperoEnable"
 
 ```
 :PulperoEnable
-```
-
-To use code complete at cursor position use "PulperoCodeComplete"
-
-```
-:PulperoCodeComplete
 ```
 
 </details>
@@ -325,6 +309,7 @@ Logs are recreated with each request to maintain a controlled size and facilitat
 - 🚧 Add the docker build and publish process to the CI pipeline
 - ❌ Add test on the CI pipeline
 - ✅ Migrate to a DeepSeek
+- 🚧 Automate the download of the DeepSeek gguf format model
 - 🚧 Add live feedback with audio for coding
 
 *References*:
