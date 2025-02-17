@@ -110,34 +110,9 @@ function M.setup()
         end
     end
 
-    local function get_cursor_context()
-        local cursor_line = vim.api.nvim_win_get_cursor(0)[1] -- 1-based line number
-        local buffer = vim.api.nvim_get_current_buf()
-
-        local start_line = math.max(cursor_line - 5, 1)
-        local end_line = cursor_line + 5
-
-        local lines = vim.api.nvim_buf_get_lines(buffer, start_line - 1, end_line, false)
-        local context = table.concat(lines, "\n")
-
-        return {
-            cursor_line = cursor_line,
-            context = context,
-            relative_cursor = cursor_line - start_line + 1 -- Position of cursor in the context
-        }
-    end
-
     vim.api.nvim_create_autocmd({ "BufEnter", "BufWrite" }, {
         callback = update_current_file
     })
-
-    vim.api.nvim_create_user_command('PulperoExpFn', function()
-        execute_function_and_show(runner.explainFunction)
-    end, { range = true })
-
-    vim.api.nvim_create_user_command('PulperoRefactor', function()
-        execute_function_and_show(runner.refactorFunction)
-    end, { range = true })
 
     vim.api.nvim_create_user_command('PulperoOpenChat', function()
         if enable then
@@ -179,33 +154,6 @@ function M.setup()
     vim.api.nvim_create_user_command('PulperoEndsPairingSession', function()
         if enable then
             runner:endPairingSession()
-        end
-    end, { range = true })
-
-    vim.api.nvim_create_user_command('PulperoCodeComplete', function()
-        if enable then
-            local cursorInfo = get_cursor_context()
-            local filetype = vim.bo.filetype
-            local success, code = runner:completeCode(filetype, cursorInfo)
-            if success then
-                local cursor_pos = vim.api.nvim_win_get_cursor(0)
-                local line = cursor_pos[1] - 1
-                local col = cursor_pos[2]
-
-                local completion_lines = vim.split(code, "\n")
-
-                local current_line = vim.api.nvim_get_current_line()
-
-                local new_line = current_line:sub(1, col) .. completion_lines[1] .. current_line:sub(col + 1)
-                vim.api.nvim_buf_set_lines(0, line, line + 1, false, { new_line })
-
-                if #completion_lines > 1 then
-                    vim.api.nvim_buf_set_lines(0, line + 1, line + 1, false,
-                        { unpack(completion_lines, 2) })
-                end
-            else
-                logger:debug("Completion failed: ", { result = code })
-            end
         end
     end, { range = true })
 

@@ -39,7 +39,7 @@ Remember: You're here to assist the user with their development work while maint
 Chat History:
 %s
 
-User: %s
+Current user message: %s
 
 A:
 ]]
@@ -74,7 +74,14 @@ Your role combines technical expertise with collaborative development practices.
 - Provide context-aware code suggestions
 - Maintain consistency with existing code style
 - Consider the broader feature context when suggesting completions
-- Surround the code you generate with the [code] tag, avoid use markdown
+
+Guidelines for your responses:
+- Keep responses focused and relevant
+- Avoid repetition and redundant information
+- Use markdown formatting when appropriate for code or emphasis
+- If you need clarification, ask specific questions
+- If you need more information, ask for it
+- If discussing code, reference specific parts rather than being vague
 
 Remember: You're a collaborative partner in the development process, helping to guide and support while respecting the developer's expertise and decisions.
 
@@ -86,45 +93,13 @@ Feature Scope:
 Chat History:
 %s
 
-User: %s
+Current user message: %s
 
-A:
-]]
-
-local completion_chat_template = [[
-<｜begin▁of▁sentence｜>
-You are a code completion assistant. Your task is to complete or suggest code based on the context provided.
-The context includes:
-1. The current file content
-2. The code around the cursor (5 lines above and below)
-3. The exact cursor position
-
-Rules for completion:
-- Only provide the code completion/suggestion, no explanations
-- Format the response as: <code>your suggested code</code>
-- Maintain the same indentation level as the context
-- Consider the programming language and style of the existing code
-- Keep completions concise and relevant
-
-Current file for context:
-```
-%s
-```
-
-Cursor context (code language %s):
-```
-%s
-```
-
-Please complete the code at the cursor position.</s>
-
-User: %s
 A:
 ]]
 
 prompts = {
     chat = chat,
-    completion_chat_template = completion_chat_template,
     pairing = pairing_session_template
 }
 

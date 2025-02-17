@@ -9,7 +9,9 @@ function Parser.cleanModelOutput(self, output)
     self.logger:debug("Data to parse ", { data = output })
     local clean_response = nil
     local in_assistant_response = false
+    local in_assistant_code_response = false
     local response_lines = {}
+    local code_lines = {}
 
     for line in output:gmatch("[^\r\n]+") do
         if line:match("A:") then
@@ -19,12 +21,31 @@ function Parser.cleanModelOutput(self, output)
             goto continue
         end
 
+        if line:match("```%s*") and in_assistant_response then
+            self.logger:debug("Code in response found")
+            in_assistant_code_response = true
+            goto continue
+        end
+
+        if line:match("```") and in_assistant_response and in_assistant_code_response then
+            self.logger:debug("End of the code in response found")
+            in_assistant_code_response = false
+            goto continue
+        end
+
+        if in_assistant_code_response then
+            if line ~= "" then
+                table.insert(code_lines, line .. "\n")
+            end
+        end
+
         if in_assistant_response then
             if line ~= "" and not line:match("<｜end▁of▁sentence｜>") then
                 local clean_line = line:gsub("%[INST]", ""):gsub("%[/INST]", ""):gsub("%[end of text]", " ")
                 table.insert(response_lines, clean_line .. "\n")
             end
         end
+
         ::continue::
     end
 
@@ -32,7 +53,7 @@ function Parser.cleanModelOutput(self, output)
         clean_response = table.concat(response_lines, "\n")
     end
 
-    return clean_response
+    return clean_response, code_lines
 end
 
 return Parser
