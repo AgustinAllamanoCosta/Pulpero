@@ -54,37 +54,9 @@ function M.setup()
     parser = Parser.new(config, logger)
     runner = Runner.new(config, logger, parser)
     ui = UI.new(config)
-    chat = Chat.new(ui, runner, config)
+    chat = Chat.new(ui, runner, parser, config)
     pairing = Pairing.new(ui, runner, config)
     chat:close()
-
-    local function get_visual_selection()
-        local start_pos = vim.fn.getpos("'<")
-        local end_pos = vim.fn.getpos("'>")
-        local lines = vim.api.nvim_buf_get_lines(
-            0,
-            start_pos[2] - 1, -- Convert from 1-based to 0-based indexing
-            end_pos[2],
-            false
-        )
-        if #lines == 0 then
-            return nil
-        end
-        return table.concat(lines, "\n")
-    end
-
-    local function execute_function_and_show(function_ex)
-        if enable then
-            logger:debug("Processing request by native lua plugin")
-            local selected_code = get_visual_selection()
-            local filetype = vim.bo.filetype
-            local success, result = function_ex(runner, filetype, selected_code)
-            chat:show_message(result)
-            logger:debug("Processing completed")
-        else
-            logger:debug("Pulpero is disable")
-        end
-    end
 
     local function should_update_file(bufnr)
         if bufnr == ui.chat_buf or bufnr == ui.input_buf then

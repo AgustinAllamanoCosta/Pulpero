@@ -57,7 +57,7 @@ function Runner.createNewChatContext(self)
         messages = {},
         max_messages = 10, -- Keep last 10 messages for context
         current_tokens = 0,
-        max_tokens = 2048  -- Match your model's context window
+        max_tokens = 4096  -- Match your model's context window
     }
 end
 
@@ -86,10 +86,10 @@ function Runner.runLocalModel(self, prompt, config)
         '%s -m %s --temp %s --ctx-size %s --threads %s --top_p %s --repeat-penalty 1.2'
         .. ' --repeat-last-n 64 --mirostat %s --mirostat-lr 0.1 --mirostat-ent 5.0'
         .. ' -n %s'                                               -- Maximum tokens to generate
-        .. ' --prompt-cache '.. cache_prompt_path                           -- Cache the prompt for faster loading
+        .. ' --prompt-cache '.. cache_prompt_path                 -- Cache the prompt for faster loading
         .. ' -ngl 1'                                              -- Use GPU for better performance
         .. ' -b 512'                                              -- Batch size for processing
-        .. ' -r "User:" --in-prefix " " --in-suffix "Assistant:"' -- Better chat handling
+        .. ' -r "User:" --in-prefix " " --in-suffix "A:"'         -- Better chat handling
         .. ' -f %s 1> %s 2> %s',                                  -- Input file at the end
         config.llama_cpp_path,
         config.model_path,
@@ -128,7 +128,7 @@ function Runner.runLocalModel(self, prompt, config)
         self.logger:error("The result is nil or empty")
         return nil_or_empty_response
     end
-    local parser_result, pars_code = self.parser:cleanModelOutput(response)
+    local parser_result = self.parser:cleanModelOutput(response)
     self.logger:debug("Parse result ", { result = parser_result })
     return parser_result
 end
@@ -150,7 +150,7 @@ function Runner:buildChatHistory()
         if msg.role == user_key then
             history = history .. "User:" .. msg.content .. "\n"
         else
-            history = history .. "Assistant: " ..msg.content .. "</s>"
+            history = history .. "Assistant: " ..msg.content
         end
     end
     return history
@@ -164,13 +164,17 @@ end
 function Runner.talkWithModel(self, message)
     self.logger:debug("New query to the model ", { query = message })
 
-
-    local chat_history = self:buildChatHistory()
+    local current_chat_history = self:buildChatHistory()
     local dynamic_prompt = ""
     local context_file = ""
+    local chat_history = ""
+
+    if current_chat_history ~= "" then
+        chat_history = "Chat History:\n" .. current_chat_history .. "\nEnd History"
+    end
 
     if self.is_file_context_available then
-        context_file = "Current open file code: \n ```text \n" .. self.current_raw_file .. "\n ```"
+        context_file = "Current open file code:\n```text\n" .. self.current_raw_file .. "\n```\nEnd File"
     end
 
     if self.pairing_session.running then
@@ -215,8 +219,6 @@ function Runner.updateCurrentFileContent(self, content, amount_of_lines)
     end
 end
 
--- Paring related functions
-
 function Runner.initPairingSession(self, feature_description)
     self:clearModelCache()
 
@@ -229,8 +231,6 @@ function Runner.endPairingSession(self)
 
     self.pairing_session.running = false
 end
-
----------------------------------------------------
 
 function Runner.runStandardQuery(self, language, context, query)
     if context == nil then

@@ -36,7 +36,6 @@ Remember: You're here to assist the user with their development work while maint
 
 %s
 
-Chat History:
 %s
 
 Current user message: %s
@@ -90,7 +89,6 @@ Feature Scope:
 
 %s
 
-Chat History:
 %s
 
 Current user message: %s

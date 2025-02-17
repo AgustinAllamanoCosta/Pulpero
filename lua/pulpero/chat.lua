@@ -3,12 +3,14 @@ local pulpero_key = "Pulpero"
 local user_key = "User"
 local system_key = "System"
 
-function Chat.new(ui, runner, config)
-    local self     = setmetatable({}, { __index = Chat })
-    self.ui        = ui
-    self.config    = config
-    self.chat_open = false
-    self.runner    = runner
+function Chat.new(ui, runner, parser, config)
+    local self        = setmetatable({}, { __index = Chat })
+    self.ui           = ui
+    self.config       = config
+    self.chat_open    = false
+    self.runner       = runner
+    self.parser       = parser
+    self.code_snippet = nil
 
     return self
 end
@@ -44,11 +46,11 @@ function Chat.append_message(self, sender, content)
     table.insert(current_lines, "")
 
     if sender == user_key then
-        table.insert(current_lines, "😎 ".. sender .. ": " .. message_lines[1])
-    elseif  sender == pulpero_key then
-        table.insert(current_lines, "🦶 ".. sender .. ": " .. message_lines[1])
+        table.insert(current_lines, "😎 " .. sender .. ": " .. message_lines[1])
+    elseif sender == pulpero_key then
+        table.insert(current_lines, "🦶 " .. sender .. ": " .. message_lines[1])
     elseif sender == system_key then
-        table.insert(current_lines, "🤖 ".. sender .. ": " .. message_lines[1])
+        table.insert(current_lines, "🤖 " .. sender .. ": " .. message_lines[1])
     end
 
     for i = 2, #message_lines do
@@ -67,18 +69,21 @@ function Chat.submit_message(self)
         vim.api.nvim_buf_set_lines(self.ui.input_buf, 0, -1, false, { "" })
 
         self:append_message(user_key, message)
-
         self:append_message(pulpero_key, "⏲️  Cooking...")
-        vim.schedule(function()
-            local success, response = self.runner:talkWithModel(message)
-            if success then
-                self:append_message(pulpero_key, response)
-                self:append_message(system_key,
-                    "🚨 ! Note: This explanation is AI-generated and should be verified for accuracy. ! 🚨")
-            else
-                self:append_message(system_key, "🛑 Error: Failed to get response from model")
+
+        vim.fn.jobstart({ 'sh', '-c', 'sleep 0' }, {
+            on_exit = function()
+                local success, response = self.runner:talkWithModel(message)
+                if success then
+                    self.code_snippet = self.parser:getCodeFromResponse(response)
+                    self:append_message(pulpero_key, response)
+                    self:append_message(system_key,
+                        "🚨 ! Note: This explanation is AI-generated and should be verified for accuracy. ! 🚨")
+                else
+                    self:append_message(system_key, "🛑 Error: Failed to get response from model")
+                end
             end
-        end)
+        })
     end
 end
 
