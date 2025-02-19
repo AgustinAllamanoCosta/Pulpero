@@ -59,6 +59,48 @@ function OSCommands.ensureDir(self, path)
     end
 end
 
+function OSCommands.getTempDir(self)
+    local os_name = OSCommands:getPlatform()
+
+    if os_name == "linux" then
+        local tmp = os.getenv("TMPDIR")
+        if tmp then
+            return tmp
+        else
+            local candidates = {
+                "/tmp",
+                "/var/tmp",
+                "/usr/tmp"
+            }
+
+            for _, path in ipairs(candidates) do
+                local file = io.open(path .. "/test_write", "w")
+                if file then
+                    file:close()
+                    os.remove(path .. "/test_write")
+                    return path
+                end
+            end
+        end
+
+    elseif os_name == "darwin" then
+        return "/tmp"
+    elseif os_name == "windows" then
+
+        local temp = os.getenv("TEMP")
+        if temp then
+            return temp
+        else
+            local tmp = os.getenv("TMP")
+            if tmp then
+                return tmp
+            else
+                return "C:\\Windows\\Temp"
+            end
+        end
+    end
+end
+
 function OSCommands.getDataPath(self)
     local sep = package.config:sub(1,1)
     if os.getenv("HOME") then
@@ -68,14 +110,11 @@ function OSCommands.getDataPath(self)
     end
 end
 
-function OSCommands.getFileContent(self, file_path)
-  if self:fileExists(file_path) then
-    local file = io.open(file_path, "r")
-    local content = file:read("*a")
-    file:close()
-    return content
-  end
-  return nil
+function OSCommands.getModelDir(self)
+    local source_path = OSCommands:getDataPath()
+    local final_path = self:createPathByOS(source_path, "model")
+    OSCommands:ensureDir(final_path)
+    return final_path
 end
 
 function OSCommands.getPlatform(self)
@@ -90,6 +129,26 @@ function OSCommands.getPlatform(self)
         end
     end
     return os_name
+end
+
+function OSCommands.createPathByOS(self, path_or_folder, file_name_or_folder )
+    local final_path = ""
+    if OSCommands:getPlatform() == 'windows' then
+         final_path = path_or_folder .. "\\" .. file_name_or_folder
+    else
+        final_path = path_or_folder .. "/" .. file_name_or_folder
+    end
+    return final_path
+end
+
+function OSCommands.getFileContent(self, file_path)
+  if self:fileExists(file_path) then
+    local file = io.open(file_path, "r")
+    local content = file:read("*a")
+    file:close()
+    return content
+  end
+  return nil
 end
 
 return OSCommands

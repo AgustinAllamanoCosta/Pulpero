@@ -1,23 +1,15 @@
 local OSCommands = require('util.OSCommands')
 local Setup = {}
-local default_settings = {
-    context_window = 1024,
-    temp = "0.1",
-    num_threads = "4",
-    top_p = "0.4",
-    model_name = "deepseek-coder-v2-lite-instruct.gguf",
-    llama_repo = "https://github.com/ggerganov/llama.cpp.git",
-    os = OSCommands:getPlatform(),
-    response_size = "1024"
-}
 
-function Setup.new(logger)
+function Setup.new(logger, model_manager, default_config)
     local self = setmetatable({}, { __index = Setup })
     if logger == nil then
         error("Setup logger can not be nil")
     end
     self.logger = logger
     self.command_output = logger:getConfig().command_path
+    self.model_manager = model_manager
+    self.default_settings = default_config
     return self
 end
 
@@ -75,17 +67,6 @@ function Setup.generateLlamaPath(self)
     return dir_info
 end
 
-function Setup.generateModelPath(self)
-    local source_path = debug.getinfo(1).source:sub(2)
-    if self.config.os == 'windows' then
-        local plugin_root = source_path:match("(.*)\\"):match("(.*)\\"):match("(.*\\)")
-        return plugin_root .. "pulpero\\core\\model\\"  .. default_settings.model_name
-    else
-        local plugin_root = source_path:match("(.*)/"):match("(.*)/"):match("(.*/)")
-        return plugin_root .. "pulpero/core/model/" .. default_settings.model_name
-    end
-end
-
 function Setup.setupLlama(self)
     self.logger:setup("Preparing Llama cpp")
     if not self:checkCmakeInstalled() then
@@ -141,9 +122,15 @@ function Setup.prepearEnv(self)
     local llama_path, llama_setup_result = self:setupLlama()
     if llama_setup_result == 0 then
         self.config.llama_cpp_path = llama_path
-        self.config.model_path = self:generateModelPath()
     else
         error("Failed to initialize Pulpero")
+    end
+    if self.model_manager:isModelDownloaded() then
+        self.config.pulpero_ready = true
+    else
+        self.config.pulpero_ready = false
+        -- download the model async
+        self.model_manager:downloadAndAssembleModel()
     end
     return self.config
 end
@@ -151,7 +138,7 @@ end
 function Setup.configurePlugin(self)
     local context_window = nil
     local threads = nil
-    local platform = default_settings.os
+    local platform = self.default_settings.os
 
     if platform == "linux" then
         local output = OSCommands:executeCommand("free -m | grep Mem:")
@@ -179,9 +166,9 @@ function Setup.configurePlugin(self)
         end
     end
 
-    default_settings.context_window = context_window
-    default_settings.num_threads = threads
-    self.config = default_settings
+    self.default_settings.context_window = context_window
+    self.default_settings.num_threads = threads
+    self.config = self.default_settings
 
     self.logger:setup("Memory configured", { config = self.config })
     return self.config
