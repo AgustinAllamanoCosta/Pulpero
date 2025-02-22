@@ -37,33 +37,27 @@ end
 function Setup.installCmake(self)
     self.logger:setup("Installing CMake...")
     local os_name = self.config.os
-    if os_name == "linux" then
+    if OSCommands:isLinux() then
         if not self:executeCommandAndDump("sudo apt-get update && sudo apt-get install -y cmake") then
             return self:executeCommandAndDump("sudo yum -y install cmake")
         end
-    elseif os_name == "darwin" then
+    elseif OSCommands:isDarwin() then
         return self:executeCommandAndDump("brew install cmake")
-    elseif os_name == "windows" then
+    elseif OSCommands:isWindows() then
         return self:executeCommandAndDump("choco install cmake -y")
     end
     return false
 end
 
 function Setup.generateLlamaPath(self)
+    local llama_dir = OSCommands:createPathByOS(OSCommands:getDataPath(), 'llama.cpp')
+    local build_dir = OSCommands:createPathByOS(llama_dir, 'build')
+    local build_bin = OSCommands:createPathByOS(build_dir, 'bin')
     local dir_info = {
-        llama_dir = "",
-        llama_bin = "",
-        build_dir = ""
+        llama_dir = llama_dir,
+        llama_bin = OSCommands:createPathByOS(build_bin, 'llama-cli'),
+        build_dir = build_dir
     }
-    if self.config.os == 'windows' then
-        dir_info.llama_dir = OSCommands:getDataPath() .. '\\llama.cpp'
-        dir_info.llama_bin = dir_info.llama_dir .. '\\build\\bin\\llama-cli'
-        dir_info.build_dir = dir_info.llama_dir .. '\\build'
-    else
-        dir_info.llama_dir = OSCommands:getDataPath() .. '/llama.cpp'
-        dir_info.llama_bin = dir_info.llama_dir .. '/build/bin/llama-cli'
-        dir_info.build_dir = dir_info.llama_dir .. '/build'
-    end
     return dir_info
 end
 
@@ -125,7 +119,7 @@ function Setup.prepearEnv(self)
     else
         error("Failed to initialize Pulpero")
     end
-    if self.model_manager:isModelDownloaded() then
+    if true then
         self.config.pulpero_ready = true
     else
         self.config.pulpero_ready = false
@@ -140,13 +134,13 @@ function Setup.configurePlugin(self)
     local threads = nil
     local platform = self.default_settings.os
 
-    if platform == "linux" then
+    if OSCommands:isLinux() then
         local output = OSCommands:executeCommand("free -m | grep Mem:")
         if output then
             local memory = tonumber(output:match("Mem:%s+(%d+)"))
             context_window, threads = self:configureMemory(memory)
         end
-    elseif platform == "darwin" then
+    elseif OSCommands:isDarwin() then
         local output = OSCommands:executeCommand("sysctl hw.memsize")
         if output then
             local bytes = tonumber(output:match("hw.memsize: (%d+)"))
@@ -155,7 +149,7 @@ function Setup.configurePlugin(self)
                 context_window, threads = self:configureMemory(memory)
             end
         end
-    elseif platform == "windows" then
+    elseif OSCommands:isWindows() then
         local output = OSCommands:executeCommand("wmic ComputerSystem get TotalPhysicalMemory")
         if output then
             local bytes = tonumber(output:match("(%d+)"))

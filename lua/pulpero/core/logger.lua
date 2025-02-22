@@ -25,64 +25,16 @@ function Logger.new(testEnv)
     return self
 end
 
-function  Logger.getConfig(self)
+function Logger.getConfig(self)
     return config
 end
 
 function Logger.configuredLoggerPathBaseOnOS(self)
-    local os_name = OSCommands:getPlatform()
-
-    if os_name == "linux" then
-        local tmp = os.getenv("TMPDIR")
-        if tmp then
-            config.directory = tmp
-        else
-            local candidates = {
-                "/tmp",
-                "/var/tmp",
-                "/usr/tmp"
-            }
-
-            for _, path in ipairs(candidates) do
-                local file = io.open(path .. "/test_write", "w")
-                if file then
-                    file:close()
-                    os.remove(path .. "/test_write")
-                    config.directory = path
-                    return
-                end
-            end
-        end
-
-        config.debug_path = string.format("%s/%s", config.directory, config.debug_file)
-        config.error_path = string.format("%s/%s", config.directory, config.error_file)
-        config.command_path = string.format("%s/%s", config.directory, config.command_output)
-        config.setup_path = string.format("%s/%s", config.directory, config.setup_file)
-    elseif os_name == "darwin" then
-
-        config.debug_path = string.format("%s/%s", config.directory, config.debug_file)
-        config.error_path = string.format("%s/%s", config.directory, config.error_file)
-        config.command_path = string.format("%s/%s", config.directory, config.command_output)
-        config.setup_path = string.format("%s/%s", config.directory, config.setup_file)
-    elseif os_name == "windows" then
-
-        local temp = os.getenv("TEMP")
-        if temp then
-            config.directory = temp
-        else
-            local tmp = os.getenv("TMP")
-            if tmp then
-                config.directory = tmp
-            else
-                config.directory =  "C:\\Windows\\Temp"
-            end
-        end
-
-        config.debug_path = string.format("%s\\%s", config.directory, config.debug_file)
-        config.error_path = string.format("%s\\%s", config.directory, config.error_file)
-        config.command_path = string.format("%s\\%s", config.directory, config.command_output)
-        config.setup_path = string.format("%s\\%s", config.directory, config.setup_file)
-    end
+    config.directory = OSCommands:getTempDir()
+    config.debug_path = OSCommands:createPathByOS(config.directory, config.debug_file)
+    config.error_path = OSCommands:createPathByOS(config.directory, config.error_file)
+    config.command_path = OSCommands:createPathByOS(config.directory, config.command_output)
+    config.setup_path = OSCommands:createPathByOS(config.directory, config.setup_file)
 end
 
 function Logger.clearLogs(self)

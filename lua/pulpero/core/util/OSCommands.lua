@@ -1,4 +1,19 @@
 local OSCommands = {}
+local WINDOWS = "windows"
+local LINUX = "linux"
+local DARWIN = "darwin"
+
+function OSCommands.isWindows(self)
+    return OSCommands:getPlatform() == WINDOWS
+end
+
+function OSCommands.isLinux(self)
+    return OSCommands:getPlatform() == LINUX
+end
+
+function OSCommands.isDarwin(self)
+    return OSCommands:getPlatform() == DARWIN
+end
 
 function OSCommands.executeCommand(self, cmd)
     local handle = io.popen(cmd)
@@ -46,7 +61,7 @@ function OSCommands.createFile(self, path)
 end
 
 function OSCommands.createDirectory(self, path)
-    if package.config:sub(1,1) == '\\' then
+    if OSCommands:isWindows() then
         self:executeCommand('mkdir "' .. path .. '"')
     else
         self:executeCommand('mkdir -p "' .. path .. '"')
@@ -60,9 +75,7 @@ function OSCommands.ensureDir(self, path)
 end
 
 function OSCommands.getTempDir(self)
-    local os_name = OSCommands:getPlatform()
-
-    if os_name == "linux" then
+    if OSCommands:isLinux() then
         local tmp = os.getenv("TMPDIR")
         if tmp then
             return tmp
@@ -72,7 +85,6 @@ function OSCommands.getTempDir(self)
                 "/var/tmp",
                 "/usr/tmp"
             }
-
             for _, path in ipairs(candidates) do
                 local file = io.open(path .. "/test_write", "w")
                 if file then
@@ -82,11 +94,9 @@ function OSCommands.getTempDir(self)
                 end
             end
         end
-
-    elseif os_name == "darwin" then
+    elseif OSCommands:isDarwin() then
         return "/tmp"
-    elseif os_name == "windows" then
-
+    elseif OSCommands:isWindows() then
         local temp = os.getenv("TEMP")
         if temp then
             return temp
@@ -120,7 +130,7 @@ end
 function OSCommands.getPlatform(self)
     local os_name = "undefine"
     if package.config:sub(1,1) == '\\' then
-        os_name = "windows"
+        os_name = WINDOWS
     else
         local handle = io.popen("uname")
         if handle then
@@ -133,7 +143,7 @@ end
 
 function OSCommands.createPathByOS(self, path_or_folder, file_name_or_folder )
     local final_path = ""
-    if OSCommands:getPlatform() == 'windows' then
+    if OSCommands:isWindows() then
          final_path = path_or_folder .. "\\" .. file_name_or_folder
     else
         final_path = path_or_folder .. "/" .. file_name_or_folder
