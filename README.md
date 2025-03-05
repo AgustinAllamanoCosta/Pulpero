@@ -309,8 +309,11 @@ Logs are recreated with each request to maintain a controlled size and facilitat
 - 🚧 Add the docker build and publish process to the CI pipeline
 - ❌ Add test on the CI pipeline
 - ✅ Migrate to a DeepSeek
-- 🚧 Automate the download of the DeepSeek gguf format model
+- ✅ Automate the download of the DeepSeek gguf format model
 - 🚧 Add live feedback with audio for coding
+
+- refactor model download to be handle by the services
+- refactor all the model runner call to be handle by the service
 
 *References*:
 

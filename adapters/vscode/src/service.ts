@@ -163,6 +163,10 @@ export class PulperoService extends EventEmitter {
         return this._sendRequest('explain_function', { language, code }) as Promise<string>;
     }
 
+    public async talkWithModel(message: string): Promise<string> {
+        return this._sendRequest('talk_with_model', { message }) as Promise<string>;
+    }
+
     private async _sendRequest(method: string, params: Record<string, unknown>): Promise<unknown> {
         if (!this.process || !this.process.stdin) {
             throw new Error('Service not running');

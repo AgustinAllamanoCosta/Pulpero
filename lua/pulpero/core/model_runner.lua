@@ -36,7 +36,7 @@ function Runner.new(config, logger, parser)
     self.model_parameters = {
         repeat_penalty = "1.2",
         mirostat = "2",
-        context_window = "4096",
+        context_window = "4092",
         response_size = "1024",
         temp = "0.2",
         top_p = "0.3",
@@ -57,7 +57,7 @@ function Runner.createNewChatContext(self)
         messages = {},
         max_messages = 10, -- Keep last 10 messages for context
         current_tokens = 0,
-        max_tokens = 4096  -- Match your model's context window
+        max_tokens = 4092  -- Match your model's context window
     }
 end
 
@@ -190,7 +190,8 @@ function Runner.talkWithModel(self, message)
 
     if success then
         self:updateChatContext(assistant_key, result)
-        return true, result
+        local code = self.parser:getCodeFromResponse(result)
+        return true, result, code
     else
         local error_path = self.logger:getConfig().directory
         self.logger:error("An error happen when we try to execute the function run_local_model ", { error = result })
@@ -230,18 +231,6 @@ function Runner.endPairingSession(self)
     self:clearModelCache()
 
     self.pairing_session.running = false
-end
-
-function Runner.runStandardQuery(self, language, context, query)
-    if context == nil then
-        error("Code to analyze can not be nil")
-    end
-    if language == nil then
-        error("Language of the code to analyze can not be nil")
-    end
-    self:clearModelCache()
-    local full_query = string.format(query, language, context)
-    return self:talkWithModel(full_query)
 end
 
 return Runner

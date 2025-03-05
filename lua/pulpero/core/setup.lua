@@ -36,7 +36,6 @@ end
 
 function Setup.installCmake(self)
     self.logger:setup("Installing CMake...")
-    local os_name = self.config.os
     if OSCommands:isLinux() then
         if not self:executeCommandAndDump("sudo apt-get update && sudo apt-get install -y cmake") then
             return self:executeCommandAndDump("sudo yum -y install cmake")
@@ -119,11 +118,11 @@ function Setup.prepearEnv(self)
     else
         error("Failed to initialize Pulpero")
     end
+    --check if the model exist
     if true then
         self.config.pulpero_ready = true
     else
         self.config.pulpero_ready = false
-        -- download the model async
         self.model_manager:downloadAndAssembleModel()
     end
     return self.config
@@ -132,7 +131,6 @@ end
 function Setup.configurePlugin(self)
     local context_window = nil
     local threads = nil
-    local platform = self.default_settings.os
 
     if OSCommands:isLinux() then
         local output = OSCommands:executeCommand("free -m | grep Mem:")

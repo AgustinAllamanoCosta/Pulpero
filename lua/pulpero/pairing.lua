@@ -34,6 +34,10 @@ function Pairing.submit_description(self)
     self:close()
 end
 
+function Pairing.endParingSession(self) 
+    self.runner:endParingSession()
+end
+
 function Pairing.close(self)
     if self.modal_open == true then
         self.ui:close_desc()

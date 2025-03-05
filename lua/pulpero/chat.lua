@@ -3,15 +3,14 @@ local pulpero_key = "Pulpero"
 local user_key = "User"
 local system_key = "System"
 
-function Chat.new(ui, runner, parser, config)
+function Chat.new(ui, runner, config)
     local self        = setmetatable({}, { __index = Chat })
     self.ui           = ui
     self.config       = config
     self.chat_open    = false
     self.runner       = runner
-    self.parser       = parser
     self.code_snippet = nil
-
+    self.code         = nil
     return self
 end
 
@@ -32,6 +31,18 @@ function Chat.open(self)
     vim.api.nvim_buf_set_keymap(self.ui.input_buf, 'i', '<CR>',
         '<Esc>:PulperoSendChat<CR>',
         keymap_opts)
+end
+
+function Chat.clear(self)
+    vim.api.nvim_buf_set_option(self.ui.chat_buf, 'modifiable', true)
+    vim.api.nvim_buf_set_lines(self.ui.chat_buf, 0, -1, false, { "" })
+    vim.api.nvim_win_set_cursor(self.ui.chat_win, { 0, 0 })
+    vim.api.nvim_buf_set_option(self.ui.chat_buf, 'modifiable', false)
+    self.runner:clearModelCache()
+end
+
+function Chat.updateCurrentFileContext(self, file_data, amount_of_lines)
+    self.runner:updateCurrentFileContext(file_data, amount_of_lines)
 end
 
 function Chat.append_message(self, sender, content)
@@ -73,9 +84,8 @@ function Chat.submit_message(self)
 
         vim.fn.jobstart({ 'sh', '-c', 'sleep 0' }, {
             on_exit = function()
-                local success, response = self.runner:talkWithModel(message)
+                local success, response, code = self.runner:talkWithModel(message)
                 if success then
-                    self.code_snippet = self.parser:getCodeFromResponse(response)
                     self:append_message(pulpero_key, response)
                     self:append_message(system_key,
                         "🚨 ! Note: This explanation is AI-generated and should be verified for accuracy. ! 🚨")
