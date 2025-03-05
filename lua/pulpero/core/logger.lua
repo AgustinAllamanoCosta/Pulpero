@@ -19,48 +19,48 @@ local config = {
 
 function Logger.new(testEnv)
     local self = setmetatable({}, { __index = Logger })
-    self:configuredLoggerPathBaseOnOS()
-    self:clearLogs()
+    self:configured_logger_path_base_on_OS()
+    self:clear_logs()
     self.testEnv = testEnv
     return self
 end
 
-function Logger.getConfig(self)
+function Logger.get_config(self)
     return config
 end
 
-function Logger.configuredLoggerPathBaseOnOS(self)
-    config.directory = OSCommands:getTempDir()
-    config.debug_path = OSCommands:createPathByOS(config.directory, config.debug_file)
-    config.error_path = OSCommands:createPathByOS(config.directory, config.error_file)
-    config.command_path = OSCommands:createPathByOS(config.directory, config.command_output)
-    config.setup_path = OSCommands:createPathByOS(config.directory, config.setup_file)
+function Logger.configured_logger_path_base_on_OS(self)
+    config.directory = OSCommands:get_temp_dir()
+    config.debug_path = OSCommands:create_path_by_OS(config.directory, config.debug_file)
+    config.error_path = OSCommands:create_path_by_OS(config.directory, config.error_file)
+    config.command_path = OSCommands:create_path_by_OS(config.directory, config.command_output)
+    config.setup_path = OSCommands:create_path_by_OS(config.directory, config.setup_file)
 end
 
-function Logger.clearLogs(self)
-    self:clearLogFile(config.debug_path, config.title_debug)
-    self:clearLogFile(config.error_path, config.title_error)
-    self:clearLogFile(config.setup_path, config.title_setup)
-    self:clearLogFile(config.command_path, config.title_command)
+function Logger.clear_logs(self)
+    self:clear_log_file(config.debug_path, config.title_debug)
+    self:clear_log_file(config.error_path, config.title_error)
+    self:clear_log_file(config.setup_path, config.title_setup)
+    self:clear_log_file(config.command_path, config.title_command)
 end
 
 function Logger.setup(self, message, data)
-    self:writeInLog(config.setup_path, message, data)
+    self:write_in_log(config.setup_path, message, data)
 end
 
 function Logger.debug(self, message, data)
-    self:writeInLog(config.debug_path, message, data)
+    self:write_in_log(config.debug_path, message, data)
 end
 
 function Logger.error(self, error_text)
-    self:writeInLog(config.error_path, error_text, nil)
+    self:write_in_log(config.error_path, error_text, nil)
 end
 
-function Logger.commandOutput(self, output, data)
-    self:writeInLog(config.command_path, output, data)
+function Logger.command_output(self, output, data)
+    self:write_in_log(config.command_path, output, data)
 end
 
-function Logger.clearLogFile(self, file_path, file_title)
+function Logger.clear_log_file(self, file_path, file_title)
     local file = io.open(file_path, "w")
     if file then
         file:write(file_title)
@@ -68,7 +68,7 @@ function Logger.clearLogFile(self, file_path, file_title)
     end
 end
 
-function Logger.writeInLog(self, path, message, data)
+function Logger.write_in_log(self, path, message, data)
     if path == nil then
         error("Logger path can not be nil")
     end

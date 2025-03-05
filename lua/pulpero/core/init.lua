@@ -1,4 +1,4 @@
-local function addPulperoToPath()
+local function add_pulpero_to_path()
     local current_file = debug.getinfo(1, "S").source:sub(2)
     local plugin_root = current_file:match("(.*/)"):sub(1, -2):match("(.*/)"):sub(1, -2)
 
@@ -18,7 +18,7 @@ local function addPulperoToPath()
     return plugin_root
 end
 
-addPulperoToPath()
+add_pulpero_to_path()
 local Runner = require('model_runner')
 local Setup = require('setup')
 local Logger = require('logger')
@@ -33,10 +33,10 @@ local config = {}
 
 local function start()
     logger = Logger.new()
-    logger:clearLogs()
+    logger:clear_logs()
     setup = Setup.new(logger)
-    config = setup:configurePlugin()
-    setup:prepearEnv()
+    config = setup:configure_plugin()
+    setup:prepear_env()
 
     parser = Parser.new(config)
     runner = Runner.new(config, logger, parser)

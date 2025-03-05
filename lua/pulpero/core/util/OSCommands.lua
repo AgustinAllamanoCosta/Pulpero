@@ -3,19 +3,19 @@ local WINDOWS = "windows"
 local LINUX = "linux"
 local DARWIN = "darwin"
 
-function OSCommands.isWindows(self)
-    return OSCommands:getPlatform() == WINDOWS
+function OSCommands.is_windows(self)
+    return OSCommands:get_platform() == WINDOWS
 end
 
-function OSCommands.isLinux(self)
-    return OSCommands:getPlatform() == LINUX
+function OSCommands.is_linux(self)
+    return OSCommands:get_platform() == LINUX
 end
 
-function OSCommands.isDarwin(self)
-    return OSCommands:getPlatform() == DARWIN
+function OSCommands.is_darwin(self)
+    return OSCommands:get_platform() == DARWIN
 end
 
-function OSCommands.executeCommand(self, cmd)
+function OSCommands.execute_command(self, cmd)
     local handle = io.popen(cmd)
     if not handle then return nil end
     local result = handle:read("*a")
@@ -23,7 +23,7 @@ function OSCommands.executeCommand(self, cmd)
     return result
 end
 
-function OSCommands.isDirectory(self, path)
+function OSCommands.is_directory(self, path)
     local file = io.open(path)
     if file then
         local ok, err, code = file:read(1)
@@ -33,7 +33,7 @@ function OSCommands.isDirectory(self, path)
     return false
 end
 
-function OSCommands.fileExists(self, path)
+function OSCommands.file_exists(self, path)
     local file = io.open(path, "r")
     if file then
         file:close()
@@ -42,40 +42,40 @@ function OSCommands.fileExists(self, path)
     return false
 end
 
-function OSCommands.deleteFile(self, path)
-    if self:fileExists(path) then
-        self:executeCommand('rm "' .. path .. '"')
+function OSCommands.delete_file(self, path)
+    if self:file_exists(path) then
+        self:execute_command('rm "' .. path .. '"')
     end
 end
 
-function OSCommands.deleteFolder(self, path)
-    if self:isDirectory(path) then
-        self:executeCommand('yes | rm -r "' .. path .. '"')
+function OSCommands.delete_folder(self, path)
+    if self:is_directory(path) then
+        self:execute_command('yes | rm -r "' .. path .. '"')
     end
 end
 
-function OSCommands.createFile(self, path)
-    if not self:fileExists(path) then
-        self:executeCommand('touch "' .. path .. '"')
+function OSCommands.create_file(self, path)
+    if not self:file_exists(path) then
+        self:execute_command('touch "' .. path .. '"')
     end
 end
 
-function OSCommands.createDirectory(self, path)
-    if OSCommands:isWindows() then
-        self:executeCommand('mkdir "' .. path .. '"')
+function OSCommands.create_directory(self, path)
+    if OSCommands:is_windows() then
+        self:execute_command('mkdir "' .. path .. '"')
     else
-        self:executeCommand('mkdir -p "' .. path .. '"')
+        self:execute_command('mkdir -p "' .. path .. '"')
     end
 end
 
-function OSCommands.ensureDir(self, path)
-    if not self:isDirectory(path) then
-        self:createDirectory(path)
+function OSCommands.ensure_dir(self, path)
+    if not self:is_directory(path) then
+        self:create_directory(path)
     end
 end
 
-function OSCommands.getTempDir(self)
-    if OSCommands:isLinux() then
+function OSCommands.get_temp_dir(self)
+    if OSCommands:is_linux() then
         local tmp = os.getenv("TMPDIR")
         if tmp then
             return tmp
@@ -94,9 +94,9 @@ function OSCommands.getTempDir(self)
                 end
             end
         end
-    elseif OSCommands:isDarwin() then
+    elseif OSCommands:is_darwin() then
         return "/tmp"
-    elseif OSCommands:isWindows() then
+    elseif OSCommands:is_windows() then
         local temp = os.getenv("TEMP")
         if temp then
             return temp
@@ -111,7 +111,7 @@ function OSCommands.getTempDir(self)
     end
 end
 
-function OSCommands.getDataPath(self)
+function OSCommands.get_data_path(self)
     local sep = package.config:sub(1,1)
     if os.getenv("HOME") then
         return os.getenv("HOME") .. sep .. ".local" .. sep .. "share" .. sep .. "pulpero"
@@ -120,14 +120,14 @@ function OSCommands.getDataPath(self)
     end
 end
 
-function OSCommands.getModelDir(self)
-    local source_path = OSCommands:getDataPath()
-    local final_path = self:createPathByOS(source_path, "model")
-    OSCommands:ensureDir(final_path)
+function OSCommands.get_model_dir(self)
+    local source_path = OSCommands:get_data_path()
+    local final_path = self:create_path_by_OS(source_path, "model")
+    OSCommands:ensure_dir(final_path)
     return final_path
 end
 
-function OSCommands.getPlatform(self)
+function OSCommands.get_platform(self)
     local os_name = "undefine"
     if package.config:sub(1,1) == '\\' then
         os_name = WINDOWS
@@ -141,9 +141,9 @@ function OSCommands.getPlatform(self)
     return os_name
 end
 
-function OSCommands.createPathByOS(self, path_or_folder, file_name_or_folder )
+function OSCommands.create_path_by_OS(self, path_or_folder, file_name_or_folder )
     local final_path = ""
-    if OSCommands:isWindows() then
+    if OSCommands:is_windows() then
          final_path = path_or_folder .. "\\" .. file_name_or_folder
     else
         final_path = path_or_folder .. "/" .. file_name_or_folder
@@ -151,8 +151,8 @@ function OSCommands.createPathByOS(self, path_or_folder, file_name_or_folder )
     return final_path
 end
 
-function OSCommands.getFileContent(self, file_path)
-  if self:fileExists(file_path) then
+function OSCommands.get_file_content(self, file_path)
+  if self:file_exists(file_path) then
     local file = io.open(file_path, "r")
     local content = file:read("*a")
     file:close()

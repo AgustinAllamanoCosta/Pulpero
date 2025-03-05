@@ -31,7 +31,7 @@ function Runner.new(config, logger, parser)
     self.config = config
     self.logger = logger
     self.parser = parser
-    self.chat_context = self:createNewChatContext()
+    self.chat_context = self:create_new_chat_context()
     self.is_file_context_available = false
     self.model_parameters = {
         repeat_penalty = "1.2",
@@ -52,7 +52,7 @@ function Runner.new(config, logger, parser)
     return self
 end
 
-function Runner.createNewChatContext(self)
+function Runner.create_new_chat_context(self)
     return {
         messages = {},
         max_messages = 10, -- Keep last 10 messages for context
@@ -61,7 +61,7 @@ function Runner.createNewChatContext(self)
     }
 end
 
-function Runner.generatePromptFile(self, prompt)
+function Runner.generate_prompt_file(self, prompt)
     self.logger:debug("Creating temp file with prompt")
     local tmp_prompt = os.tmpname()
     local tmp_prompt_file = io.open(tmp_prompt, 'w')
@@ -75,10 +75,10 @@ function Runner.generatePromptFile(self, prompt)
     return tmp_prompt
 end
 
-function Runner.runLocalModel(self, prompt, config)
+function Runner.run_local_model(self, prompt, config)
     self.logger:debug("Configuration ", config)
 
-    local tmp_prompt = self:generatePromptFile(prompt)
+    local tmp_prompt = self:generate_prompt_file(prompt)
     local response_file = os.tmpname()
 
     self.logger:debug("Formatting command to execute")
@@ -128,12 +128,12 @@ function Runner.runLocalModel(self, prompt, config)
         self.logger:error("The result is nil or empty")
         return nil_or_empty_response
     end
-    local parser_result = self.parser:cleanModelOutput(response)
+    local parser_result = self.parser:clean_model_output(response)
     self.logger:debug("Parse result ", { result = parser_result })
     return parser_result
 end
 
-function Runner:updateChatContext(role, content)
+function Runner:update_chat_context(role, content)
     table.insert(self.chat_context.messages, {
         role = role,
         content = content
@@ -144,7 +144,7 @@ function Runner:updateChatContext(role, content)
     end
 end
 
-function Runner:buildChatHistory()
+function Runner:build_chat_history()
     local history = ""
     for _, msg in ipairs(self.chat_context.messages) do
         if msg.role == user_key then
@@ -156,15 +156,15 @@ function Runner:buildChatHistory()
     return history
 end
 
-function Runner.clearModelCache(self)
+function Runner.clear_model_cache(self)
     os.remove(cache_prompt_path)
-    self.chat_context = self:createNewChatContext()
+    self.chat_context = self:create_new_chat_context()
 end
 
-function Runner.talkWithModel(self, message)
+function Runner.talk_with_model(self, message)
     self.logger:debug("New query to the model ", { query = message })
 
-    local current_chat_history = self:buildChatHistory()
+    local current_chat_history = self:build_chat_history()
     local dynamic_prompt = ""
     local context_file = ""
     local chat_history = ""
@@ -183,17 +183,17 @@ function Runner.talkWithModel(self, message)
         dynamic_prompt = string.format(prompts.chat, context_file, chat_history, message)
     end
 
-    self:updateChatContext(user_key, message)
+    self:update_chat_context(user_key, message)
 
     self.logger:debug("Full prompt", { prompt = dynamic_prompt })
-    local success, result = pcall(self.runLocalModel, self, dynamic_prompt, self.model_parameters)
+    local success, result = pcall(self.run_local_model, self, dynamic_prompt, self.model_parameters)
 
     if success then
-        self:updateChatContext(assistant_key, result)
-        local code = self.parser:getCodeFromResponse(result)
+        self:update_chat_context(assistant_key, result)
+        local code = self.parser:get_code_from_response(result)
         return true, result, code
     else
-        local error_path = self.logger:getConfig().directory
+        local error_path = self.logger:get_config().directory
         self.logger:error("An error happen when we try to execute the function run_local_model ", { error = result })
         self.logger:debug("Formatting error message to render on UI")
         local error_message = string.format(
@@ -207,7 +207,7 @@ function Runner.talkWithModel(self, message)
     end
 end
 
-function Runner.updateCurrentFileContent(self, content, amount_of_lines)
+function Runner.update_current_file_content(self, content, amount_of_lines)
     if content == nil or content == "" then
         self.is_file_context_available = false
     end
@@ -220,15 +220,15 @@ function Runner.updateCurrentFileContent(self, content, amount_of_lines)
     end
 end
 
-function Runner.initPairingSession(self, feature_description)
-    self:clearModelCache()
+function Runner.init_pairing_session(self, feature_description)
+    self:clear_model_cache()
 
     self.pairing_session.running = true
     self.pairing_session.feature = feature_description
 end
 
-function Runner.endPairingSession(self)
-    self:clearModelCache()
+function Runner.end_pairing_session(self)
+    self:clear_model_cache()
 
     self.pairing_session.running = false
 end

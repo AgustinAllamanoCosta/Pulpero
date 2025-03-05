@@ -3,12 +3,11 @@ local pulpero_key = "Pulpero"
 local user_key = "User"
 local system_key = "System"
 
-function Chat.new(ui, runner, config)
+function Chat.new(ui, service)
     local self        = setmetatable({}, { __index = Chat })
     self.ui           = ui
-    self.config       = config
     self.chat_open    = false
-    self.runner       = runner
+    self.service      = service
     self.code_snippet = nil
     self.code         = nil
     return self
@@ -38,11 +37,20 @@ function Chat.clear(self)
     vim.api.nvim_buf_set_lines(self.ui.chat_buf, 0, -1, false, { "" })
     vim.api.nvim_win_set_cursor(self.ui.chat_win, { 0, 0 })
     vim.api.nvim_buf_set_option(self.ui.chat_buf, 'modifiable', false)
-    self.runner:clearModelCache()
+    self.service:clear_model_cache(function(err, result)
+        if err then
+            self:append_message(system_key, "Error clearing cache: " .. err)
+        end
+    end)
 end
 
-function Chat.updateCurrentFileContext(self, file_data, amount_of_lines)
-    self.runner:updateCurrentFileContext(file_data, amount_of_lines)
+function Chat.update_current_file_context(self, file_data, amount_of_lines)
+    self.service:update_current_file_content(file_data, amount_of_lines, function(err, result)
+        if err then
+            print("Error updating file context: ")
+            print(err)
+        end
+    end)
 end
 
 function Chat.append_message(self, sender, content)
@@ -74,6 +82,9 @@ function Chat.append_message(self, sender, content)
 end
 
 function Chat.submit_message(self)
+    if not self.chat_open then
+        return
+    end
     local message = vim.api.nvim_buf_get_lines(self.ui.input_buf, 0, -1, false)[1]
 
     if message and message ~= "" then
@@ -81,19 +92,27 @@ function Chat.submit_message(self)
 
         self:append_message(user_key, message)
         self:append_message(pulpero_key, "⏲️  Cooking...")
-
-        vim.fn.jobstart({ 'sh', '-c', 'sleep 0' }, {
-            on_exit = function()
-                local success, response, code = self.runner:talkWithModel(message)
-                if success then
-                    self:append_message(pulpero_key, response)
-                    self:append_message(system_key,
-                        "🚨 ! Note: This explanation is AI-generated and should be verified for accuracy. ! 🚨")
-                else
-                    self:append_message(system_key, "🛑 Error: Failed to get response from model")
-                end
+        self.service:talk_with_model(message, function(err, result)
+            if err then
+                self.ui:append_message(pulpero_key, "🛑 Error: " .. err)
+                return
             end
-        })
+
+            if result and result.success then
+                -- Replace "Cooking..." message with actual response
+                self.ui:append_message(pulpero_key, result.message)
+
+                -- Set code snippet if available
+                if result.code then
+                    self.code = result.code
+                end
+
+                self:append_message(system_key,
+                    "🚨 ! Note: This explanation is AI-generated and should be verified for accuracy. ! 🚨")
+            else
+                self.ui:update_message(pulpero_key, "🛑 Error: Failed to get response from model")
+            end
+        end)
     end
 end
 

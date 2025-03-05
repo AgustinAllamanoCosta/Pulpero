@@ -1,11 +1,11 @@
 local Parser = {}
-function Parser.new(config, logger)
+function Parser.new(logger)
     local self = setmetatable({}, { __index = Parser })
     self.logger = logger
     return self
 end
 
-function Parser.cleanModelOutput(self, output)
+function Parser.clean_model_output(self, output)
     self.logger:debug("Data to parse ", { data = output })
     local clean_response = nil
     local in_assistant_response = false
@@ -54,7 +54,7 @@ function Parser.cleanModelOutput(self, output)
     return clean_response
 end
 
-function Parser.getCodeFromResponse(self, output)
+function Parser.get_code_from_response(self, output)
     self.logger:debug("Data to parse ", { data = output })
     local in_code = false
     local code_lines = {}

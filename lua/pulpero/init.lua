@@ -25,10 +25,12 @@ local M = {}
 local UI = require('ui')
 local Chat = require('chat')
 local Pairing = require('pairing')
+local Service_Connector = require('service_connector')
 
-local ui = UI.new(config)
-local chat = Chat.new(ui, runner, config)
-local pairing = Pairing.new(ui, runner, config)
+local ui = UI.new()
+local service = Service_Connector.new()
+local chat = Chat.new(ui, service)
+local pairing = Pairing.new(ui, service)
 
 local function submit_feat_desc()
     pairing:submit_description()
@@ -66,29 +68,26 @@ end
 local function update_code_data(self)
     if should_update_file(vim.api.nvim_get_current_buf()) then
         local current_file, amount_of_lines = get_current_file()
-        chat:updateCurrentFileContext(current_file, amount_of_lines)
+        chat:update_current_file_context(current_file, amount_of_lines)
         add_virtual_text()
     end
 end
 
-local function clear() end
-local function toggle() end
-
 function M.setup()
+    service:connect()
     chat:close()
-    clear()
+    chat:clear()
     vim.api.nvim_create_autocmd({ "BufEnter", "BufWrite" }, {
         callback = update_code_data
     })
 
     vim.api.nvim_create_user_command('PulperoOpenChat', function()
-            chat:open()
-        end,
-        {
-            range = true,
-            desc =
-            "Open the chat windows, if it is open in another tab close that windows and open a new one in the current tab"
-        })
+        chat:open()
+    end,
+    {
+        range = true,
+        desc = "Open the chat windows, if it is open in another tab close that windows and open a new one in the current tab"
+    })
 
     vim.api.nvim_create_user_command('PulperoCloseChat', function()
         chat:close()
@@ -115,7 +114,7 @@ function M.setup()
     end, { range = true, desc = "End an ongoing pairing session" })
 
     vim.api.nvim_create_user_command('PulperoToggle', function()
-        toggle()
+        service:toggle_service(function(err, data) if err then print("Error toggling the service ".. err) end end)
     end, { range = true, desc = "Enable or Disable the plugin for running unless the IA model is not ready yet" })
 end
 

@@ -1,11 +1,10 @@
 local Pairing = {}
 
-function Pairing.new(ui, runner, config)
-    local self               = setmetatable({}, { __index = Pairing })
-    self.ui                  = ui
-    self.config              = config
-    self.modal_open           = false
-    self.runner              = runner
+function Pairing.new(ui, service)
+    local self      = setmetatable({}, { __index = Pairing })
+    self.ui         = ui
+    self.modal_open = false
+    self.service    = service
     return self
 end
 
@@ -17,8 +16,8 @@ function Pairing.open(self)
     else
         self.ui:create_desc_box()
     end
-    self.modal_open = true
-    local keymap_opts        = { noremap = true, silent = false }
+    self.modal_open   = true
+    local keymap_opts = { noremap = true, silent = false }
     vim.api.nvim_buf_set_keymap(self.ui.desc_buf, 'i', '<CR>',
         '<Esc>:PulperoSubmitFeatDescription<CR>',
         keymap_opts)
@@ -29,13 +28,23 @@ function Pairing.submit_description(self)
 
     if message and message ~= "" then
         vim.api.nvim_buf_set_lines(self.ui.desc_buf, 0, -1, false, { "" })
-        self.runner:initPairingSession(message)
+        self.service:init_pairing_session(message, function(err, result)
+            if err then
+                print("Error trying to start the a new pairing session: ")
+                print(err)
+            end
+        end)
     end
     self:close()
 end
 
-function Pairing.endParingSession(self) 
-    self.runner:endParingSession()
+function Pairing.end_paring_session(self)
+    self.service:end_paring_session(function(err, result)
+        if err then
+            print("Error trying to end the current pairing session: ")
+            print(err)
+        end
+    end)
 end
 
 function Pairing.close(self)

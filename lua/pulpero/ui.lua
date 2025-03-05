@@ -1,6 +1,6 @@
 local UI = {}
 
-function UI.new(config)
+function UI.new()
     local self         = setmetatable({}, { __index = UI })
     local width        = math.floor(vim.o.columns * 0.3)
     local chat_height  = vim.o.lines - 9
@@ -8,7 +8,6 @@ function UI.new(config)
     local col          = vim.o.columns - width
     local input_height = 3
 
-    self.config        = config
     self.chat_buf      = vim.api.nvim_create_buf(false, true)
     self.input_buf     = vim.api.nvim_create_buf(false, true)
     self.desc_buf      = vim.api.nvim_create_buf(false, true)
