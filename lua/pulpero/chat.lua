@@ -33,10 +33,12 @@ function Chat.open(self)
 end
 
 function Chat.clear(self)
-    vim.api.nvim_buf_set_option(self.ui.chat_buf, 'modifiable', true)
-    vim.api.nvim_buf_set_lines(self.ui.chat_buf, 0, -1, false, { "" })
-    vim.api.nvim_win_set_cursor(self.ui.chat_win, { 0, 0 })
-    vim.api.nvim_buf_set_option(self.ui.chat_buf, 'modifiable', false)
+    if self.ui.chat_buf and self.ui.chat_win then
+        vim.api.nvim_buf_set_option(self.ui.chat_buf, 'modifiable', true)
+        vim.api.nvim_buf_set_lines(self.ui.chat_buf, 0, -1, false, { "" })
+        vim.api.nvim_win_set_cursor(self.ui.chat_win, { 0, 0 })
+        vim.api.nvim_buf_set_option(self.ui.chat_buf, 'modifiable', false)
+    end
     self.service:clear_model_cache(function(err, result)
         if err then
             self:append_message(system_key, "Error clearing cache: " .. err)
@@ -93,25 +95,26 @@ function Chat.submit_message(self)
         self:append_message(user_key, message)
         self:append_message(pulpero_key, "⏲️  Cooking...")
         self.service:talk_with_model(message, function(err, result)
-            if err then
-                self.ui:append_message(pulpero_key, "🛑 Error: " .. err)
-                return
-            end
-
-            if result and result.success then
-                -- Replace "Cooking..." message with actual response
-                self.ui:append_message(pulpero_key, result.message)
-
-                -- Set code snippet if available
-                if result.code then
-                    self.code = result.code
+            vim.schedule(function()
+                if err then
+                    self.ui:append_message(pulpero_key, "🛑 Error: " .. err)
+                    return
                 end
 
-                self:append_message(system_key,
-                    "🚨 ! Note: This explanation is AI-generated and should be verified for accuracy. ! 🚨")
-            else
-                self.ui:update_message(pulpero_key, "🛑 Error: Failed to get response from model")
-            end
+                if result and result.success then
+                    -- Replace "Cooking..." message with actual response
+                    self:append_message(pulpero_key, result.message)
+
+                    if result.code then
+                        self.code = result.code
+                    end
+
+                    self:append_message(system_key,
+                        "🚨 ! Note: This explanation is AI-generated and should be verified for accuracy. ! 🚨")
+                else
+                    self.ui:update_message(pulpero_key, "🛑 Error: Failed to get response from model")
+                end
+            end)
         end)
     end
 end

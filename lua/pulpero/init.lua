@@ -69,14 +69,16 @@ local function update_code_data(self)
     if should_update_file(vim.api.nvim_get_current_buf()) then
         local current_file, amount_of_lines = get_current_file()
         chat:update_current_file_context(current_file, amount_of_lines)
-        add_virtual_text()
+        --add_virtual_text()
     end
 end
 
 function M.setup()
-    service:connect()
+    if not service:connect() then
+        print("Service not connected")
+        return
+    end
     chat:close()
-    chat:clear()
     vim.api.nvim_create_autocmd({ "BufEnter", "BufWrite" }, {
         callback = update_code_data
     })
@@ -89,6 +91,13 @@ function M.setup()
         desc = "Open the chat windows, if it is open in another tab close that windows and open a new one in the current tab"
     })
 
+
+    vim.api.nvim_create_user_command('PulperoStatus', function()
+        service:get_service_status(function (err, result)
+            print(err)
+            print(result)
+        end)
+    end, { range = true, desc = "Get the pulpero service status" })
     vim.api.nvim_create_user_command('PulperoCloseChat', function()
         chat:close()
     end, { range = true, desc = "Close the current open chat" })

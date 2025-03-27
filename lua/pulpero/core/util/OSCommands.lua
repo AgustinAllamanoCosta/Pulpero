@@ -2,6 +2,7 @@ local OSCommands = {}
 local WINDOWS = "windows"
 local LINUX = "linux"
 local DARWIN = "darwin"
+local sep = package.config:sub(1, 1)
 
 function OSCommands.is_windows(self)
     return OSCommands:get_platform() == WINDOWS
@@ -34,11 +35,30 @@ function OSCommands.is_directory(self, path)
 end
 
 function OSCommands.file_exists(self, path)
-    local file = io.open(path, "r")
-    if file then
-        file:close()
-        return true
+    local handle, files, directory, filename
+
+    directory = path:match("(.*".. sep ..")")
+    filename = path:match("[%w+_-]*%w+[.]%w+$")
+
+    if self:is_windows() then
+        handle = io.popen('dir /b "' .. directory .. '"')
+    else
+        handle = io.popen('ls -1 "' .. directory .. '"')
     end
+
+    if handle then
+        files = handle:read("*a")
+        handle:close()
+    else
+        return false
+    end
+
+    for file in files:gmatch("([^\n]+)") do
+        if file == filename then
+            return true
+        end
+    end
+
     return false
 end
 
@@ -112,12 +132,23 @@ function OSCommands.get_temp_dir(self)
 end
 
 function OSCommands.get_data_path(self)
-    local sep = package.config:sub(1,1)
     if os.getenv("HOME") then
         return os.getenv("HOME") .. sep .. ".local" .. sep .. "share" .. sep .. "pulpero"
     else
         return os.getenv("APPDATA") .. sep .. "pulpero"
     end
+end
+
+function OSCommands.get_source_path(self)
+    local regex = sep .. "pulpero" .. sep .. "%S*.lua"
+    local source_path = debug.getinfo(1).source:sub(2):gsub(regex, "")
+    return source_path
+end
+
+function OSCommands.get_core_path(self)
+    local source_path = OSCommands:get_source_path()
+    local base_path = OSCommands:create_path_by_OS(source_path, "pulpero")
+    return OSCommands:create_path_by_OS(base_path, "core")
 end
 
 function OSCommands.get_model_dir(self)
@@ -129,7 +160,7 @@ end
 
 function OSCommands.get_platform(self)
     local os_name = "undefine"
-    if package.config:sub(1,1) == '\\' then
+    if package.config:sub(1, 1) == '\\' then
         os_name = WINDOWS
     else
         local handle = io.popen("uname")
@@ -141,10 +172,10 @@ function OSCommands.get_platform(self)
     return os_name
 end
 
-function OSCommands.create_path_by_OS(self, path_or_folder, file_name_or_folder )
+function OSCommands.create_path_by_OS(self, path_or_folder, file_name_or_folder)
     local final_path = ""
     if OSCommands:is_windows() then
-         final_path = path_or_folder .. "\\" .. file_name_or_folder
+        final_path = path_or_folder .. "\\" .. file_name_or_folder
     else
         final_path = path_or_folder .. "/" .. file_name_or_folder
     end
@@ -152,13 +183,13 @@ function OSCommands.create_path_by_OS(self, path_or_folder, file_name_or_folder 
 end
 
 function OSCommands.get_file_content(self, file_path)
-  if self:file_exists(file_path) then
-    local file = io.open(file_path, "r")
-    local content = file:read("*a")
-    file:close()
-    return content
-  end
-  return nil
+    if self:file_exists(file_path) then
+        local file = io.open(file_path, "r")
+        local content = file:read("*a")
+        file:close()
+        return content
+    end
+    return nil
 end
 
 return OSCommands

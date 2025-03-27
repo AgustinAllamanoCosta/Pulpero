@@ -308,6 +308,7 @@ Logs are recreated with each request to maintain a controlled size and facilitat
 - ✅ Add pairing mode as a companion for developing a feature
 - 🚧 Add the docker build and publish process to the CI pipeline
 - ❌ Add test on the CI pipeline
+- ❌ Improve Neovim's UI
 - ✅ Migrate to a DeepSeek
 - ✅ Automate the download of the DeepSeek gguf format model
 - 🚧 Add live feedback with audio for coding

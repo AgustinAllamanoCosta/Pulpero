@@ -5,10 +5,11 @@ local uv = vim.loop
 
 local ServiceConnector = {}
 
-local SOCKET_DIR = OSCommands:get_temp_dir() or "/tmp"
+local SOCKET_DIR = OSCommands:get_temp_dir()
 local SOCKET_PATH = OSCommands:create_path_by_OS(SOCKET_DIR, "pulpero.sock")
 local PID_FILE = OSCommands:create_path_by_OS(SOCKET_DIR, "pulpero.pid")
-local SERVICE_SCRIPT = OSCommands:create_path_by_OS(vim.fn.stdpath('data'), 'pulpero/socket_service.lua')
+local SERVICE_SCRIPT = OSCommands:create_path_by_OS(OSCommands:get_core_path(), 'service.lua')
+local service_started = false
 
 function ServiceConnector.new()
     local self = setmetatable({}, { __index = ServiceConnector })
@@ -19,33 +20,40 @@ function ServiceConnector.new()
     self.pending_data = ""
     self.reconnect_attempts = 0
     self.max_reconnect_attempts = 5
-    self.logger = Logger.new()
+    self.logger = Logger.new("service_connector")
+    self.logger:debug("Script path ", { path = SERVICE_SCRIPT })
     return self
 end
 
 -- Check if the service is already running by checking PID file
 function ServiceConnector:is_service_running()
     if not OSCommands:file_exists(PID_FILE) then
+        self.logger:debug("Service is not running, PID file does not exists")
         return false
     end
     -- Read PID from file
+    self.logger:debug("Checking if the service is running")
     local file = io.open(PID_FILE, "r")
     if not file then
+        self.logger:debug("Service is not running, PID file does not exists")
         return false
     end
     local pid_str = file:read("*a")
     file:close()
     local pid = tonumber(pid_str)
     if not pid then
+        self.logger:debug("Service is not running, cannot read the PID from the file")
         return false
     end
     -- Check if process is running (platform specific)
     if OSCommands:is_windows() then
         -- Windows
+        self.logger:debug("Looking for the processes on Windows")
         local result = os.execute('tasklist /FI "PID eq ' .. pid .. '" 2>NUL | find "' .. pid .. '"')
         return result == 0
     else
         -- Unix-like
+        self.logger:debug("Looking for the processes on Darwing or Linux")
         local result = os.execute('kill -0 ' .. pid .. ' 2>/dev/null')
         return result == 0
     end
@@ -62,12 +70,14 @@ function ServiceConnector:start_service()
     local handle, pid
     local args = { SERVICE_SCRIPT }
     if OSCommands:is_windows() then
+        self.logger:debug("Is windows, starting service", { args })
         handle, pid = uv.spawn('lua', {
             args = args,
             detached = true,
             hide = true
         })
     else
+        self.logger:debug("Is Linux or Darwing, starting service", { args })
         handle, pid = uv.spawn('lua', {
             args = args,
             detached = true
@@ -85,11 +95,9 @@ function ServiceConnector:start_service()
     return true
 end
 
--- Process incoming data and extract complete JSON messages
 function ServiceConnector:process_data(data)
     if data then
         self.pending_data = self.pending_data .. data
-        -- Process all complete messages
         while true do
             local end_pos = self.pending_data:find("\n")
             if not end_pos then break end
@@ -100,21 +108,22 @@ function ServiceConnector:process_data(data)
     end
 end
 
--- Connect to the service socket
 function ServiceConnector:connect()
     if self.connected then
         return true
     end
-    -- Check if socket file exists
+    self.logger:debug("Plugin is not connected to the service", { SOCKET_PATH })
+
     if not OSCommands:file_exists(SOCKET_PATH) then
-        self.logger:debug("Socket file not found", { path = SOCKET_PATH })
-        -- Try to start the service if it's not running
-        if not self:is_service_running() then
-            if not self:start_service() then
-                self.logger:error("Failed to start service")
+        self.logger:debug("Socket file not found")
+        service_started = self:is_service_running()
+        if not service_started then
+            self.logger:debug("Service is not running starting a new one")
+            service_started = self:start_service()
+            if not service_started then
                 return false
             end
-            -- Wait a bit for the service to create the socket
+            self.logger:debug("Waiting for the service to complete")
             uv.sleep(1000)
             if not OSCommands:file_exists(SOCKET_PATH) then
                 self.logger:error("Socket file still not found after starting service")
@@ -126,9 +135,8 @@ function ServiceConnector:connect()
         end
     end
 
-    -- Create a new pipe
+    self.logger:debug("Socket file found, trying to connect...", { path = SOCKET_PATH })
     self.pipe = uv.new_pipe(false)
-    -- Connect to the socket
     local success, err = pcall(function()
         self.pipe:connect(SOCKET_PATH)
     end)
@@ -138,7 +146,6 @@ function ServiceConnector:connect()
         self.pipe = nil
         return false
     end
-    -- Set up data handling
     self.pipe:read_start(function(err, data)
         if err then
             self.logger:error("Error reading from service", { error = err })
@@ -148,7 +155,6 @@ function ServiceConnector:connect()
         if data then
             self:process_data(data)
         else
-            -- EOF - socket closed
             self:handle_disconnect()
         end
     end)
@@ -159,7 +165,6 @@ function ServiceConnector:connect()
     return true
 end
 
--- Handle disconnection and attempt reconnection
 function ServiceConnector:handle_disconnect()
     self.logger:debug("Disconnected from service")
     if self.pipe then
@@ -167,7 +172,6 @@ function ServiceConnector:handle_disconnect()
         self.pipe = nil
     end
     self.connected = false
-    -- Attempt reconnection with backoff
     if self.reconnect_attempts < self.max_reconnect_attempts then
         self.reconnect_attempts = self.reconnect_attempts + 1
         local delay = math.min(100 * (2 ^ self.reconnect_attempts), 5000) -- Exponential backoff with max 5s
@@ -185,7 +189,6 @@ function ServiceConnector:handle_disconnect()
     end
 end
 
--- Process a response from the service
 function ServiceConnector:handle_response(data)
     local success, decoded = pcall(json.decode, data)
     if not success then
@@ -196,15 +199,12 @@ function ServiceConnector:handle_response(data)
         self.logger:debug("Received response with no matching callback", { requestId = decoded.requestId })
         return
     end
-    -- Call the callback with error and result
+    self.logger:debug("Response from service to requestId ", decoded)
     self.callbacks[decoded.requestId](decoded.error, decoded.result)
-    -- Clean up
     self.callbacks[decoded.requestId] = nil
 end
 
--- Send a request to the service
 function ServiceConnector:send_request(method, params, callback)
-    -- Make sure we're connected
     if not self.connected then
         if not self:connect() then
             if callback then
@@ -213,18 +213,15 @@ function ServiceConnector:send_request(method, params, callback)
             return nil
         end
     end
-    -- Create a new request ID
     self.request_id = self.request_id + 1
     local request = {
         id = self.request_id,
         method = method,
         params = params
     }
-    -- Store the callback
     if callback then
         self.callbacks[self.request_id] = callback
     end
-    -- Encode and send the request
     local success, encoded = pcall(json.encode, request)
     if not success then
         self.logger:error("Failed to encode request", { error = encoded })
@@ -234,12 +231,10 @@ function ServiceConnector:send_request(method, params, callback)
         end
         return nil
     end
-    -- Write to the pipe
     self.pipe:write(encoded .. "\n")
     return self.request_id
 end
 
--- Wrapper methods for common service operations
 function ServiceConnector:talk_with_model(message, callback)
     return self:send_request("talk_with_model", { message = message }, callback)
 end
@@ -277,7 +272,6 @@ function ServiceConnector:toggle_service(callback)
     return self:send_request("toggle", {}, callback)
 end
 
--- Close the connection
 function ServiceConnector:disconnect()
     if self.pipe then
         self.pipe:close()
@@ -289,4 +283,3 @@ function ServiceConnector:disconnect()
 end
 
 return ServiceConnector
-

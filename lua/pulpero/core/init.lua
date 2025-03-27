@@ -32,7 +32,7 @@ local setup = nil
 local config = {}
 
 local function start()
-    logger = Logger.new()
+    logger = Logger.new("init_plugin")
     logger:clear_logs()
     setup = Setup.new(logger)
     config = setup:configure_plugin()

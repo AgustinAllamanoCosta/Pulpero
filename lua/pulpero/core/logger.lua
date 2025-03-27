@@ -17,8 +17,12 @@ local config = {
     title_debug = "=== New Debug Session Started ===\n"
 }
 
-function Logger.new(testEnv)
+function Logger.new(class_name, testEnv)
     local self = setmetatable({}, { __index = Logger })
+    config.debug_file = "pulpero_".. class_name .."_debug.log"
+    config.setpup_file = "pulpero_".. class_name .."_setup.log"
+    config.command_output = "pulpero_".. class_name .."_command.log"
+    config.error_file = "pulpero_".. class_name .."_error.log"
     self:configured_logger_path_base_on_OS()
     self:clear_logs()
     self.testEnv = testEnv
@@ -86,6 +90,10 @@ Data: %s
     log_file:close()
     if self.testEnv then
         print(message)
+        if data then
+            print("Data")
+            print(String:toString(data))
+        end
     end
 end
 

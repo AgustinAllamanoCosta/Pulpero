@@ -1,6 +1,7 @@
 local ModelManager = {}
 local OSCommands = require('util.OSCommands')
--- Chunk info table with URLs and checksums
+local String = require('util.String')
+local json = require('JSON')
 local chunks_info = {
     {
         url = "https://github.com/AgustinAllamanoCosta/Pulpero/releases/download/m0.1.0/deepseek.part-1.tar.gz",
@@ -79,7 +80,7 @@ local chunks_info = {
         checksum = "d2fab1cb51d3f4106a083d4a3dc8c09b2b1eb4c43a18f45ea137589e4fc994b5"
     }
 }
--- Main download process
+
 local status = {
     current_chunk = 0,
     total_chunks = #chunks_info,
@@ -103,37 +104,33 @@ function ModelManager.new(logger, default_config)
         status_file = OSCommands:create_path_by_OS(OSCommands:get_temp_dir(), "pulpero_download_status.txt"),
         model_assemble = false
     }
+    if not OSCommands:file_exists(self.config.status_file) then
+        self:write_status(self.config.status_file, status)
+    end
     return self
 end
 
 function ModelManager.write_status(self, status_file, status)
     local f = io.open(status_file, "w")
     if f then
-        f:write(string.format([[
-current_chunk=%d
-total_chunks=%d
-state=%s
-error=%s
-downloaded_chunks=%s
-extracted_chunks=%s
-]],
-            status.current_chunk or 0,
-            status.total_chunks or 19,
-            status.state or "not_started",
-            status.error or "",
-            table.concat(status.downloaded_chunks or {}, ","),
-            table.concat(status.extracted_chunks or {}, ",")
-        ))
+        f:write(json.encode(status))
         f:close()
     end
 end
 
 function ModelManager.get_status_from_file(self)
     local lines = {}
+    self.logger:debug("Status file path ", { path = self.config.status_file })
     for line in io.lines(self.config.status_file) do
         lines[#lines + 1] = line
     end
-    return lines[3]
+    local success_json, status_json = pcall(json.decode, lines[1])
+    if not success_json then
+        self.logger:debug("Error decoding file ")
+        self.logger:debug("Raw file " .. lines[1])
+    end
+    self.logger:debug("Status file ", status_json)
+    return status_json.state
 end
 
 function ModelManager.download_chunk(self, chunk_url, output_file)
@@ -192,61 +189,67 @@ function ModelManager.assemble_model(self, temp_dir, model_path, num_chunks)
 end
 
 function ModelManager.check_if_model_exist(self)
-    return OSCommands:file_exists(self.config.model_path)
+    self.logger:debug("Checking if file exist ", { path = self.config.model_path })
+    local file = OSCommands:file_exists(self.config.model_path)
+    if file and status.state ~= "completed" then
+        status.state = "completed"
+        self:write_status(self.config.status_file, status)
+    end
+    self.logger:debug("Result ", { result = file })
+    return file
 end
 
 function ModelManager.download_and_assemble_model(self)
     self.logger:debug("Starting background model download")
 
-    -- Download and process each chunk
     for i, chunk_info in ipairs(chunks_info) do
         status.current_chunk = i
         status.state = "downloading"
-        self:write_status(self.status_file, status)
-        local temp_file = OSCommands:create_path_by_OS(self.temp_dir, string.format("model_chunk_%d.tar.gz", i))
+        self:write_status(self.config.status_file, status)
+        local temp_file = OSCommands:create_path_by_OS(self.config.temp_dir, string.format("model_chunk_%d.tar.gz", i))
         if self:download_chunk(chunk_info.url, temp_file) then
             -- Verify checksum
             if self:verify_checksum(temp_file, chunk_info.checksum) then
                 table.insert(status.downloaded_chunks, i)
-                self:write_status(self.status_file, status)
+                self:write_status(self.config.status_file, status)
                 status.state = "extracting"
-                self:write_status(self.status_file, status)
-                if self:extract_chunk(temp_file, i, self.temp_dir) then
+                self:write_status(self.config.status_file, status)
+                if self:extract_chunk(temp_file, i, self.config.temp_dir) then
                     table.insert(status.extracted_chunks, i)
                     os.remove(temp_file)
                 else
                     status.state = "error"
                     status.error = string.format("Failed to extract chunk %d", i)
-                    self:write_status(self.status_file, status)
+                    self:write_status(self.config.status_file, status)
                     os.exit(1)
                 end
             else
                 status.state = "error"
                 status.error = string.format("Checksum verification failed for chunk %d", i)
-                self:write_status(self.status_file, status)
+                self:write_status(self.config.status_file, status)
                 os.remove(temp_file)
                 os.exit(1)
             end
         else
             status.state = "error"
             status.error = string.format("Failed to download chunk %d", i)
-            self:write_status(self.status_file, status)
+            self:write_status(self.config.status_file, status)
             os.exit(1)
         end
     end
 
     -- Assemble final model
     status.state = "assembling"
-    self:write_status(self.status_file, status)
+    self:write_status(self.config.status_file, status)
 
-    if self:assemble_model(self.temp_dir, self.model_path, status.total_chunks) then
+    if self:assemble_model(self.config.temp_dir, self.model_path, status.total_chunks) then
         status.state = "completed"
     else
         status.state = "error"
         status.error = "Failed to assemble model"
     end
 
-    self:write_status(self.status_file, status)
+    self:write_status(self.config.status_file, status)
 end
 
 return ModelManager

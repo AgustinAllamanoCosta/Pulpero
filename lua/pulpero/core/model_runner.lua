@@ -43,7 +43,7 @@ function Runner.new(config, logger, parser)
         num_threads = self.config.num_threads,
         model_path = self.config.model_path,
         llama_cpp_path = self.config.llama_cpp_path,
-        command_debug_output = logger:getConfig().command_path
+        command_debug_output = logger:get_config().command_path
     }
     self.pairing_session = {
         feature = "",
