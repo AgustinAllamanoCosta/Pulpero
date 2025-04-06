@@ -81,7 +81,7 @@ function UI.create_chat_sidebar(self)
 end
 
 function UI.create_chat_fullscreen(self)
-    vim.cmd("tabnew")
+    vim.cmd("$tabnew")
 
     self.chat_win = vim.api.nvim_get_current_win()
 
@@ -107,8 +107,6 @@ function UI.create_chat_fullscreen(self)
     vim.api.nvim_win_set_option(self.input_win, 'relativenumber', false)
 
     vim.api.nvim_win_set_option(self.input_win, 'winbar', '  💬 Message')
-
-    vim.api.nvim_win_set_option(self.chat_win, 'winbar', '  🦶 Pulpero Chat')
 end
 
 function UI.open_chat(self)
