@@ -17,13 +17,18 @@ function Chat.update(self, message)
     self.ui:update_chat_content(message)
 end
 
-function Chat.open(self)
+function Chat.open(self, full_screen)
+    full_screen = full_screen or false
     if self.chat_open then self:close() end
 
-    if self.ui.chat_win then
-        self.ui:open_chat()
+    if full_screen then 
+        self.ui:create_chat_fullscreen()
     else
-        self.ui:create_chat_sidebar()
+        if self.ui.chat_win then
+            self.ui:open_chat()
+        else
+            self.ui:create_chat_sidebar()
+        end
     end
     self.chat_open    = true
     local keymap_opts = { noremap = true, silent = false }
@@ -103,7 +108,8 @@ function Chat.submit_message(self)
 
                 if result and result.success then
                     -- Replace "Cooking..." message with actual response
-                    self:append_message(pulpero_key, result.message)
+                    local message_to_append = result.message:gsub("\\n", "\n")
+                    self:append_message(pulpero_key, message_to_append)
 
                     if result.code then
                         self.code = result.code

@@ -10,7 +10,7 @@ local function encode_value(value, stack)
     elseif val_type == "boolean" then
         return tostring(value)
     elseif val_type == "string" then
-        return string.format("%q", value:gsub('\n', ' ')):gsub('[%c]*', ''):gsub('[\\ ]$', ''):gsub('[\\]$', '')
+        return string.format("%q", value:gsub('\n', '\\n')):gsub('[%c]*', ''):gsub('[\\ ]$', ''):gsub('[\\]$', '')
     elseif val_type == "table" then
         if stack[value] then
             error("circular reference detected")
@@ -149,7 +149,7 @@ local function decode_value(str, pos)
             elseif char == "\\" then
                 pos = pos + 1
                 local escape = str:sub(pos, pos)
-                if escape == "n" then value = value .. "\n"
+                if escape == "n" then value = value .. " \n"
                 elseif escape == "r" then value = value .. "\r"
                 elseif escape == "t" then value = value .. "\t"
                 else value = value .. escape

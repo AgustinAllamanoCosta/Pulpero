@@ -84,16 +84,17 @@ function M.setup()
     })
 
     vim.api.nvim_create_user_command('PulperoOpenChat', function()
-        chat:open()
-    end,
-    {
-        range = true,
-        desc = "Open the chat windows, if it is open in another tab close that windows and open a new one in the current tab"
-    })
+            chat:open()
+        end,
+        {
+            range = true,
+            desc =
+            "Open the chat windows, if it is open in another tab close that windows and open a new one in the current tab"
+        })
 
 
     vim.api.nvim_create_user_command('PulperoStatus', function()
-        service:get_service_status(function (err, result)
+        service:get_service_status(function(err, result)
             print(err)
             print(result)
         end)
@@ -111,7 +112,7 @@ function M.setup()
     end, { range = true, desc = "Delete the model cache and the chat history" })
 
     vim.api.nvim_create_user_command('PulperoStartPairingSession', function()
-        pairing:start_pairing_session()
+        pairing:open()
     end, { range = true, desc = "Start a new pairing session and override the chat history" })
 
     vim.api.nvim_create_user_command('PulperoSubmitFeatDescription', function()
@@ -123,8 +124,12 @@ function M.setup()
     end, { range = true, desc = "End an ongoing pairing session" })
 
     vim.api.nvim_create_user_command('PulperoToggle', function()
-        service:toggle_service(function(err, data) if err then print("Error toggling the service ".. err) end end)
+        service:toggle_service(function(err, data) if err then print("Error toggling the service " .. err) end end)
     end, { range = true, desc = "Enable or Disable the plugin for running unless the IA model is not ready yet" })
+
+    vim.api.nvim_create_user_command('PulperoFullScreen', function()
+        chat:open(true)
+    end, { range = true, desc = "Open Pulpero in full-screen mode in a new tab" })
 end
 
 return M

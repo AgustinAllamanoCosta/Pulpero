@@ -71,14 +71,44 @@ function UI.new()
 end
 
 function UI.create_chat_sidebar(self)
-    self.chat_win = vim.api.nvim_open_win(self.chat_buf, false, self.chat_options)
-    self.input_win = vim.api.nvim_open_win(self.input_buf, true, self.input_options)
+    self:open_chat()
 
     vim.api.nvim_win_set_option(self.chat_win, 'wrap', true)
     vim.api.nvim_win_set_option(self.chat_win, 'cursorline', true)
     vim.api.nvim_win_set_option(self.chat_win, 'winhighlight', 'Normal:Normal,FloatBorder:FloatBorder')
     vim.api.nvim_win_set_option(self.input_win, 'wrap', true)
     vim.api.nvim_win_set_option(self.input_win, 'winhighlight', 'Normal:Normal,FloatBorder:FloatBorder')
+end
+
+function UI.create_chat_fullscreen(self)
+    vim.cmd("tabnew")
+
+    self.chat_win = vim.api.nvim_get_current_win()
+
+    vim.api.nvim_win_set_option(self.chat_win, 'wrap', true)
+    vim.api.nvim_win_set_option(self.chat_win, 'number', false)
+    vim.api.nvim_win_set_option(self.chat_win, 'relativenumber', false)
+    vim.api.nvim_win_set_option(self.chat_win, 'cursorline', true)
+
+    vim.api.nvim_win_set_buf(self.chat_win, self.chat_buf)
+
+    local total_height = vim.api.nvim_win_get_height(self.chat_win)
+    local chat_height = total_height - 5
+
+    vim.cmd("botright " .. chat_height .. "split")
+    vim.cmd("horizontal resize " .. (total_height - chat_height))
+
+    self.input_win = vim.api.nvim_get_current_win()
+
+    vim.api.nvim_win_set_buf(self.input_win, self.input_buf)
+
+    vim.api.nvim_win_set_option(self.input_win, 'wrap', true)
+    vim.api.nvim_win_set_option(self.input_win, 'number', false)
+    vim.api.nvim_win_set_option(self.input_win, 'relativenumber', false)
+
+    vim.api.nvim_win_set_option(self.input_win, 'winbar', '  💬 Message')
+
+    vim.api.nvim_win_set_option(self.chat_win, 'winbar', '  🦶 Pulpero Chat')
 end
 
 function UI.open_chat(self)
