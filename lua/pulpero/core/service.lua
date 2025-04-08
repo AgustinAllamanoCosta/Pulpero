@@ -6,6 +6,7 @@ local function add_pulpero_to_path()
         plugin_root .. "/?.lua",
         plugin_root .. "/?/init.lua",
         plugin_root .. "/core/?.lua",
+        plugin_root .. "/core/tool/?.lua",
         plugin_root .. "/core/util/?.lua"
     }
 
@@ -24,6 +25,7 @@ local json = require('JSON')
 local ModelManager = require('model_manager')
 local Setup = require('setup')
 local Runner = require('model_runner')
+local ToolManager = require('tool.manager')
 local Logger = require('logger')
 local Parser = require('parser')
 local OSCommands = require('util.OSCommands')
@@ -40,6 +42,7 @@ local setup = nil
 local parser = nil
 local runner = nil
 local config = nil
+local tool_manager = nil
 local logger_config = nil
 local model_manager = nil
 local current_os = OSCommands:get_platform()
@@ -166,7 +169,7 @@ local function process_request(request_str)
     elseif request.method == "prepear_env" then
         local success, result = pcall(setup.prepear_env, setup)
         if success then
-            runner = Runner.new(result, logger, parser)
+            runner = Runner.new(result, logger, parser, tool_manager)
             response.result = true
         else
             response.error = result
@@ -275,6 +278,7 @@ local function initialize_service(logger)
     logger:setup("Service starting on OS: " .. current_os)
     logger:setup("Configuration ", config)
     logger:debug("Finish service initialization")
+    tool_manager = ToolManager.new(logger)
     return config
 end
 

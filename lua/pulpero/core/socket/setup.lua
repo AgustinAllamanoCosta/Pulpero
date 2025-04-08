@@ -118,7 +118,6 @@ function Setup.prepear_env(self)
     else
         error("Failed to initialize Pulpero")
     end
-    --check if the model exist
     if self.model_manager:check_if_model_exist() then
         self.config.pulpero_ready = true
     else

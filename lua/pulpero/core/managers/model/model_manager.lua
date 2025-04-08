@@ -1,6 +1,5 @@
 local ModelManager = {}
 local OSCommands = require('util.OSCommands')
-local String = require('util.String')
 local json = require('JSON')
 local chunks_info = {
     {

@@ -21,7 +21,7 @@ function Chat.open(self, full_screen)
     full_screen = full_screen or false
     if self.chat_open then self:close() end
 
-    if full_screen then 
+    if full_screen then
         self.ui:create_chat_fullscreen()
     else
         if self.ui.chat_win then

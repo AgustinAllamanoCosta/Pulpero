@@ -84,4 +84,44 @@ function Parser.get_code_from_response(self, output)
     return code_lines
 end
 
+function Parser.process_tool_calls(self, model_output)
+    if not self.tool_manager then
+        self.logger:debug("Tool manager not set, skipping tool execution")
+        return model_output
+    end
+
+    local tool_calls = self.tool_manager:parse_tool_calls(model_output)
+    if #tool_calls == 0 then
+        return model_output
+    end
+
+    local processed_output = model_output
+
+    for _, tool_call in ipairs(tool_calls) do
+        self.logger:debug("Processing tool call", { tool = tool_call.name })
+
+        local tool_result = self.tool_manager:execute_tool(tool_call.name, tool_call.params)
+
+        local result_str
+        if tool_result.success then
+            result_str = string.format(
+                "<tool_result name=\"%s\" success=\"true\">\n%s\n</tool_result>",
+                tool_call.name,
+                json.encode(tool_result.result)
+            )
+        else
+            result_str = string.format(
+                "<tool_result name=\"%s\" success=\"false\" error=\"%s\"></tool_result>",
+                tool_call.name,
+                tool_result.error
+            )
+        end
+
+        local pattern = string.format("<tool%s+name=\"%s\"%s+params=\"[^\"]+\">", "%", tool_call.name, "%")
+        processed_output = processed_output:gsub(pattern, result_str)
+    end
+
+    return processed_output
+end
+
 return Parser
