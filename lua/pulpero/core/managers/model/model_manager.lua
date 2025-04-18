@@ -1,5 +1,5 @@
 local ModelManager = {}
-local OSCommands = require('util.OSCommands')
+local OSCommands = require('OSCommands')
 local json = require('JSON')
 local chunks_info = {
     {
@@ -119,7 +119,7 @@ end
 
 function ModelManager.get_status_from_file(self)
     local lines = {}
-    self.logger:debug("Status file path ", { path = self.config.status_file })
+    self.logger:debug("Get model status from file path ", { path = self.config.status_file })
     for line in io.lines(self.config.status_file) do
         lines[#lines + 1] = line
     end
@@ -128,7 +128,7 @@ function ModelManager.get_status_from_file(self)
         self.logger:debug("Error decoding file ")
         self.logger:debug("Raw file " .. lines[1])
     end
-    self.logger:debug("Status file ", status_json)
+    self.logger:debug("State " .. status_json.state)
     return status_json.state
 end
 
@@ -190,11 +190,11 @@ end
 function ModelManager.check_if_model_exist(self)
     self.logger:debug("Checking if file exist ", { path = self.config.model_path })
     local file = OSCommands:file_exists(self.config.model_path)
-    if file and status.state ~= "completed" then
+    if file then
         status.state = "completed"
         self:write_status(self.config.status_file, status)
     end
-    self.logger:debug("Result ", { result = file })
+    self.logger:debug("Check finished status is: ", status)
     return file
 end
 

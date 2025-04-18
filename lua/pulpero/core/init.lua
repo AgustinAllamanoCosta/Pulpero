@@ -7,10 +7,10 @@ local function add_pulpero_to_path()
         plugin_root .. "/?/init.lua",
         plugin_root .. "/core/?.lua",
         plugin_root .. "/core/socket/?.lua",
-        plugin_root .. "/core/manager/?.lua",
-        plugin_root .. "/core/manager/tool/?.lua",
-        plugin_root .. "/core/manager/model/?.lua",
-        plugin_root .. "/core/manager/audio/?.lua",
+        plugin_root .. "/core/managers/?.lua",
+        plugin_root .. "/core/managers/tool/?.lua",
+        plugin_root .. "/core/managers/model/?.lua",
+        plugin_root .. "/core/managers/audio/?.lua",
         plugin_root .. "/core/runner/model/?.lua",
         plugin_root .. "/core/util/?.lua"
     }
@@ -29,8 +29,8 @@ local ModelManager = require('model_manager')
 local Setup = require('socket.setup')
 local Server = require('socket.server')
 local Methods = require('socket.methods')
-local Logger = require('util.logger')
-local OSCommands = require('util.OSCommands')
+local Logger = require('logger')
+local OSCommands = require('OSCommands')
 
 local logger = nil
 local setup = nil
@@ -55,6 +55,17 @@ local default_settings = {
     response_size = "1024"
 }
 
+local function initialize_logger(param_logger)
+    if not param_logger then
+        logger = Logger.new("service", true)
+        logger:clear_logs()
+        logger_config = logger:get_config()
+        logger:setup("Configuration logger", logger_config)
+    else
+        logger = param_logger
+    end
+end
+
 local function initialize_service(logger)
     logger:debug("Initialize service dependencies")
     model_manager = ModelManager.new(logger, default_settings)
@@ -65,22 +76,11 @@ local function initialize_service(logger)
     logger:setup("Service starting on OS: " .. current_os)
     logger:setup("Configuration ", config)
     logger:debug("Finish service initialization")
-    methods = Methods.new(logger, model_manager)
+    methods = Methods.new(logger, model_manager, setup)
     server = Server.new(logger, model_manager, methods)
+    server:start()
     return config
 end
 
-local function start_service(param_logger)
-    if not param_logger then
-        logger = Logger.new("service", true)
-        logger:clear_logs()
-        logger_config = logger:get_config()
-        logger:setup("Configuration logger", logger_config)
-    else
-        logger = param_logger
-    end
-    initialize_service(logger)
-    server:start()
-end
-
-start_service()
+initialize_logger(logger)
+initialize_service(logger)

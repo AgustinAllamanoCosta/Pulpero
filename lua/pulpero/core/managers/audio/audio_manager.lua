@@ -1,9 +1,6 @@
-local OSCommands = require('util.OSCommands')
-
+local OSCommands = require('OSCommands')
 local AudioManager = {}
-
 local DEFAULT_CONFIG = {
-
     text_to_speech = {
         model = "tts-1", -- The model to use for text-to-speech conversion
         voice = "alloy", -- Options: alloy, echo, fable, onyx, nova, shimmer
@@ -11,7 +8,6 @@ local DEFAULT_CONFIG = {
         output_format = "mp3", -- Output audio format (mp3 or wav)
         temp_dir = OSCommands:getTempDir()
     },
-
     audio_cache_limit = 50, -- Maximum number of audio files to cache
     cache_dir = OSCommands:createPathByOS(OSCommands:getTempDir(), "pulpero_audio_cache")
 }

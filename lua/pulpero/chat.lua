@@ -102,23 +102,18 @@ function Chat.submit_message(self)
         self.service:talk_with_model(message, function(err, result)
             vim.schedule(function()
                 if err then
-                    self.ui:append_message(pulpero_key, "🛑 Error: " .. err)
+                    self:append_message(pulpero_key, "🛑 Error: " .. err)
                     return
                 end
 
-                if result and result.success then
-                    -- Replace "Cooking..." message with actual response
-                    local message_to_append = result.message:gsub("\\n", "\n")
+                if result then
+                    local message_to_append = result:gsub("\\n", "\n")
                     self:append_message(pulpero_key, message_to_append)
-
-                    if result.code then
-                        self.code = result.code
-                    end
 
                     self:append_message(system_key,
                         "🚨 ! Note: This explanation is AI-generated and should be verified for accuracy. ! 🚨")
                 else
-                    self.ui:update_message(pulpero_key, "🛑 Error: Failed to get response from model")
+                    self:append_message(pulpero_key, "🛑 Error: Failed to get response from model")
                 end
             end)
         end)

@@ -6,8 +6,23 @@ local function add_pulpero_to_path()
         plugin_root .. "/?.lua",
         plugin_root .. "/?/init.lua",
         plugin_root .. "/pulpero/?.lua",
+        plugin_root .. "/pulpero/?/init.lua",
         plugin_root .. "/pulpero/core/?.lua",
-        plugin_root .. "/pulpero/util/?.lua"
+        plugin_root .. "/pulpero/core/?/init.lua",
+        plugin_root .. "/pulpero/core/util/?.lua",
+        plugin_root .. "/pulpero/core/util/?/init.lua",
+        plugin_root .. "/pulpero/core/socket/?.lua",
+        plugin_root .. "/pulpero/core/socket/?/init.lua",
+        plugin_root .. "/pulpero/core/managers/?.lua",
+        plugin_root .. "/pulpero/core/managers/?/init.lua",
+        plugin_root .. "/pulpero/core/managers/tool/?.lua",
+        plugin_root .. "/pulpero/core/managers/tool/?/init.lua",
+        plugin_root .. "/pulpero/core/runner/model/?.lua",
+        plugin_root .. "/pulpero/core/runner/model/?/init.lua",
+        plugin_root .. "/pulpero/core/managers/model/?.lua",
+        plugin_root .. "/pulpero/core/managers/model/?/init.lua",
+        plugin_root .. "/pulpero/core/managers/audio/?.lua",
+        plugin_root .. "/pulpero/core/managers/audio/?/init.lua",
     }
 
     for _, path in ipairs(paths) do
@@ -79,10 +94,10 @@ function M.setup()
         return
     end
     chat:close()
-    vim.api.nvim_create_autocmd({ "BufEnter", "BufWrite" }, {
-        callback = update_code_data
-    })
-
+    -- vim.api.nvim_create_autocmd({ "BufEnter", "BufWrite" }, {
+    --     callback = update_code_data
+    -- })
+    --
     vim.api.nvim_create_user_command('PulperoOpenChat', function()
             chat:open()
         end,
@@ -92,13 +107,13 @@ function M.setup()
             "Open the chat windows, if it is open in another tab close that windows and open a new one in the current tab"
         })
 
-
     vim.api.nvim_create_user_command('PulperoStatus', function()
         service:get_service_status(function(err, result)
             print(err)
             print(result)
         end)
     end, { range = true, desc = "Get the pulpero service status" })
+
     vim.api.nvim_create_user_command('PulperoCloseChat', function()
         chat:close()
     end, { range = true, desc = "Close the current open chat" })

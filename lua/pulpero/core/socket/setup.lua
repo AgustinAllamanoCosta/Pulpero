@@ -1,4 +1,4 @@
-local OSCommands = require('util.OSCommands')
+local OSCommands = require('OSCommands')
 local Setup = {}
 
 function Setup.new(logger, model_manager, default_config)
@@ -87,7 +87,7 @@ function Setup.setup_llama(self)
     if not OSCommands:file_exists(dir_info.llama_bin) then
         self.logger:setup("Compile llama cpp repository")
         OSCommands:ensure_dir(dir_info.build_dir)
-        local build_commands = string.format('cd "%s" && cmake .. && cmake --build . --config Release',
+        local build_commands = string.format('cd "%s" && cmake -B build .. && cmake --build build --config Release',
             dir_info.build_dir)
         if not self:execute_command_and_dump(build_commands) then
             self.logger:setup("Failed to compile llama.cpp")
@@ -106,7 +106,7 @@ function Setup.configure_memory(self, total_mem)
     elseif total_mem and total_mem < 16384 then -- Less than 16GB RAM
         return 1024, 4
     else                                        -- 16GB or more RAM
-        return 4096, 8
+        return 8840, 8
     end
 end
 
@@ -161,7 +161,7 @@ function Setup.configure_plugin(self)
     self.default_settings.num_threads = threads
     self.config = self.default_settings
 
-    self.logger:setup("Memory configured", { config = self.config })
+    self.logger:setup("Memory configured: " .. self.config.context_window .. " threads: " .. self.config.num_threads)
     return self.config
 end
 

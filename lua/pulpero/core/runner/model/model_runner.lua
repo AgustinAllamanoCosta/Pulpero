@@ -1,5 +1,5 @@
-local prompts = require "prompts"
-local json = require "JSON"
+local prompts = require("prompts")
+local json = require("JSON")
 local Runner = {}
 local user_key = "User"
 local assistant_key = "Assistant"
@@ -25,9 +25,8 @@ function Runner.new(config, logger, parser, tool_manager)
     self.chat_context = self:create_new_chat_context()
     self.tool_manager = tool_manager
     self.model_parameters = {
-        repeat_penalty = "1.2",
         mirostat = "2",
-        context_window = "8840",
+        context_window = self.config.context_window,
         response_size = "1024",
         temp = "0.3",
         top_p = "0.4",
@@ -42,9 +41,9 @@ end
 function Runner.create_new_chat_context(self)
     return {
         messages = {},
-        max_messages = 10, -- Keep last 10 messages for context
+        max_messages = 10,
         current_tokens = 0,
-        max_tokens = 4092  -- Match your model's context window
+        max_tokens = self.config.context_window
     }
 end
 
@@ -150,8 +149,6 @@ function Runner.clear_model_cache(self)
 end
 
 function Runner.talk_with_model(self, message)
-    self.logger:debug("New query to the model ", { query = message })
-
     local current_chat_history = self:build_chat_history()
     local dynamic_prompt = ""
     local chat_history = ""

@@ -1,5 +1,5 @@
-local json = require('util.JSON')
-local OSCommands = require('util.OSCommands')
+local OSCommands = require('OSCommands')
+local json = require('JSON')
 local Logger = require('logger')
 local uv = vim.loop
 
@@ -25,13 +25,12 @@ function ServiceConnector.new()
     return self
 end
 
--- Check if the service is already running by checking PID file
 function ServiceConnector:is_service_running()
     if not OSCommands:file_exists(PID_FILE) then
         self.logger:debug("Service is not running, PID file does not exists")
         return false
     end
-    -- Read PID from file
+
     self.logger:debug("Checking if the service is running")
     local file = io.open(PID_FILE, "r")
     if not file then
@@ -45,24 +44,21 @@ function ServiceConnector:is_service_running()
         self.logger:debug("Service is not running, cannot read the PID from the file")
         return false
     end
-    -- Check if process is running (platform specific)
+
     if OSCommands:is_windows() then
-        -- Windows
         self.logger:debug("Looking for the processes on Windows")
         local result = os.execute('tasklist /FI "PID eq ' .. pid .. '" 2>NUL | find "' .. pid .. '"')
         return result == 0
     else
-        -- Unix-like
         self.logger:debug("Looking for the processes on Darwing or Linux")
         local result = os.execute('kill -0 ' .. pid .. ' 2>/dev/null')
         return result == 0
     end
 end
 
--- Start the service as a detached process
 function ServiceConnector:start_service()
     self.logger:debug("Starting Pulpero service")
-    -- Ensure service script exists
+
     if not OSCommands:file_exists(SERVICE_SCRIPT) then
         self.logger:error("Service script not found", { path = SERVICE_SCRIPT })
         return false
@@ -87,9 +83,7 @@ function ServiceConnector:start_service()
         self.logger:error("Failed to start service process", { pid = pid })
         return false
     end
-    -- Unref the process so it can run independently
     handle:unref()
-    -- Wait a moment for the service to initialize
     uv.sleep(1000)
     self.logger:debug("Service started", { pid = pid })
     return true

@@ -82,8 +82,6 @@ Remember: You're here to assist the user with their development work while maint
 
 %s
 
-%s
-
 Current user message: %s
 
 A:

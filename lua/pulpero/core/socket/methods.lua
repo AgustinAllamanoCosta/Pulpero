@@ -4,11 +4,14 @@ local ToolManager = require('managers.tool.manager')
 local Parser = require('runner.model.parser')
 local uv = require('luv')
 
-function Methods.new(logger, model_manager)
+function Methods.new(logger, model_manager, setup)
     local self = setmetatable({}, { __index = Methods })
     self.logger = logger
     self.model_manager = model_manager
     self.runner = nil
+    self.setup = setup
+    self.is_ready = false
+    self.enable = true
     return self
 end
 
@@ -39,32 +42,38 @@ function Methods.adapter(self, request)
     }
     local method = request.method
     if method == "talk_with_model" then
-        response = self:execute(function()
-            return self.runner.talk_with_model(request.params.message)
+        response = self:execute(function(methods)
+            return methods.runner:talk_with_model(request.params.message)
         end, response, method)
     elseif method == "prepear_env" then
-        response = self:execute(function()
-            local config = self.setup:prepear_env()
-            local tool_manager = ToolManager.new(self.logger)
-            local parser = Parser.new(self.logger)
-            self.runner = Runner.new(config, self.logger, parser, tool_manager)
-            return true
-        end, response, method)
+        local function prepear_env(methods)
+            if not methods.is_ready then
+                local config = methods.setup:prepear_env()
+                local tool_manager = ToolManager.new(methods.logger)
+                local parser = Parser.new(methods.logger)
+                methods.runner = Runner.new(config, methods.logger, parser, tool_manager)
+                methods.is_ready = true
+            end
+            return methods.is_ready
+        end
+        local success, result = pcall(prepear_env, self)
+        if success then response.result = result else response.error = result end
+        return response
     elseif method == "clear_model_cache" then
-        response = self:execute(function()
-            self.runner:clear_model_cache()
+        response = self:execute(function(methods)
+            methods.runner:clear_model_cache()
             return true
         end, response, method)
     elseif method == "get_download_status" then
-        response = self:execute(function()
-            return self.model_manager:get_download_status()
+        response = self:execute(function(methods)
+            return methods.model_manager:get_download_status()
         end, response, method)
     elseif request.method == "get_service_status" then
-        response = self:execute(function()
-            local status = self.model_manager:get_status_from_file()
+        response = self:execute(function(methods)
+            local status = methods.model_manager:get_status_from_file()
             return {
                 running = true,
-                model_ready = self:service_is_ready(),
+                model_ready = methods:service_is_ready(),
                 download_status = status,
                 pid = uv.os_getpid()
             }
@@ -80,11 +89,11 @@ end
 
 function Methods.execute(self, callback, response, name)
     if self:service_is_ready() then
-        local success, result = pcall(callback)
+        local success, result = pcall(callback, self)
         if success then
             response.result = result
         else
-            self.logger:error("Something went wrong when executing" .. name)
+            self.logger:error("Something went wrong when executing " .. name)
             self.logger:error("Error: ", result)
             response.result = false
             response.error = result
