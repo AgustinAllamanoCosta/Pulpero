@@ -67,14 +67,13 @@ function Runner.run_local_model(self, prompt, config)
     local tmp_prompt = self:generate_prompt_file(prompt)
     local response_file = os.tmpname()
 
-    self.logger:debug("Formatting command to execute")
     local command = string.format(
         '%s -m %s --temp %s --ctx-size %s --threads %s --top_p %s --repeat-penalty 1.2'
         .. ' --repeat-last-n 64 --mirostat %s --mirostat-lr 0.1 --mirostat-ent 5.0'
         .. ' -n %s'                                       -- Maximum tokens to generate
         .. ' --prompt-cache ' .. cache_prompt_path        -- Cache the prompt for faster loading
         .. ' -ngl 14'                                     -- Use GPU for better performance
-        .. ' -b 512'                                      -- Batch size for processing
+        .. ' -b 1024'                                      -- Batch size for processing
         .. ' -r "User:" --in-prefix " " --in-suffix "A:"' -- Better chat handling
         .. ' --tensor-split 0'                            -- Move all computation to GPU
         .. ' -f %s -no-cnv 1> %s 2> %s',                  -- Input file at the end
@@ -116,8 +115,9 @@ function Runner.run_local_model(self, prompt, config)
         return nil_or_empty_response
     end
     local parser_result = self.parser:clean_model_output(response)
-    self.logger:debug("Parse result ", { result = parser_result })
-    return parser_result
+    local tool_calls = self.tool_manager:parse_tool_calls(parser_result)
+    local code = self.parser:get_code_from_response(parser_result)
+    return { message = parser_result, code = code, tool_calls = tool_calls }
 end
 
 function Runner:update_chat_context(role, content)
@@ -137,7 +137,7 @@ function Runner:build_chat_history()
         if msg.role == user_key then
             history = history .. "User:" .. msg.content .. "\n"
         else
-            history = history .. "Assistant: " .. msg.content
+            history = history .. "Assistant: " .. msg.content .. "<｜end▁of▁sentence｜>"
         end
     end
     return history
@@ -148,7 +148,35 @@ function Runner.clear_model_cache(self)
     self.chat_context = self:create_new_chat_context()
 end
 
-function Runner.talk_with_model(self, message)
+function Runner.process_tool_calls(self, tool_calls, prompt)
+    for _, tool_call in ipairs(tool_calls) do
+        self.logger:debug("Processing tool call", { tool = tool_call.name })
+
+        local tool_result = self.tool_manager:execute_tool(tool_call.name, tool_call.params)
+
+        local result_str
+        if tool_result.success then
+            result_str = string.format(
+                "<toolresult name=\"%s\" success=\"true\" result=\"%s\" />",
+                tool_call.name,
+                json.encode(tool_result.result)
+            )
+        else
+            result_str = string.format(
+                "<toolresult name=\"%s\" success=\"false\" error=\"%s\" />",
+                tool_call.name,
+                tool_result.error
+            )
+        end
+
+        local pattern = string.format("<toolcall name=\"%s\" params=\".*\" />", tool_call.name)
+        prompt = prompt:gsub(pattern, result_str)
+    end
+
+    return prompt
+end
+
+function Runner.create_dynamic_prompot(self, message)
     local current_chat_history = self:build_chat_history()
     local dynamic_prompt = ""
     local chat_history = ""
@@ -158,33 +186,33 @@ function Runner.talk_with_model(self, message)
         chat_history = "Chat History:\n" .. current_chat_history .. "\nEnd History"
     end
 
-    dynamic_prompt = string.format(prompts.chat, chat_history, message)
-
-    if self.tool_manager then
-        local tools = self.tool_manager:get_tool_descriptions()
-        if #tools > 0 then
-            tool_descriptions = "Available tools:\n"
-            for _, tool in ipairs(tools) do
-                tool_descriptions = tool_descriptions .. string.format(
-                    "Tool: %s\nDescription: %s\nParameters: %s\n\n",
-                    tool.name,
-                    tool.description,
-                    json.encode(tool.parameters)
-                )
-            end
-            tool_descriptions = tool_descriptions .. "End Tools\n\n"
-            tool_descriptions = tool_descriptions ..
-                "To use a tool, emit XML in this format: <tool name=\"tool_name\" params=\"param1=value1,param2=value2\">"
+    local tools = self.tool_manager:get_tool_descriptions()
+    if #tools > 0 then
+        for _, tool in ipairs(tools) do
+            tool_descriptions = tool_descriptions .. string.format(
+                "- Tool Name: \"%s\"\nDescription: \"%s\"\nParameters: \"%s\"\n\n",
+                tool.name,
+                tool.description,
+                json.encode(tool.parameters)
+            )
         end
     end
-    self:update_chat_context(user_key, message)
 
-    self.logger:debug("Full prompt", { prompt = dynamic_prompt })
-    local response = self:run_local_model(dynamic_prompt, self.model_parameters)
-    response = self.parser:process_tool_calls(response)
-    self:update_chat_context(assistant_key, response)
-    local code = self.parser:get_code_from_response(response)
-    return response, code
+    dynamic_prompt = string.format(prompts.chat_with_functions_calls, tool_descriptions, os.date("%x", os.time()),
+        chat_history, message)
+    return dynamic_prompt
+end
+
+function Runner.talk_with_model(self, user_message)
+    local dynamic_prompt = self:create_dynamic_prompot(user_message)
+    local model_response = self:run_local_model(dynamic_prompt, self.model_parameters)
+    if model_response.tool_calls ~= nil and #model_response.tool_calls > 0 then
+        self.logger:debug("Tools call found")
+        local new_prompt = self:process_tool_calls(model_response.tool_calls, dynamic_prompt)
+        model_response = self:run_local_model(new_prompt, self.model_parameters)
+    end
+    self:update_chat_context(assistant_key, model_response.message)
+    return model_response.message, model_response.code
 end
 
 return Runner

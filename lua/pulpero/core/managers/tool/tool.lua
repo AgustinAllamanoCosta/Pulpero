@@ -10,3 +10,4 @@ function Tool.new(name, description, parameters, callback)
 end
 
 return Tool
+

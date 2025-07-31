@@ -1,6 +1,7 @@
 local Methods = {}
 local Runner = require('runner.model.model_runner')
 local ToolManager = require('managers.tool.manager')
+local tools = require('tools')
 local Parser = require('runner.model.parser')
 local uv = require('luv')
 
@@ -50,6 +51,9 @@ function Methods.adapter(self, request)
             if not methods.is_ready then
                 local config = methods.setup:prepear_env()
                 local tool_manager = ToolManager.new(methods.logger)
+                tool_manager:register_tool(tools.create_create_file_tool(methods.logger))
+                tool_manager:register_tool(tools.create_get_file_tool(methods.logger))
+                tool_manager:register_tool(tools.create_web_Search_tool(methods.logger))
                 local parser = Parser.new(methods.logger)
                 methods.runner = Runner.new(config, methods.logger, parser, tool_manager)
                 methods.is_ready = true

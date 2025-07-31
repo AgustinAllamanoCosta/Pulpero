@@ -308,13 +308,16 @@ Logs are recreated with each request to maintain a controlled size and facilitat
 - ✅ Add pairing mode as a companion for developing a feature
 - 🚧 Add the docker build and publish process to the CI pipeline
 - ❌ Add test on the CI pipeline
-- ❌ Improve Neovim's UI
+- 🚧 Improve Neovim's UI
 - ✅ Migrate to a DeepSeek
 - ✅ Automate the download of the DeepSeek gguf format model
 - 🚧 Add live feedback with audio for coding
 
 - refactor model download to be handle by the services
 - refactor all the model runner call to be handle by the service
+
+Add new type of tool definition to parse in the parser object with the code, move all the parser logic in the run_local_model and return a table with the code, tool definition to execute and the response of
+the model. In the function talk with the model only execute the tools if exist 
 
 *References*:
 

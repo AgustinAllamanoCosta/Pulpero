@@ -39,18 +39,11 @@ add_pulpero_to_path()
 local M = {}
 local UI = require('ui')
 local Chat = require('chat')
-local Pairing = require('pairing')
 local Service_Connector = require('service_connector')
 
 local ui = UI.new()
 local service = Service_Connector.new()
 local chat = Chat.new(ui, service)
-local pairing = Pairing.new(ui, service)
-
-local function submit_feat_desc()
-    pairing:submit_description()
-    chat:open()
-end
 
 local function should_update_file(bufnr)
     if bufnr == ui.chat_buf or bufnr == ui.input_buf then
@@ -125,18 +118,6 @@ function M.setup()
     vim.api.nvim_create_user_command('PulperoClearModelCache', function()
         chat:clear()
     end, { range = true, desc = "Delete the model cache and the chat history" })
-
-    vim.api.nvim_create_user_command('PulperoStartPairingSession', function()
-        pairing:open()
-    end, { range = true, desc = "Start a new pairing session and override the chat history" })
-
-    vim.api.nvim_create_user_command('PulperoSubmitFeatDescription', function()
-        submit_feat_desc()
-    end, { range = true, desc = "Add a feature description to a new or a already started pairing session" })
-
-    vim.api.nvim_create_user_command('PulperoEndsPairingSession', function()
-        pairing:end_pairing_session()
-    end, { range = true, desc = "End an ongoing pairing session" })
 
     vim.api.nvim_create_user_command('PulperoToggle', function()
         service:toggle_service(function(err, data) if err then print("Error toggling the service " .. err) end end)

@@ -1,3 +1,4 @@
+local json = require("JSON")
 local ToolManager = {}
 
 function ToolManager.new(logger)
@@ -46,16 +47,14 @@ end
 function ToolManager.parse_tool_calls(self, model_output)
     local tool_calls = {}
 
-    for tool_call in model_output:gmatch("<tool%s+name=\"([^\"]+)\"%s+params=\"([^\"]+)\">") do
-        local name, params_str = tool_call[1], tool_call[2]
-
+    for tool_name, params_str in model_output:gmatch("<tool%s+name=\"(.*)\"%s+params=\"(.*)\"%s+/>") do
         local params = {}
         for param, value in params_str:gmatch("([^=,]+)=([^,]+)") do
             params[param] = value
         end
 
         table.insert(tool_calls, {
-            name = name,
+            name = tool_name,
             params = params
         })
     end

@@ -120,16 +120,21 @@ end
 function ModelManager.get_status_from_file(self)
     local lines = {}
     self.logger:debug("Get model status from file path ", { path = self.config.status_file })
-    for line in io.lines(self.config.status_file) do
-        lines[#lines + 1] = line
+    if OSCommands:file_exists(self.config.status_file) then
+        for line in io.lines(self.config.status_file) do
+            lines[#lines + 1] = line
+        end
+        local success_json, status_json = pcall(json.decode, lines[1])
+        if not success_json then
+            self.logger:debug("Error decoding file ")
+            self.logger:debug("Raw file " .. lines[1])
+        end
+        status.state = status_json.state
+    else
+        self:check_if_model_exist()
     end
-    local success_json, status_json = pcall(json.decode, lines[1])
-    if not success_json then
-        self.logger:debug("Error decoding file ")
-        self.logger:debug("Raw file " .. lines[1])
-    end
-    self.logger:debug("State " .. status_json.state)
-    return status_json.state
+    self.logger:debug("State " .. status.state)
+    return status.state
 end
 
 function ModelManager.download_chunk(self, chunk_url, output_file)

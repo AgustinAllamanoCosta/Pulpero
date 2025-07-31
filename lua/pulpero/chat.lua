@@ -38,17 +38,17 @@ function Chat.open(self, full_screen)
 end
 
 function Chat.clear(self)
+    self.service:clear_model_cache(function(err, result)
+        if err then
+            self:append_message(system_key, "Error clearing cache: " .. err)
+        end
+    end)
     if self.ui.chat_buf and self.ui.chat_win then
         vim.api.nvim_buf_set_option(self.ui.chat_buf, 'modifiable', true)
         vim.api.nvim_buf_set_lines(self.ui.chat_buf, 0, -1, false, { "" })
         vim.api.nvim_win_set_cursor(self.ui.chat_win, { 0, 0 })
         vim.api.nvim_buf_set_option(self.ui.chat_buf, 'modifiable', false)
     end
-    self.service:clear_model_cache(function(err, result)
-        if err then
-            self:append_message(system_key, "Error clearing cache: " .. err)
-        end
-    end)
 end
 
 function Chat.update_current_file_context(self, file_data, amount_of_lines)

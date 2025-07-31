@@ -54,8 +54,8 @@ function Setup.generate_llama_path(self)
     local build_bin = OSCommands:create_path_by_OS(build_dir, 'bin')
     local dir_info = {
         llama_dir = llama_dir,
-        llama_bin = OSCommands:create_path_by_OS(build_bin, 'llama-cli'),
-        build_dir = build_dir
+        build_bin = build_bin,
+        llama_exec = OSCommands:create_path_by_OS(build_bin, 'llama-cli'),
     }
     return dir_info
 end
@@ -84,11 +84,11 @@ function Setup.setup_llama(self)
         self.logger:setup("Llama is already cloned, skipping")
     end
 
-    if not OSCommands:file_exists(dir_info.llama_bin) then
+    if not OSCommands:is_directory(dir_info.build_bin) then
         self.logger:setup("Compile llama cpp repository")
-        OSCommands:ensure_dir(dir_info.build_dir)
+        OSCommands:ensure_dir(dir_info.llama_dir)
         local build_commands = string.format('cd "%s" && cmake -B build .. && cmake --build build --config Release',
-            dir_info.build_dir)
+            dir_info.llama_dir)
         if not self:execute_command_and_dump(build_commands) then
             self.logger:setup("Failed to compile llama.cpp")
             return "", 1
@@ -97,7 +97,7 @@ function Setup.setup_llama(self)
         self.logger:setup("Llama is already compiled, skipping")
     end
 
-    return dir_info.llama_bin, 0
+    return dir_info.llama_exec, 0
 end
 
 function Setup.configure_memory(self, total_mem)

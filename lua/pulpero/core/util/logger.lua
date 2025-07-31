@@ -1,5 +1,5 @@
-local String = require('util.String')
-local OSCommands = require('util.OSCommands')
+local String = require('String')
+local OSCommands = require('OSCommands')
 local Logger = {}
 local config = {
     directory = "/tmp",
