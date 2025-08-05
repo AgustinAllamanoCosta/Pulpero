@@ -183,13 +183,14 @@ function OSCommands.create_path_by_OS(self, path_or_folder, file_name_or_folder)
 end
 
 function OSCommands.get_file_content(self, file_path)
-    if self:file_exists(file_path) then
+    -- if self:file_exists(file_path) then
         local file = io.open(file_path, "r")
         local content = file:read("*a")
         file:close()
         return content
-    end
-    return nil
+    -- else
+        -- return "File not exits"
+    -- end
 end
 
 return OSCommands

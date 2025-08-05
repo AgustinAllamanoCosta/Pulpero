@@ -229,8 +229,8 @@ function ServiceConnector:send_request(method, params, callback)
     return self.request_id
 end
 
-function ServiceConnector:talk_with_model(message, callback)
-    return self:send_request("talk_with_model", { message = message }, callback)
+function ServiceConnector:talk_with_model(message, file_context_data,callback)
+    return self:send_request("talk_with_model", { message = message, file_context_data = file_context_data }, callback)
 end
 
 function ServiceConnector:update_current_file_content(file_data, amount_of_lines, callback)

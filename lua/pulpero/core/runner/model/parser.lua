@@ -1,4 +1,3 @@
-local json = require('JSOn')
 local Parser = {}
 function Parser.new(logger)
     local self = setmetatable({}, { __index = Parser })

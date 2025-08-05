@@ -45,52 +45,12 @@ local ui = UI.new()
 local service = Service_Connector.new()
 local chat = Chat.new(ui, service)
 
-local function should_update_file(bufnr)
-    if bufnr == ui.chat_buf or bufnr == ui.input_buf then
-        return false
-    end
-    local buftype = vim.api.nvim_buf_get_option(bufnr, 'buftype')
-    return buftype == ''
-end
-
-local function get_current_file()
-    local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-    local amount_of_lines = table.getn(lines)
-    return table.concat(lines, "\n"), amount_of_lines
-end
-
-local function add_virtual_text()
-    if chat.code then
-        local bufnr = vim.api.nvim_get_current_buf()
-        local ns_id = vim.api.nvim_create_namespace("pulpero_suggestion")
-        vim.api.nvim_buf_clear_namespace(bufnr, ns_id, 0, -1)
-        local cursor = vim.api.nvim_win_get_cursor(0)
-        local row, col = cursor[1] - 1, cursor[2]
-        vim.api.nvim_buf_set_extmark(bufnr, ns_id, row, col, {
-            virt_text = { { chat.code, "Comment" } },
-            virt_text_pos = "inline"
-        })
-    end
-end
-
-local function update_code_data(self)
-    if should_update_file(vim.api.nvim_get_current_buf()) then
-        local current_file, amount_of_lines = get_current_file()
-        chat:update_current_file_context(current_file, amount_of_lines)
-        --add_virtual_text()
-    end
-end
-
 function M.setup()
     if not service:connect() then
         print("Service not connected")
         return
     end
     chat:close()
-    -- vim.api.nvim_create_autocmd({ "BufEnter", "BufWrite" }, {
-    --     callback = update_code_data
-    -- })
-    --
     vim.api.nvim_create_user_command('PulperoOpenChat', function()
             chat:open()
         end,

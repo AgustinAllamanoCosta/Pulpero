@@ -93,13 +93,17 @@ function Chat.submit_message(self)
         return
     end
     local message = vim.api.nvim_buf_get_lines(self.ui.input_buf, 0, -1, false)[1]
+    local file_context_data = {
+        current_working_dir  = vim.loop.cwd(),
+        current_file_name = ""
+    }
 
     if message and message ~= "" then
         vim.api.nvim_buf_set_lines(self.ui.input_buf, 0, -1, false, { "" })
 
         self:append_message(user_key, message)
         self:append_message(pulpero_key, "⏲️  Cooking...")
-        self.service:talk_with_model(message, function(err, result)
+        self.service:talk_with_model(message, file_context_data, function(err, result)
             vim.schedule(function()
                 if err then
                     self:append_message(pulpero_key, "🛑 Error: " .. err)

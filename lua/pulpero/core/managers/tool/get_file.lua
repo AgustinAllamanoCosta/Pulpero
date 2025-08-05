@@ -10,7 +10,8 @@ local function get_file(logger)
         logger:debug("Looking for file content " .. params.path)
         local content = OSCommands:get_file_content(params.path)
 
-        return { content = content }
+        logger:debug("Tool call result " .. content)
+        return { result = content }
     end
 
     return Tool.new(
@@ -22,6 +23,7 @@ local function get_file(logger)
                 description = "The file path"
             }
         },
+        "<tool name=\"get_file\" params=\"path=EXACT_PATH\" />",
         execute
     )
 end
