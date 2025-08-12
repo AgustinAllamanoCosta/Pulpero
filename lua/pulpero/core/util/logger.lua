@@ -29,7 +29,7 @@ function Logger.new(class_name, testEnv)
     return self
 end
 
-function Logger.get_config(self)
+function Logger:get_config()
     return config
 end
 

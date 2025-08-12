@@ -1,42 +1,20 @@
-local function add_pulpero_to_path()
-    local current_file = debug.getinfo(1, "S").source:sub(2)
-    local plugin_root = current_file:match("(.*/)"):sub(1, -2):match("(.*/)"):sub(1, -2)
+local M = {}
+local current_file = debug.getinfo(1, "S").source:sub(2)
+local plugin_root = current_file:match("(.*/)"):sub(1, -2):match("(.*/)"):sub(1, -2)
 
-    local paths = {
-        plugin_root .. "/?.lua",
-        plugin_root .. "/?/init.lua",
-        plugin_root .. "/pulpero/?.lua",
-        plugin_root .. "/pulpero/?/init.lua",
-        plugin_root .. "/pulpero/core/?.lua",
-        plugin_root .. "/pulpero/core/?/init.lua",
-        plugin_root .. "/pulpero/core/util/?.lua",
-        plugin_root .. "/pulpero/core/util/?/init.lua",
-        plugin_root .. "/pulpero/core/socket/?.lua",
-        plugin_root .. "/pulpero/core/socket/?/init.lua",
-        plugin_root .. "/pulpero/core/managers/?.lua",
-        plugin_root .. "/pulpero/core/managers/?/init.lua",
-        plugin_root .. "/pulpero/core/managers/tool/?.lua",
-        plugin_root .. "/pulpero/core/managers/tool/?/init.lua",
-        plugin_root .. "/pulpero/core/runner/model/?.lua",
-        plugin_root .. "/pulpero/core/runner/model/?/init.lua",
-        plugin_root .. "/pulpero/core/managers/model/?.lua",
-        plugin_root .. "/pulpero/core/managers/model/?/init.lua",
-        plugin_root .. "/pulpero/core/managers/audio/?.lua",
-        plugin_root .. "/pulpero/core/managers/audio/?/init.lua",
-    }
+local paths = {
+    plugin_root .. "/?.lua",
+    plugin_root .. "/?/init.lua",
+    plugin_root .. "/pulpero/?.lua",
+}
 
-    for _, path in ipairs(paths) do
-        if not package.path:match(path:gsub("[%.%/]", "%%%1")) then
-            package.path = path .. ";" .. package.path
-        end
+for _, path in ipairs(paths) do
+    if not package.path:match(path:gsub("[%.%/]", "%%%1")) then
+        package.path = path .. ";" .. package.path
     end
-
-    return plugin_root
 end
 
-add_pulpero_to_path()
-
-local M = {}
+require('load_dep')
 local UI = require('ui')
 local Chat = require('chat')
 local Service_Connector = require('service_connector')
@@ -45,12 +23,35 @@ local ui = UI.new()
 local service = Service_Connector.new()
 local chat = Chat.new(ui, service)
 
+local function should_update_file(bufnr)
+    if bufnr == ui.chat_buf or bufnr == ui.input_buf then
+        return false
+    end
+    local buftype = vim.api.nvim_buf_get_option(bufnr, 'buftype')
+    return buftype == ''
+end
+
+local function update_code_data(self)
+    if should_update_file(vim.api.nvim_get_current_buf()) then
+        local current_file_path = vim.api.nvim_buf_get_name(0)
+        chat.file_context = {
+            current_working_dir = vim.loop.cwd(),
+            current_file_name   = string.match(current_file_path, "[^/\\]+$"),
+            current_file_path   = current_file_path
+        }
+    end
+end
+
 function M.setup()
     if not service:connect() then
         print("Service not connected")
         return
     end
     chat:close()
+    vim.api.nvim_create_autocmd({ "BufEnter", "BufWrite" }, {
+        callback = update_code_data
+    })
+
     vim.api.nvim_create_user_command('PulperoOpenChat', function()
             chat:open()
         end,

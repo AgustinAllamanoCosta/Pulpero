@@ -109,7 +109,7 @@ function ModelManager.new(logger, default_config)
     return self
 end
 
-function ModelManager.write_status(self, status_file, status)
+function ModelManager:write_status(status_file, status)
     local f = io.open(status_file, "w")
     if f then
         f:write(json.encode(status))
@@ -163,13 +163,19 @@ function ModelManager.verify_checksum(self, file_path, expected_checksum)
 end
 
 function ModelManager.extract_chunk(self, chunk_file, chunk_number, temp_dir)
-    local extract_cmd = string.format(
-        'tar --transform="s,deepseek.part-*,deepseek.part-%s" -xzf "%s" -C "%s"',
-        chunk_number,
-        chunk_file,
-        temp_dir
-    )
-    return os.execute(extract_cmd)
+    local extract_cmd = string.format('tar -xzf "%s" -C "%s"', chunk_file, temp_dir)
+    self.logger:debug("Extract command to excute " .. extract_cmd)
+    OSCommands:execute_command(extract_cmd)
+
+    local expected_name = string.format("deepseek.part-%d", chunk_number)
+    local expected_path = OSCommands:create_path_by_OS(temp_dir, expected_name)
+
+    if OSCommands:file_exists(expected_path) then
+        return true
+    else
+        self.logger:debug("extracted file does not exit " .. expected_path)
+        return false
+    end
 end
 
 function ModelManager.assemble_model(self, temp_dir, model_path, num_chunks)
@@ -210,7 +216,9 @@ function ModelManager.download_and_assemble_model(self)
         status.current_chunk = i
         status.state = "downloading"
         self:write_status(self.config.status_file, status)
+
         local temp_file = OSCommands:create_path_by_OS(self.config.temp_dir, string.format("model_chunk_%d.tar.gz", i))
+
         if self:download_chunk(chunk_info.url, temp_file) then
             -- Verify checksum
             if self:verify_checksum(temp_file, chunk_info.checksum) then

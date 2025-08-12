@@ -1,55 +1,70 @@
 local luaunit = require('luaunit')
 local Parser = require('parser')
-local ModelResponse = [[<|system|>
-You are a code explanation expert. Provide concise, non-repetitive explanations focusing on the key functionality.
-<|user|>
-Explain this lua function:
+local Logger = require('logger')
+local ModelResponse = [[
+You are Pulpero, a friendly and knowledgeable AI assistant integrated into an IDE. Your key characteristics are:
 
-function Parser.new(config)
-    local self = setmetatable({}, { __index = Parser })
-    if config == nil then
-        error("Config in parser can not be nil")
-    end
-    self.config = config
-    return self
-end
-<|assistant|>
-In the Lua function `Parser.new`, the `config` parameter is passed as an argument to the `setmetatable()` function. This function is used to create a new instance of the `Parser` class, which is a table with the following properties:
+1. Programming Focus:
+- You're deeply familiar with programming concepts, patterns, and best practices
+- You understand various programming languages and development tools
 
-1. `config`: This is a table that contains the configuration settings for the parser. The `config` table is passed as an argument to the `setmetatable()` function, which creates a new table with the same properties.
+2. Communication Style:
+- You provide clear, concise responses that fit naturally in a text editor context
+- You maintain a friendly but professional tone
+- You stay focused and avoid unnecessary verbosity
+- You acknowledge uncertainties when they exist
 
-2. `self`: This is the base class for the `Parser` class, which is the table that is created by the `setmetatable()` function.
+3. Context Awareness:
+- You understand you're operating within IDEs
+- You remember previous parts of the conversation for context
+- You can help with both quick queries and detailed technical discussions
+- You can get the content of the current open file where the user is working on
+- You can create new files inside the current working dir
 
-3. `config`: This is the table that contains the configuration settings for the parser. The `config` table is passed as an argument to the `setmetatable()` function, which creates a new table with the same properties.
+IDE information context:
 
-The `Parser` class is a table with the following properties:
+Current working dir: /Users/agustinallamanocosta/repo/personal/AI/Pulpero
+ Open file name: router.lua
+ Open file dir path: /Users/agustinallamanocosta/repo/personal/AI/Pulpero/lua/pulpero/core/router/router.lua
 
-1. `config`: This is the configuration settings for the parser. This is a table with the following properties:
 
-   - `input_file`: This is the name of the input file.
-   - `output_
+Guidelines for your responses:
+- Keep responses focused and relevant
+- Avoid repetition and redundant information
+- Use markdown formatting when appropriate for code or emphasis
+- If you need clarification, ask specific questions
+- If you need more information, ask for it
+- If discussing code, reference specific parts rather than being vague
+
+Remember: You're here to assist the user with their development work while maintaining a helpful and professional demeanor.
+
+""
+
+User message: "Hi Pulpero, are you there ?"
+
+A: Yes, I'm here! How can I assist you today? [end of text]
 
 ]]
-local config = { maxLineLength = 110 }
-local parser = Parser.new(config)
+local logger = Logger.new("Test parser ", true)
+local parser = Parser.new(logger)
 
-function testParseAModelMessageDifferentFromNil()
-    local parserResult = parser:cleanModelOutput(ModelResponse)
-    local line = parserResult:sub(1,parserResult:find('\n'))
+function test_parse_a_model_message_different_from_nil()
+    local parserResult = parser:clean_model_output(ModelResponse)
+    local line = parserResult:sub(1, parserResult:find('\n'))
     luaunit.assertNotNil(parserResult)
-    luaunit.assertTrue(#line <= config.maxLineLength)
+    luaunit.assertTrue(#line == 46)
 end
 
-function testReturnNilFromAnEmptyString()
-    local parserResult = parser:cleanModelOutput("")
-    luaunit.assertNil(parserResult)
+function test_return_an_empty_string_from_an_empty_string()
+    local parserResult = parser:clean_model_output("")
+    luaunit.assertTrue(parserResult == "")
 end
 
-function testReturnNilFromNilValue()
-    local parserResult = parser:cleanModelOutput(nil)
-    luaunit.assertNil(parserResult)
+function test_return_an_empty_string_from_nil_value()
+    local parserResult = parser:clean_model_output(nil)
+    luaunit.assertTrue(parserResult == "")
 end
 
 local runner = luaunit.LuaUnit.new()
 runner:setOutputType("text")
-os.exit( runner:runSuite() )
+os.exit(runner:runSuite())

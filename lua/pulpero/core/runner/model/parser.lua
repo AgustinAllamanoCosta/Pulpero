@@ -11,8 +11,11 @@ function Parser.clean_model_output(self, output)
     local skip_line = false
     local response_lines = {}
 
-    for line in output:gmatch("[^\r\n]+") do
+    if output == nil then
+        return clean_response
+    end
 
+    for line in output:gmatch("[^\r\n]+") do
         if line:match("Current open file code:") or line:match("Chat History") then
             skip_line = true
             goto continue
@@ -46,7 +49,6 @@ function Parser.clean_model_output(self, output)
     if #response_lines > 0 then
         clean_response = table.concat(response_lines, "\n")
     end
-
     self.logger:debug("parse complete ", { lines = #clean_response })
     return clean_response
 end
@@ -74,9 +76,8 @@ function Parser.get_code_from_response(self, output)
         ::continue::
     end
 
-    self.logger:debug("Code parse ", { code_lines=#code_lines })
+    self.logger:debug("Code parse ", { code_lines = #code_lines })
     return code_lines
 end
 
 return Parser
-

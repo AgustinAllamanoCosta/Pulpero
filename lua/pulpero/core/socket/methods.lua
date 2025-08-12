@@ -45,7 +45,20 @@ function Methods.adapter(self, request)
     local method = request.method
     if method == "talk_with_model" then
         response = self:execute(function(methods)
-            return methods.router:route(request.params.message, methods.params.file_context_data)
+            local file_context_data = {}
+            -- self.logger:debug("talk with model params " .. request.params)
+            self.logger:debug("talk with model request ", request)
+            if request.params.file_context_data == nil then
+                file_context_data = {
+                    current_working_dir = "",
+                    current_file_name = "",
+                    current_file_path = ""
+                }
+            else
+                file_context_data = request.params.file_context_data
+            end
+
+            return methods.router:route(request.params.message, file_context_data)
         end, response, method)
     elseif method == "prepear_env" then
         local function prepear_env(methods)

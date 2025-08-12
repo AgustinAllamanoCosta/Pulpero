@@ -229,7 +229,7 @@ function ServiceConnector:send_request(method, params, callback)
     return self.request_id
 end
 
-function ServiceConnector:talk_with_model(message, file_context_data,callback)
+function ServiceConnector:talk_with_model(message, file_context_data, callback)
     return self:send_request("talk_with_model", { message = message, file_context_data = file_context_data }, callback)
 end
 

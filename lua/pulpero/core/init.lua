@@ -1,34 +1,7 @@
-local function add_pulpero_to_path()
-    local current_file = debug.getinfo(1, "S").source:sub(2)
-    local plugin_root = current_file:match("(.*/)"):sub(1, -2):match("(.*/)"):sub(1, -2)
-
-    local paths = {
-        plugin_root .. "/?.lua",
-        plugin_root .. "/?/init.lua",
-        plugin_root .. "/core/?.lua",
-        plugin_root .. "/core/socket/?.lua",
-        plugin_root .. "/core/managers/?.lua",
-        plugin_root .. "/core/managers/tool/?.lua",
-        plugin_root .. "/core/managers/model/?.lua",
-        plugin_root .. "/core/managers/audio/?.lua",
-        plugin_root .. "/core/runner/model/?.lua",
-        plugin_root .. "/core/util/?.lua"
-    }
-
-    for _, path in ipairs(paths) do
-        if not package.path:match(path:gsub("[%.%/]", "%%%1")) then
-            package.path = path .. ";" .. package.path
-        end
-    end
-
-    return plugin_root
-end
-
-add_pulpero_to_path()
 local ModelManager = require('model_manager')
-local Setup = require('socket.setup')
-local Server = require('socket.server')
-local Methods = require('socket.methods')
+local Setup = require('setup')
+local Server = require('server')
+local Methods = require('methods')
 local Logger = require('logger')
 local OSCommands = require('OSCommands')
 

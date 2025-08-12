@@ -2,7 +2,6 @@ local prompts = require("prompts")
 local json = require("JSON")
 local Router = {}
 local user_key = "User"
-local cache_prompt_path = "/tmp/prompts.bin"
 local error_file_permission = "Error to run the router, can not write the file for the temp prompt"
 
 function Router.new(config, logger, model_runner, tool_manager)
@@ -25,6 +24,7 @@ function Router.new(config, logger, model_runner, tool_manager)
     self.config = config
     self.logger = logger
     self.chat_context = self:create_new_chat_context()
+    self.file_context_data = nil
     return self
 end
 
@@ -40,13 +40,11 @@ end
 -- PIPELINE SECTION
 
 function Router:route(user_message, file_context_data)
-    if file_context_data == nil then
-        file_context_data = { current_working_dir = "", current_file_name = "" }
-    end
+    self.file_context_data = file_context_data
 
     -- detect when a topic change and switch context or clean the cache
     local intention = self:detect_intention(user_message):gsub("%s+", ""):gsub("\n", "")
-    local response = ""
+    local response = "No pipeline category found"
 
     if intention == "file_operations" then
         response = self:file_pipeline(user_message)
@@ -71,8 +69,16 @@ function Router:detect_intention(user_message)
 end
 
 function Router:file_pipeline(user_message)
+    local file_context_data_str = string.format(
+        "Current working dir: %s\n Open file name: %s\n Open file dir path: %s\n",
+        self.file_context_data.current_working_dir,
+        self.file_context_data.current_file_name,
+        self.file_context_data.current_file_path
+    )
+
     local full_prompt = string.format(
         prompts.file_operation,
+        file_context_data_str,
         self:generate_tools_description(),
         self:generate_chat_history(),
         user_message
@@ -104,9 +110,16 @@ function Router:web_research_pipeline(user_message)
 end
 
 function Router:code_analysis_pipeline(user_message)
+    local file_context_data_str = string.format(
+        "Current working dir: %s\n Open file name: %s\n Open file dir path: %s\n",
+        self.file_context_data.current_working_dir,
+        self.file_context_data.current_file_name,
+        self.file_context_data.current_file_path
+    )
     local final_response = ""
     local full_prompt = string.format(
         prompts.code,
+        file_context_data_str,
         self:generate_tools_description(),
         self:generate_chat_history(),
         user_message
@@ -134,8 +147,14 @@ function Router:code_analysis_pipeline(user_message)
 end
 
 function Router:general_chat_pipeline(user_message)
+    local file_context_data_str = string.format(
+        "Current working dir: %s\n Open file name: %s\n Open file dir path: %s\n",
+        self.file_context_data.current_working_dir,
+        self.file_context_data.current_file_name,
+        self.file_context_data.current_file_path
+    )
     local chat_history = self:generate_chat_history()
-    local full_prompt = string.format(prompts.chat, chat_history, user_message)
+    local full_prompt = string.format(prompts.chat, file_context_data_str, chat_history, user_message)
     local prompts_file = self:generate_prompt_file(full_prompt)
 
     self:update_chat_context('User', user_message)
@@ -166,8 +185,7 @@ function Router:generate_prompt_file(prompt)
 end
 
 function Router:clear_model_cache()
-    os.remove(cache_prompt_path)
-    self.chat_context = self:create_new_chat_context()
+   self.chat_context = self:create_new_chat_context()
 end
 
 -- CHAT HISTORY SECTION
@@ -213,7 +231,7 @@ function Router:generate_tools_description()
     if #tools > 0 then
         for _, tool in ipairs(tools) do
             tool_descriptions = tool_descriptions .. string.format(
-                "- Tool Name: \"%s\"\nDescription: \"%s\"\nCall Example: \"%s\"\n",
+                "\n- Tool Name: \"%s\"\nDescription: \"%s\"\nCall Example: \"%s\"\n",
                 tool.name,
                 tool.description,
                 tool.call_example
@@ -250,13 +268,13 @@ function Router:process_tool_calls(tool_calls, prompt)
         local result_str
         if tool_result.success then
             result_str = string.format(
-                "<toolresult name=\"%s\" success=\"true\" result=\"%s\" />",
+                "\nTool Result\nname: \"%s\"\nsuccess:\"true\"\nresult:\n\"%s\"",
                 tool_call.name,
                 json.encode(tool_result.result)
             )
         else
             result_str = string.format(
-                "<toolresult name=\"%s\" success=\"false\" error=\"%s\" />",
+                "\nTool Result\nname: \"%s\"\nsuccess: \"false\"\nerror:\"%s\"",
                 tool_call.name,
                 tool_result.error
             )

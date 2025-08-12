@@ -87,7 +87,7 @@ function Setup.setup_llama(self)
     if not OSCommands:is_directory(dir_info.build_bin) then
         self.logger:setup("Compile llama cpp repository")
         OSCommands:ensure_dir(dir_info.llama_dir)
-        local build_commands = string.format('cd "%s" && cmake -B build .. && cmake --build build --config Release',
+        local build_commands = string.format('cd "%s" && cmake -B build -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release',
             dir_info.llama_dir)
         if not self:execute_command_and_dump(build_commands) then
             self.logger:setup("Failed to compile llama.cpp")
@@ -118,12 +118,14 @@ function Setup.prepear_env(self)
     else
         error("Failed to initialize Pulpero")
     end
+
     if self.model_manager:check_if_model_exist() then
         self.config.pulpero_ready = true
     else
         self.config.pulpero_ready = false
         self.model_manager:download_and_assemble_model()
     end
+
     return self.config
 end
 
