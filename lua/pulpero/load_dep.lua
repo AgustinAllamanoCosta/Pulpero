@@ -24,6 +24,7 @@ local paths = {
     plugin_root .. "/pulpero/core/managers/model/?/init.lua",
     plugin_root .. "/pulpero/core/managers/audio/?.lua",
     plugin_root .. "/pulpero/core/managers/audio/?/init.lua",
+    plugin_root .. "/pulpero/core/managers/history/?/init.lua",
 }
 
 for _, path in ipairs(paths) do

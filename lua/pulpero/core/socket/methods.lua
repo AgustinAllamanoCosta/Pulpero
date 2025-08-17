@@ -1,9 +1,10 @@
 local Methods = {}
-local Runner = require('runner.model.model_runner')
+local Runner = require('model_runner')
 local Router = require('router.router')
+local History = require('history.manager')
 local ToolManager = require('managers.tool.manager')
 local tools = require('tools')
-local Parser = require('runner.model.parser')
+local Parser = require('parser')
 local uv = require('luv')
 
 function Methods.new(logger, model_manager, setup)
@@ -11,6 +12,7 @@ function Methods.new(logger, model_manager, setup)
     self.logger = logger
     self.model_manager = model_manager
     self.router = nil
+    self.history = nil
     self.setup = setup
     self.is_ready = false
     self.enable = true
@@ -45,9 +47,10 @@ function Methods.adapter(self, request)
     local method = request.method
     if method == "talk_with_model" then
         response = self:execute(function(methods)
+
             local file_context_data = {}
-            -- self.logger:debug("talk with model params " .. request.params)
             self.logger:debug("talk with model request ", request)
+
             if request.params.file_context_data == nil then
                 file_context_data = {
                     current_working_dir = "",
@@ -64,13 +67,17 @@ function Methods.adapter(self, request)
         local function prepear_env(methods)
             if not methods.is_ready then
                 local config = methods.setup:prepear_env()
+
                 local tool_manager = ToolManager.new(methods.logger)
+
                 tool_manager:register_tool(tools.create_create_file_tool(methods.logger))
                 tool_manager:register_tool(tools.create_get_file_tool(methods.logger))
-                -- tool_manager:register_tool(tools.create_web_Search_tool(methods.logger))
+
                 local parser = Parser.new(methods.logger)
-                local runner = Runner.new(config, methods.logger, parser, tool_manager)
-                methods.router = Router.new(config, methods.logger, runner, tool_manager)
+                local runner = Runner.new(config, methods.logger, parser)
+                methods.history = History.new(nil)
+
+                methods.router = Router.new(config, methods.logger, runner, tool_manager, methods.history)
                 methods.is_ready = true
             end
             return methods.is_ready
@@ -80,7 +87,7 @@ function Methods.adapter(self, request)
         return response
     elseif method == "clear_model_cache" then
         response = self:execute(function(methods)
-            methods.router:clear_model_cache()
+            methods.history:clear()
             return true
         end, response, method)
     elseif method == "get_download_status" then

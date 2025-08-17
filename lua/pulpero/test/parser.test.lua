@@ -45,7 +45,7 @@ User message: "Hi Pulpero, are you there ?"
 A: Yes, I'm here! How can I assist you today? [end of text]
 
 ]]
-local logger = Logger.new("Test parser ", true)
+local logger = Logger.new("Test_Parser ", false)
 local parser = Parser.new(logger)
 
 function test_parse_a_model_message_different_from_nil()

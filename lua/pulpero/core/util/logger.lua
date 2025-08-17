@@ -83,7 +83,7 @@ Data: %s
 ----------------------------------------
 ]]
     if data then
-        log_file:write(string.format(message_template, os.date("%Y-%m-%d %H:%M:%S"), message, String:toString(data)))
+        log_file:write(string.format(message_template, os.date("%Y-%m-%d %H:%M:%S"), message, String:to_string(data)))
     else
         log_file:write(string.format(message_template, os.date("%Y-%m-%d %H:%M:%S"), message, ""))
     end
@@ -92,7 +92,7 @@ Data: %s
         print(message)
         if data then
             print("Data")
-            print(String:toString(data))
+            print(String:to_string(data))
         end
     end
 end

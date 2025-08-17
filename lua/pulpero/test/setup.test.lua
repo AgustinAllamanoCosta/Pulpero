@@ -4,7 +4,7 @@ local ModelManager = require('model_manager')
 local Logger = require('logger')
 local OSCommands = require('OSCommands')
 
-local loggerConsoleOutput = true
+local loggerConsoleOutput = false
 
 -- Test run manually
 function test_should_download_llama_and_the_model()

@@ -1,4 +1,4 @@
-local prompts = {}
+local error_file_permission = "Error on Prompt, can not write the file for the temp prompt"
 
 local intent_prompt = [[
 Classify this user request into ONE category, if the chat history is available use it to infer the intention:
@@ -155,7 +155,7 @@ User message: "%s"
 
 A:]]
 
-prompts = {
+Prompts = {
     chat = chat,
     generate_final_response = generate_final_response,
     intent_prompt = intent_prompt,
@@ -163,4 +163,17 @@ prompts = {
     code = code
 }
 
-return prompts
+function Prompts:generate_prompt_file(prompt)
+    local tmp_prompt = os.tmpname()
+    local tmp_prompt_file = io.open(tmp_prompt, 'w')
+    if not tmp_prompt_file then
+        self.logger:error(error_file_permission)
+        return error_file_permission
+    end
+    tmp_prompt_file:write(prompt)
+    tmp_prompt_file:close()
+    return tmp_prompt
+end
+
+
+return Prompts

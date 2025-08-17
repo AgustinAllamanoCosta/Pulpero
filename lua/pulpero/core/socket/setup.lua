@@ -129,7 +129,7 @@ function Setup.prepear_env(self)
     return self.config
 end
 
-function Setup.configure_plugin(self)
+function Setup:configure_plugin()
     local context_window = nil
     local threads = nil
 

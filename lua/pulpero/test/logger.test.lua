@@ -1,7 +1,7 @@
 local OSCommands = require('OSCommands')
 local luaunit = require('luaunit')
 local Logger = require('logger')
-local logger = Logger.new("test", true)
+local logger = Logger.new("Logger_Test", false)
 
 function test_create_logs_files_at_start()
   local config = logger:get_config()

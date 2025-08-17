@@ -1,13 +1,13 @@
 local String = {}
 
-function String.toString(self, table)
+function String.to_string(self, table)
     local result = "{\n"
     for k, v in pairs(table) do
         if type(k) == "string" then
             result = result.."\""..k.."\"".." = "
         end
         if type(v) == "table" then
-            result = result .. self:toString(v)
+            result = result .. self:to_string(v)
         elseif type(v) == "boolean" then
             result = result .. tostring(v)
         else
