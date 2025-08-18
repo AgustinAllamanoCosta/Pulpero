@@ -17,11 +17,14 @@ local function create_file(logger)
 
         logger:debug("Creating file in", { path = params.path })
 
-        OSCommands:create_file(params.path)
         local file = io.open(params.path, "w")
 
-        file:write(params.content)
-        file:close()
+        if file ~= nil then
+            file:write(params.content)
+            file:close()
+        else
+            return { error = "Can not create the file" }
+        end
 
         return { success = true }
     end

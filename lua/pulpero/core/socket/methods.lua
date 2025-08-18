@@ -72,6 +72,7 @@ function Methods.adapter(self, request)
 
                 tool_manager:register_tool(tools.create_create_file_tool(methods.logger))
                 tool_manager:register_tool(tools.create_get_file_tool(methods.logger))
+                tool_manager:register_tool(tools.create_find_file_tool(methods.logger))
 
                 local parser = Parser.new(methods.logger)
                 local runner = Runner.new(config, methods.logger, parser)

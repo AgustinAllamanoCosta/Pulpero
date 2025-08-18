@@ -18,7 +18,7 @@ end
 function History:create_new_chat_context()
     return {
         messages = {},
-        max_messages = 8,
+        max_messages = 16,
         current_tokens = 0
     }
 end

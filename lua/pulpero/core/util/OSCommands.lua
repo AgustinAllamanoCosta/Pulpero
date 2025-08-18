@@ -19,7 +19,7 @@ end
 function OSCommands:execute_command(cmd)
     local handle = io.popen(cmd)
     if not handle then
-        return nil 
+        return nil
     end
     local result = handle:read("*a")
     handle:close()
@@ -37,31 +37,14 @@ function OSCommands:is_directory(path)
 end
 
 function OSCommands:file_exists(path)
-    local handle, files, directory, filename
+    local file = io.open(path, "r")
+    if file then
+        file:close()
 
-    directory = path:match("(.*" .. sep .. ")")
-    filename = path:match("[%w+_-]*%w+[.]%w+$")
-
-    if self:is_windows() then
-        handle = io.popen('dir /b "' .. directory .. '"')
-    else
-        handle = io.popen('ls -1 "' .. directory .. '"')
-    end
-
-    if handle then
-        files = handle:read("*a")
-        handle:close()
+        return true
     else
         return false
     end
-
-    for file in files:gmatch("([^\n]+)") do
-        if file == filename then
-            return true
-        end
-    end
-
-    return false
 end
 
 function OSCommands:delete_file(path)
@@ -94,6 +77,33 @@ function OSCommands:ensure_dir(path)
     if not self:is_directory(path) then
         self:create_directory(path)
     end
+end
+
+function OSCommands:rename_file(new_name, file_path)
+    local command = ""
+    if OSCommands:is_windows() then
+        command = string.format('ren "%s" "%s"', file_path, new_name)
+    else
+        local old_file_name = OSCommands:get_file_name_from_path(file_path)
+        local new_path = file_path:gsub(old_file_name, new_name)
+        command = string.format('mv "%s" "%s"', file_path, new_path)
+    end
+    return OSCommands:execute_command(command)
+end
+
+function OSCommands:create_path_by_OS(path_or_folder, file_name_or_folder)
+    local final_path = path_or_folder .. sep .. file_name_or_folder
+    return final_path
+end
+
+function OSCommands:list_directory(path)
+    local result = "Dir not found"
+    if OSCommands:is_windows() then
+        result = self:execute_command("dir " .. path)
+    else
+        result = self:execute_command("ls " .. path)
+    end
+    return result
 end
 
 function OSCommands:get_temp_dir()
@@ -149,18 +159,6 @@ function OSCommands:get_file_name_from_path(path)
     return file_name
 end
 
-function OSCommands:rename_file(new_name, file_path)
-    local command = ""
-    if OSCommands:is_windows() then
-        command = string.format('ren "%s" "%s"', file_path, new_name)
-    else
-        local old_file_name = OSCommands:get_file_name_from_path(file_path)
-        local new_path = file_path:gsub(old_file_name, new_name)
-        command = string.format('mv "%s" "%s"', file_path, new_path)
-    end
-    return OSCommands:execute_command(command)
-end
-
 function OSCommands:get_source_path()
     local regex = sep .. "pulpero" .. sep .. "%S*.lua"
     local source_path = debug.getinfo(1).source:sub(2):gsub(regex, "")
@@ -194,18 +192,8 @@ function OSCommands:get_platform()
     return os_name
 end
 
-function OSCommands:create_path_by_OS(path_or_folder, file_name_or_folder)
-    local final_path = path_or_folder .. sep .. file_name_or_folder
-    return final_path
-end
-
-function OSCommands:list_directory(path)
-    local result = "Dir not found"
-    if OSCommands:is_windows() then
-        result = self:execute_command("dir " .. path)
-    else
-        result = self:execute_command("ls " .. path)
-    end
+function OSCommands:get_work_dir()
+    local result = self:execute_command("pwd"):gsub("%s+", ""):gsub("\n", "")
     return result
 end
 

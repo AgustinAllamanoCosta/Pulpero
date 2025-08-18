@@ -33,7 +33,8 @@ function test_should_generate_the_chat_history()
   history:update_chat_context_as_assistant("some assistant response")
 
   local chat_history = history:generate_chat_history()
-  local expected_chat_history = "Chat History:\nUser:some user response\nAssistant: some assistant response\n\nEnd History"
+  local expected_chat_history =
+  "Chat History:\nUser:some user response\nAssistant: some assistant response\n\nEnd History"
   luaunit.assertTrue(chat_history == expected_chat_history)
 end
 
@@ -50,7 +51,13 @@ function test_should_clear_a_existent_chat_history()
 end
 
 function test_should_remove_the_overflow_messages()
-  local history = History.new(nil)
+  local history = History.new(
+    {
+      messages = {},
+      max_messages = 8,
+      current_tokens = 0
+    }
+  )
 
   history:update_chat_context_as_user("some user response 1")
   history:update_chat_context_as_assistant("some assistant response 1")
@@ -68,7 +75,8 @@ function test_should_remove_the_overflow_messages()
   history:update_chat_context_as_assistant("some assistant response 5")
 
   local truked_history = history:generate_chat_history()
-  local expected_trunkated_history = "Chat History:\nUser:some user response 2\nAssistant: some assistant response 2\nUser:some user response 3\nAssistant: some assistant response 3\nUser:some user response 4\nAssistant: some assistant response 4\nUser:some user response 5\nAssistant: some assistant response 5\n\nEnd History"
+  local expected_trunkated_history =
+  "Chat History:\nUser:some user response 2\nAssistant: some assistant response 2\nUser:some user response 3\nAssistant: some assistant response 3\nUser:some user response 4\nAssistant: some assistant response 4\nUser:some user response 5\nAssistant: some assistant response 5\n\nEnd History"
   luaunit.assertTrue(truked_history == expected_trunkated_history)
 end
 

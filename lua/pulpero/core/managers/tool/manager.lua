@@ -33,8 +33,6 @@ function ToolManager:execute_tool(tool_name, params)
         return { success = false, error = "Tool not found: " .. tool_name }
     end
 
-    self.logger:debug("Executing tool: " .. tool_name, { params = params })
-
     local success, result = pcall(tool.execute, params)
 
     if success then
@@ -79,39 +77,35 @@ function ToolManager:parse_tool_calls(model_output)
     return tool_calls
 end
 
-function ToolManager:process_tool_calls(tool_calls, prompt)
-    for _, tool_call in ipairs(tool_calls) do
-        self.logger:debug("Processing tool call", { tool = tool_call.name })
+function ToolManager:process_tool_call(tool_call)
+    self.logger:debug("Executing tool call", { tool = tool_call.name })
 
-        local tool_result = self:execute_tool(tool_call.name, tool_call.params)
+    local tool_result = self:execute_tool(tool_call.name, tool_call.params)
 
-        local result_str
-        if tool_result.success then
-            result_str = string.format(
-                "\nTool Result\nname: \"%s\"\nsuccess:\"true\"\nresult:\n\"%s\"",
-                tool_call.name,
-                json.encode(tool_result.result)
-            )
-        else
-            result_str = string.format(
-                "\nTool Result\nname: \"%s\"\nsuccess: \"false\"\nerror:\"%s\"",
-                tool_call.name,
-                tool_result.error
-            )
-        end
-
-        local pattern = string.format("<tool name=\"%s\" params=\".*\" />", tool_call.name)
-        prompt = prompt:gsub(pattern, result_str)
+    local result_str = ""
+    if tool_result.success then
+        result_str = string.format(
+            "\nTool Result\nname: \"%s\"\nsuccess:\"true\"\nresult:\n\"%s\"",
+            tool_call.name,
+            json.encode(tool_result.result)
+        )
+    else
+        result_str = string.format(
+            "\nTool Result\nname: \"%s\"\nsuccess: \"false\"\nerror:\"%s\"",
+            tool_call.name,
+            tool_result.error
+        )
     end
 
-    return prompt
+    self.logger:debug("Tool executed" .. result_str)
+    return result_str
 end
 
 function ToolManager:execute_tool_if_exist_call(model_response_with_tool_call)
     local tool_calls = self:parse_tool_calls(model_response_with_tool_call)
     local tool_response = ""
     if #tool_calls > 0 then
-        tool_response = self:process_tool_calls(tool_calls, model_response_with_tool_call)
+        tool_response = self:process_tool_call(tool_calls[1])
     else
         tool_response = model_response_with_tool_call
     end

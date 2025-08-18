@@ -305,21 +305,21 @@ Logs are recreated with each request to maintain a controlled size and facilitat
 - ❌ Add new test cases for pipelines
 - ✅ Add a live chat to interact with the model
 - ✅ Add context of the current file for better understanding
-- ❌ Node Js project analizer
 - 🚧 Improve model download process
 - 🚧 Add IDE project awernes
+- ❌ Node Js project analizer
 - 🚧 Add live feedback
 - ✅ Add pairing mode as a companion for developing a feature
 - 🚧 Add the docker build and publish process to the CI pipeline
-- ❌ Add test on the CI pipeline
+- 🚧 Add live feedback with audio for coding
+- 🚧 Add test on the CI pipeline
 - ✅ Improve Neovim's UI
 - ✅ Migrate to a DeepSeek
 - ✅ Automate the download of the DeepSeek gguf format model
-- 🚧 Add live feedback with audio for coding
 
 - ✅ Refactor model download to be handle by the services
 - ✅ Refactor all the model runner call to be handle by the service
-- ❌ Fix tool parsing multi params
+- ✅ Fix tool parsing multi params
 
 Add new type of tool definition to parse in the parser object with the code, move all the parser logic in the run_local_model and return a table with the code, tool definition to execute and the response of
 the model. In the function talk with the model only execute the tools if exist

@@ -10,7 +10,7 @@ local function get_file(logger)
         logger:debug("Looking for file content " .. params.path)
         local content = OSCommands:get_file_content(params.path)
 
-        return { result = content:gsub("%%", "/s") }
+        return content:gsub("%%", "/s")
     end
 
     return Tool.new(

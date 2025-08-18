@@ -7,44 +7,39 @@ local function find_file(logger)
             return { error = "File name is require" }
         end
 
-        if not params.dri then
-            return { error = "File dir is require" }
+        if not params.dir then
+            return { error = "Working dir is require" }
         end
 
-        local result = ""
-        local src_filespec = OSCommands:create_path_by_OS(params.path, params.filename)
-        logger:debug("Searching file recursivly " .. src_filespec)
-        if OSCommands:file_exists(src_filespec) then
-            return src_filespec
+
+        local result = {}
+        local command = "find " .. params.dir .. " -name " .. params.name
+        local paths = OSCommands:execute_command(command)
+
+        local index = 1
+        for path in paths:gmatch("[^\r\n]+") do
+            result[index] = path
+            index = index + 1
         end
-        result = OSCommands:list_directory(src_filespec)
 
-        -- for line in pipe:lines() do
-        --     table.insert(subfolders, line)
-        -- end
-        -- pipe:close()
-        --
-        -- for _, subfolder_name in ipairs(subfolders) do
-        --     src_filespec = search_recursively(path .. subfolder_name .. "\\")
-        --     if src_filespec then
-        --         return src_filespec
-        --     end
-        -- end
-        --
-
-        return { result = result }
+        return result
     end
 
     return Tool.new(
-        "get_file",
+        "find_file",
         "Find a file recursive in the working dir",
         {
             name = {
                 type = "string",
                 description = "Name of the file to find"
+            },
+            dir = {
+                type = "string",
+                description = "Directory where to search for the file"
             }
+
         },
-        "<tool name=\"find_file\" params=\"name=NAME_OF_THE_FILE\" />",
+        "<tool name=\"find_file\" params=\"name=NAME_OF_THE_FILE dir=PATH_OF_FOLDER_TO_SEARCH\" />",
         execute
     )
 end

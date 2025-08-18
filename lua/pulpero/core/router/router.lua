@@ -67,11 +67,11 @@ function Router:file_pipeline(user_message)
     local full_prompt = string.format(
         prompts.file_operation,
         file_context_data_str,
-        self:generate_tools_description(),
+        self.tool_manager:generate_tools_description(),
         self.history:generate_chat_history(),
         user_message
     )
-    local prompts_file = self:generate_prompt_file(full_prompt)
+    local prompts_file = prompts:generate_prompt_file(full_prompt)
     local model_response_with_tool_call = self.model_runner:talk_with_model(prompts_file)
 
     local tool_response = self.tool_manager:execute_tool_if_exist_call(model_response_with_tool_call)
@@ -97,7 +97,7 @@ function Router:code_analysis_pipeline(user_message)
     local full_prompt = string.format(
         prompts.code,
         file_context_data_str,
-        self:generate_tools_description(),
+        self.tool_manager:generate_tools_description(),
         self.history:generate_chat_history(),
         user_message
     )
