@@ -11,6 +11,20 @@ function UI.new()
     self.chat_buf      = vim.api.nvim_create_buf(false, true)
     self.input_buf     = vim.api.nvim_create_buf(false, true)
     self.desc_buf      = vim.api.nvim_create_buf(false, true)
+    self.log_buf       = vim.api.nvim_create_buf(false, true)
+
+    self.log_options   = {
+        relative = 'editor',
+        row = row,
+        col = col,
+        width = width,
+        height = chat_height,
+        style = 'minimal',
+        border = { "╔", "═", "╗", "║", "╝", "═", "╚", "║" },
+        title = ' Pulpero Logs ',
+        title_pos = 'center',
+        focusable = true
+    }
     self.chat_options  = {
         relative = 'editor',
         row = row,
@@ -54,11 +68,17 @@ function UI.new()
     self.chat_win      = nil
     self.input_win     = nil
     self.desc_win      = nil
+    self.log_win       = nil
 
     vim.api.nvim_buf_set_option(self.chat_buf, 'buftype', 'nofile')
     vim.api.nvim_buf_set_option(self.chat_buf, 'bufhidden', 'hide')
     vim.api.nvim_buf_set_option(self.chat_buf, 'swapfile', false)
     vim.api.nvim_buf_set_option(self.chat_buf, 'modifiable', false)
+
+    vim.api.nvim_buf_set_option(self.log_buf, 'buftype', 'nofile')
+    vim.api.nvim_buf_set_option(self.log_buf, 'bufhidden', 'hide')
+    vim.api.nvim_buf_set_option(self.log_buf, 'swapfile', false)
+    vim.api.nvim_buf_set_option(self.log_buf, 'modifiable', false)
 
     vim.api.nvim_buf_set_option(self.input_buf, 'buftype', 'nofile')
     vim.api.nvim_buf_set_option(self.input_buf, 'bufhidden', 'hide')
@@ -78,6 +98,19 @@ function UI.create_chat_sidebar(self)
     vim.api.nvim_win_set_option(self.chat_win, 'winhighlight', 'Normal:Normal,FloatBorder:FloatBorder')
     vim.api.nvim_win_set_option(self.input_win, 'wrap', true)
     vim.api.nvim_win_set_option(self.input_win, 'winhighlight', 'Normal:Normal,FloatBorder:FloatBorder')
+end
+
+function UI.create_log_fullscreen(self)
+    vim.cmd("$tabnew")
+
+    self.log_win = vim.api.nvim_get_current_win()
+
+    vim.api.nvim_win_set_option(self.log_win, 'wrap', true)
+    vim.api.nvim_win_set_option(self.log_win, 'number', false)
+    vim.api.nvim_win_set_option(self.log_win, 'relativenumber', false)
+    vim.api.nvim_win_set_option(self.log_win, 'cursorline', true)
+
+    vim.api.nvim_win_set_buf(self.log_win, self.log_buf)
 end
 
 function UI.create_chat_fullscreen(self)
@@ -117,6 +150,10 @@ end
 function UI.close_chat(self)
     vim.api.nvim_win_close(self.chat_win, true)
     vim.api.nvim_win_close(self.input_win, true)
+end
+
+function UI.close_log(self)
+    vim.api.nvim_win_close(self.log_win, true)
 end
 
 function UI.create_desc_box(self)

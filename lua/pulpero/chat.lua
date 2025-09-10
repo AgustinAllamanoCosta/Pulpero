@@ -3,7 +3,7 @@ local pulpero_key = "Pulpero"
 local user_key = "User"
 local system_key = "System"
 
-function Chat.new(ui, service)
+function Chat.new(ui, service )
     local self        = setmetatable({}, { __index = Chat })
     self.ui           = ui
     self.chat_open    = false
@@ -12,10 +12,6 @@ function Chat.new(ui, service)
     self.code         = nil
     self.file_context = nil
     return self
-end
-
-function Chat.update(self, message)
-    self.ui:update_chat_content(message)
 end
 
 function Chat.open(self, full_screen)

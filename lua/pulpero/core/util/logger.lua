@@ -19,10 +19,10 @@ local config = {
 
 function Logger.new(class_name, testEnv)
     local self = setmetatable({}, { __index = Logger })
-    config.debug_file = "pulpero_".. class_name .."_debug.log"
-    config.setpup_file = "pulpero_".. class_name .."_setup.log"
-    config.command_output = "pulpero_".. class_name .."_command.log"
-    config.error_file = "pulpero_".. class_name .."_error.log"
+    config.debug_file = "pulpero_" .. class_name .. "_debug.log"
+    config.setpup_file = "pulpero_" .. class_name .. "_setup.log"
+    config.command_output = "pulpero_" .. class_name .. "_command.log"
+    config.error_file = "pulpero_" .. class_name .. "_error.log"
     self:configured_logger_path_base_on_OS()
     self:clear_logs()
     self.testEnv = testEnv
@@ -76,24 +76,21 @@ function Logger.write_in_log(self, path, message, data)
     if path == nil then
         error("Logger path can not be nil")
     end
+    local data_str = ""
+    if data ~= nil then
+        data_str = String:to_string(data)
+    end
     local log_file = io.open(path, "a")
     local message_template = [[
 %s: %s
 Data: %s
 ----------------------------------------
 ]]
-    if data then
-        log_file:write(string.format(message_template, os.date("%Y-%m-%d %H:%M:%S"), message, String:to_string(data)))
-    else
-        log_file:write(string.format(message_template, os.date("%Y-%m-%d %H:%M:%S"), message, ""))
-    end
+    local message = string.format(message_template, os.date("%Y-%m-%d %H:%M:%S"), message, data_str)
+    log_file:write(message)
     log_file:close()
     if self.testEnv then
         print(message)
-        if data then
-            print("Data")
-            print(String:to_string(data))
-        end
     end
 end
 

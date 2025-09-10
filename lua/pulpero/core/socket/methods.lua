@@ -6,6 +6,7 @@ local ToolManager = require('managers.tool.manager')
 local tools = require('tools')
 local Parser = require('parser')
 local uv = require('luv')
+local String = require("String")
 
 function Methods.new(logger, model_manager, setup)
     local self = setmetatable({}, { __index = Methods })
@@ -47,21 +48,23 @@ function Methods.adapter(self, request)
     local method = request.method
     if method == "talk_with_model" then
         response = self:execute(function(methods)
-
-            local file_context_data = {}
-            self.logger:debug("talk with model request ", request)
-
-            if request.params.file_context_data == nil then
-                file_context_data = {
+            local file_context = {}
+            if request.params.file_context == nil then
+                file_context = {
                     current_working_dir = "",
                     current_file_name = "",
-                    current_file_path = ""
+                    current_file_path = "",
+                    lsp_data = nil
                 }
             else
-                file_context_data = request.params.file_context_data
+                file_context = request.params.file_context
             end
 
-            return methods.router:route(request.params.message, file_context_data)
+            return methods.router:route(request.params.message, file_context)
+        end, response, method)
+    elseif method == "get_live_code_feedback" then
+        response = self:execute(function(methods)
+            return methods.router:code_suggestion_pipeline(request.params.content, request.params.user_cursor)
         end, response, method)
     elseif method == "prepear_env" then
         local function prepear_env(methods)

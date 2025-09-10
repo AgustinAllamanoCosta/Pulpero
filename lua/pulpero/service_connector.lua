@@ -1,4 +1,4 @@
-local OSCommands = require('OSCommands')
+local OSCommands = require('core.util.OSCommands')
 local json = require('JSON')
 local Logger = require('logger')
 local uv = vim.loop
@@ -63,6 +63,7 @@ function ServiceConnector:start_service()
         self.logger:error("Service script not found", { path = SERVICE_SCRIPT })
         return false
     end
+
     local handle, pid
     local args = { SERVICE_SCRIPT }
     if OSCommands:is_windows() then
@@ -79,10 +80,12 @@ function ServiceConnector:start_service()
             detached = true
         })
     end
+
     if not handle then
         self.logger:error("Failed to start service process", { pid = pid })
         return false
     end
+
     handle:unref()
     uv.sleep(1000)
     self.logger:debug("Service started", { pid = pid })
@@ -140,6 +143,7 @@ function ServiceConnector:connect()
         self.pipe = nil
         return false
     end
+
     self.pipe:read_start(function(err, data)
         if err then
             self.logger:error("Error reading from service", { error = err })
@@ -152,6 +156,7 @@ function ServiceConnector:connect()
             self:handle_disconnect()
         end
     end)
+
     self.connected = true
     self.reconnect_attempts = 0
     self.logger:debug("Connected to service socket")
@@ -229,29 +234,16 @@ function ServiceConnector:send_request(method, params, callback)
     return self.request_id
 end
 
-function ServiceConnector:talk_with_model(message, file_context_data, callback)
-    return self:send_request("talk_with_model", { message = message, file_context_data = file_context_data }, callback)
+function ServiceConnector:talk_with_model(message, file_context, callback)
+    return self:send_request("talk_with_model", { message = message, file_context = file_context }, callback)
 end
 
-function ServiceConnector:update_current_file_content(file_data, amount_of_lines, callback)
-    return self:send_request("update_current_file_content", {
-        file_data = file_data,
-        amount_of_lines = amount_of_lines
-    }, callback)
+function ServiceConnector:get_live_code_feedback(file_conent, user_cursor, callback)
+    return self:send_request("get_live_code_feedback", { content = file_conent, user_cursor = user_cursor }, callback)
 end
 
 function ServiceConnector:clear_model_cache(callback)
     return self:send_request("clear_model_cache", {}, callback)
-end
-
-function ServiceConnector:init_pairing_session(feature_description, callback)
-    return self:send_request("init_pairing_session", {
-        feature_description = feature_description
-    }, callback)
-end
-
-function ServiceConnector:end_pairing_session(callback)
-    return self:send_request("end_pairing_session", {}, callback)
 end
 
 function ServiceConnector:get_download_status(callback)

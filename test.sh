@@ -13,3 +13,5 @@ echo "Create File Tool Test"
 lua -e "require('./lua/pulpero/load_dep')" ./lua/pulpero/test/create_file_tool.test.lua
 echo "Find File Tool Test"
 lua -e "require('./lua/pulpero/load_dep')" ./lua/pulpero/test/find_file_tool.test.lua
+echo "Code base manager"
+lua -e "require('./lua/pulpero/load_dep')" ./lua/pulpero/test/code_data_base.test.lua

@@ -36,6 +36,7 @@ function Router:route(user_message, file_context_data)
     -- Add some basic security check of prompt leaking
     local intention = self:detect_intention(user_message):gsub("%s+", ""):gsub("\n", "")
     local response = "No pipeline category found"
+    self.logger:debug(file_context_data)
     local file_context_data_str = string.format(
         "Current working dir: %s\nOpen file name: %s\nOpen file dir path: %s\n",
         self.file_context_data.current_working_dir,
@@ -118,6 +119,19 @@ function Router:general_chat_pipeline(user_message, file_context_data_str)
 
     os.remove(prompt_file)
     return final_response
+end
+
+function Router:code_suggestion_pipeline(content, user_cursor)
+    local full_prompt = string.format(
+        prompts.code_suggestion,
+        content,
+        user_cursor
+    )
+
+    local prompt_file = prompts:generate_prompt_file(full_prompt)
+    local model_response = self.model_runner:talk_with_model(prompt_file)
+    os.remove(prompt_file)
+    return model_response
 end
 
 function Router:generate_final_response(user_message, tool_response)

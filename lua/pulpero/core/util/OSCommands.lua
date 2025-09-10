@@ -37,13 +37,11 @@ function OSCommands:is_directory(path)
 end
 
 function OSCommands:file_exists(path)
-    local file = io.open(path, "r")
-    if file then
-        file:close()
-
-        return true
-    else
+    local success, err = os.rename(path, path)
+    if not success and err == "No such file or directory" then
         return false
+    else
+        return true
     end
 end
 

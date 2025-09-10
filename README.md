@@ -292,6 +292,10 @@ Logs are recreated with each request to maintain a controlled size and facilitat
 - ✅ Create a docker image of the core
 - ❌ Create the IntelliJ adapter
 - ❌ Create WebStorm adapter
+- ❌ Merge chat history state
+- 🚧 Add unit test generation base of function and context
+- 🚧 Improve model download process
+- 🚧 Add IDE project awernes
 - ✅ Create VSCode adapter
 - ✅ Improve UI
 - ✅ Improve core performance
@@ -301,18 +305,13 @@ Logs are recreated with each request to maintain a controlled size and facilitat
 - ✅ Add unit test of the core functions
 - ✅ Add integration test of the core functions
 - ✅ Add more configuration options for nvim commands
-- ❌ Add unit test generation base of function and context
-- ❌ Add new test cases for pipelines
+- ✅ Add new test cases for pipelines
 - ✅ Add a live chat to interact with the model
 - ✅ Add context of the current file for better understanding
-- 🚧 Improve model download process
-- 🚧 Add IDE project awernes
-- ❌ Node Js project analizer
-- 🚧 Add live feedback
+- ✅ Add live feedback
 - ✅ Add pairing mode as a companion for developing a feature
-- 🚧 Add the docker build and publish process to the CI pipeline
-- 🚧 Add live feedback with audio for coding
-- 🚧 Add test on the CI pipeline
+- ✅ Add the docker build and publish process to the CI pipeline
+- ✅ Add test on the CI pipeline
 - ✅ Improve Neovim's UI
 - ✅ Migrate to a DeepSeek
 - ✅ Automate the download of the DeepSeek gguf format model

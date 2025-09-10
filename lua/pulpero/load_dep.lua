@@ -7,7 +7,6 @@ local paths = {
     plugin_root .. "/pulpero/?.lua",
     plugin_root .. "/pulpero/?/init.lua",
     plugin_root .. "/pulpero/test/?.lua",
-    plugin_root .. "/pulpero/test/?/init.lua",
     plugin_root .. "/pulpero/core/?.lua",
     plugin_root .. "/pulpero/core/?/init.lua",
     plugin_root .. "/pulpero/core/util/?.lua",
