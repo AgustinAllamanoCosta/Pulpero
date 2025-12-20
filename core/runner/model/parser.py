@@ -1,9 +1,11 @@
 import re
 from typing import List
 
+from core.util.logger import Logger
+
 class Parser:
 
-    def __init__(self, logger) -> None:
+    def __init__(self, logger: Logger) -> None:
         self.logger = logger
 
     def clean_model_output(self, output: str) -> str:

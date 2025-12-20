@@ -1,10 +1,11 @@
 import os
 from llama_cpp import Llama
-from typing import Dict
+from core.runner.model.parser import Parser
+from core.util.logger import Logger
 
 class Runner:
 
-    def __init__(self, config, logger, parser) -> None:
+    def __init__(self, config, logger: Logger, parser: Parser) -> None:
         if config == None:
             raise ValueError("Model Runner config is nil")
         if logger == None:
@@ -24,7 +25,6 @@ class Runner:
                 "top_p": "0.3",
                 "num_threads": self.config["num_threads"],
                 "model_path": self.config["model_path"],
-                "command_debug_output": self.logger.get_config()["command_path"]
         }
 
     def _initialize_model(self):
@@ -52,7 +52,7 @@ class Runner:
             self.logger.error(f"Failed to initialize Llama model: {str(e)}")
             raise
 
-    def run_local_model(self, tmp_prompt: str, config: Dict) -> Dict[str, str]:
+    def run_local_model(self, tmp_prompt: str, config: dict) -> dict[str, str]:
         try:
             with open(tmp_prompt, 'r', encoding='utf-8') as f:
                 prompt_content = f.read()

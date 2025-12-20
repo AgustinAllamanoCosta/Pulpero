@@ -1,12 +1,12 @@
-from core.managers.tool.tool import Tool
-from core.managers.tool.manager import ToolResult
+from core.managers.tool.tool import ToolResult, Tool
+from core.util.logger import Logger
 
-def get_file(logger) -> Tool:
+def get_file(logger: Logger) -> Tool:
     def execute(params) -> ToolResult:
         if params["path"] == None:
             return ToolResult(False, {}, "Path is required")
 
-        logger.debug(f"Looking for file content {params.path}")
+        logger.debug(f"Looking for file content {params['path']}")
         response: str = ""
         with open(params["path"], 'r', encoding='utf-8') as f:
             response = f.read()

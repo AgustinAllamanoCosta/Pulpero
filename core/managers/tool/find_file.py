@@ -1,6 +1,5 @@
-from core.managers.tool.tool import Tool
+from core.managers.tool.tool import Tool, ToolResult
 from core.util.logger import Logger
-from core.managers.tool.manager import ToolResult
 import subprocess
 
 def find_file(logger: Logger) -> Tool:

@@ -1,8 +1,9 @@
-from core.managers.tool.tool import Tool
-from core.managers.tool.manager import ToolResult
+from core.managers.tool.tool import Tool, ToolResult
 import os
 
-def create_file(logger) -> Tool:
+from core.util.logger import Logger
+
+def create_file(logger: Logger) -> Tool:
     def execute(params) -> ToolResult:
         if params["path"] == None:
             return ToolResult(False, {},"Path is required")
