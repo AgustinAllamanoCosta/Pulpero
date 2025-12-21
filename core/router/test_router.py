@@ -1,9 +1,11 @@
+import os
+from pathlib import Path
+from core.managers.history.manager import HistoryManager
+from core.managers.tool.manager import ToolManager
+from core.util.logger import Logger
+from core.router.router import FileContextData, RouterManager
 from core.runner.model.model_runner import Runner, RunnerConfig
 from core.runner.model.parser import Parser
-from core.runner.model.prompts import chat, generate_prompt_file
-from core.util.logger import Logger
-from pathlib import Path
-import os
 import platform
 
 class OSCommands:
@@ -22,9 +24,20 @@ class OSCommands:
         else:
             return home / '.local' / 'share' / 'pulpero'
 
-def test_talk_with_model():
-    model_path: str = str(Path(OSCommands.get_model_dir()) / "deepseek-coder-v2-lite-instruct.gguf")
-    default_config: RunnerConfig = RunnerConfig(1024, 0.1, 4, 0.4, "deepseek-coder-v2-lite-instruct.gguf", model_path, "https://github.com/ggerganov/llama.cpp.git", platform.system(), False, 1024)
+def test_router_manager():
+
+    model_path = str(Path(OSCommands.get_model_dir()) / "deepseek-coder-v2-lite-instruct.gguf")
+    logger = Logger("Manager router test", True)
+
+    parser = Parser(logger)
+    tool_manager = ToolManager(logger)
+    history = HistoryManager(None)
+
+    model_runner_config = RunnerConfig(1024, 0.1, 3, 0.4, "deepseek-coder-v2-lite-instruct.gguf", model_path, "https://github.com/ggerganov/llama.cpp.git", platform.system(), False, 1024)
+    model_runner = Runner(model_runner_config, logger, parser)
+
+    file_context_data = FileContextData("","","")
+    router = RouterManager(logger,model_runner, tool_manager, history)
 
     code = '''
 function Runner.new(config, logger, parser)
@@ -45,10 +58,5 @@ function Runner.new(config, logger, parser)
 end
 '''
 
-    logger = Logger("Talk with model test", True)
-    parser = Parser(logger)
-
-    runner = Runner(default_config, logger, parser)
-
-    response = runner.talk_with_model(generate_prompt_file(chat % ("","",code)))
+    response = router.route(code, file_context_data)
     print(response)

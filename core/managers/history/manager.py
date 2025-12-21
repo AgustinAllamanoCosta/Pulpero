@@ -25,7 +25,7 @@ class ChatContext:
         self.max_messages = max_messages
         self.current_tokens = current_tokens
 
-class History:
+class HistoryManager:
 
     chat_context: ChatContext | None
     def __init__(self, context: ChatContext | None) -> None:

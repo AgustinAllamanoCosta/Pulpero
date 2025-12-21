@@ -1,13 +1,13 @@
-from core.managers.history.manager import History, ChatContext
+from core.managers.history.manager import HistoryManager, ChatContext
 
 def test_history_manager_without_context():
-    history = History(None)
+    history = HistoryManager(None)
 
     current_chat = history.generate_chat_history()
     assert current_chat == ''
 
 def test_history_manager_with_context():
-    history = History(None)
+    history = HistoryManager(None)
 
     history.update_chat_context_as_assistant('Hola en que te puedo ayudar')
     history.update_chat_context_as_user('Tienes fotos de pies?')
@@ -18,7 +18,7 @@ def test_history_manager_with_context():
     assert current_chat == expected_history
 
 def test_history_manager_clean_current_context():
-    history = History(None)
+    history = HistoryManager(None)
 
     history.update_chat_context_as_assistant('Hola en que te puedo ayudar')
     history.update_chat_context_as_user('Tienes fotos de pies?')
@@ -30,7 +30,7 @@ def test_history_manager_clean_current_context():
 
 def test_history_manager_delete_old_message_on_update():
     context = ChatContext(messages=[], max_messages=2, current_tokens=0)
-    history = History(context)
+    history = HistoryManager(context)
 
     history.update_chat_context_as_assistant('Hola en que te puedo ayudar')
     history.update_chat_context_as_user('Tienes fotos de pies?')
