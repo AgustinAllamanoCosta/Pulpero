@@ -1,56 +1,74 @@
-ModelManager = require('model_manager')
-Setup = require('setup')
-Server = require('server')
-Methods = require('methods')
-Logger = require('logger')
-OSCommands = require('OSCommands')
+import asyncio
+import os
+from pathlib import Path
+import platform
+from core.runner.model.model_runner import RunnerConfig
+from core.socket.methods import Methods
+from core.socket.server import Server
+from core.util.logger import Logger
 
-logger = nil
-setup = nil
-server = nil
-methods = nil
-config = nil
-logger_config = nil
-model_manager = nil
-model_name = "deepseek-coder-v2-lite-instruct.gguf"
-current_os = OSCommands:get_platform()
+global logger, model_name
+logger: Logger | None = None
+model_name: str = "deepseek-coder-v2-lite-instruct.gguf"
 
-default_settings = {
-    context_window = 1024,
-    temp = "0.1",
-    num_threads = "4",
-    top_p = "0.4",
-    model_name = model_name,
-    model_path = OSCommands:create_path_by_OS(OSCommands:get_model_dir(), model_name),
-    llama_repo = "https://github.com/ggerganov/llama.cpp.git",
-    os = OSCommands:get_platform(),
-    pulpero_ready = false,
-    response_size = "1024"
-}
+class OSCommands:
+    @classmethod
+    def get_model_dir(cls):
+        source_path = cls.get_data_path()
+        final_path = source_path / "model"
+        final_path.mkdir(parents=True, exist_ok=True)
+        return final_path
 
-def initialize_logger(param_logger)
-    if not param_logger then
-        logger = Logger.new("service", true)
-        logger:clear_logs()
-        logger_config = logger:get_config()
-        logger:setup("Configuration logger", logger_config)
-    else
+    @staticmethod
+    def get_data_path():
+        home = Path.home()
+        if os.name == 'nt':
+            return Path(os.getenv('APPDATA', home)) / 'pulpero'
+        else:
+            return home / '.local' / 'share' / 'pulpero'
+
+def initialize_logger(param_logger: Logger | None) -> None
+    if param_logger is None:
+        logger = Logger("service", False)
+        logger.clear_logs()
+        logger_config = logger.get_config()
+        logger.setup("Configuration logger", logger_config)
+    else:
         logger = param_logger
 
-def initialize_service(logger)
-    logger:debug("Initialize service dependencies")
-    model_manager = ModelManager.new(logger, default_settings)
-    logger:debug("Init Setup")
-    setup = Setup.new(logger, model_manager, default_settings)
-    logger:debug("Configuration plugin")
-    config = setup:configure_plugin()
-    logger:setup("Service starting on OS: " .. current_os)
-    logger:setup("Configuration ", config)
-    logger:debug("Finish service initialization")
-    methods = Methods.new(logger, model_manager, setup)
-    server = Server.new(logger, model_manager, methods)
-    server:start()
+async def initialize_service(logger: Logger) -> RunnerConfig:
+    logger.debug("Initialize service dependencies")
+    model_manager = ModelManager(logger, default_settings)
+    logger.info("Init Setup")
+    setup = Setup(logger, model_manager, default_settings)
+    logger.info("Configuration plugin")
+    config = setup.configure_plugin()
+    logger.setup(f"Service starting on OS: { platform.system() }")
+    logger.setup("Configuration ", config)
+    logger.info("Finish service initialization")
+    methods = Methods(logger, model_manager, setup)
+    server = Server(logger, methods)
+    await server.start()
     return config
 
-initialize_logger(logger)
-initialize_service(logger)
+if __name__ == "__main__":
+
+    default_settings: RunnerConfig = RunnerConfig(
+        context_window = 1024,
+         temp = 0.1,
+        num_threads = 4,
+        top_p = 0.4,
+        model_name = model_name,
+        model_path = str(Path(OSCommands.get_model_dir()) / model_name),
+        llama_repo = "https://github.com/ggerganov/llama.cpp.git",
+        os = platform.system(),
+        pulpero_ready = False,
+        response_size = 1024
+    )
+
+    initialize_logger(logger)
+
+    if logger is None:
+        raise ValueError('Logger can not be None')
+
+    asyncio.run(initialize_service(logger))

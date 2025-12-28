@@ -19,7 +19,7 @@ class FileContextData:
 
 class RouterManager:
 
-    def __init__(self, logger: Logger, model_runner:Runner, tool_manager: ToolManager, history: HistoryManager) -> None:
+    def __init__(self, logger: Logger | None, model_runner:Runner | None, tool_manager: ToolManager | None, history: HistoryManager | None) -> None:
 
         if (logger is None ):
             raise ValueError("Router logger is nil")
@@ -39,7 +39,7 @@ class RouterManager:
         self.logger = logger
         self.file_context_data = None
 
-    def route(self, user_message: str, file_context_data: FileContextData):
+    def route(self, user_message: str, file_context_data: FileContextData) -> str:
         self.file_context_data = file_context_data
 
         # detect when a topic change and switch context or clean the cache
@@ -59,14 +59,14 @@ class RouterManager:
 
         return response
 
-    def detect_intention(self, user_message: str):
+    def detect_intention(self, user_message: str) -> str:
         chat_history = self.history.generate_chat_history()
         complete_prompt = intent_prompt % (chat_history, user_message)
         prompt_file = generate_prompt_file(complete_prompt)
         model_response = self.model_runner.talk_with_model(prompt_file)
         return model_response.strip()
 
-    def file_pipeline(self, user_message: str, file_context_data_str: str):
+    def file_pipeline(self, user_message: str, file_context_data_str: str) -> str:
         chat_history = self.history.generate_chat_history()
         tool_description = self.tool_manager.generate_tools_description()
         full_prompt = file_operation % (file_context_data_str, tool_description, chat_history, user_message)
@@ -79,7 +79,7 @@ class RouterManager:
         final_response = self.generate_final_response(user_message, tool_response)
         return final_response
 
-    def code_analysis_pipeline(self, user_message: str, file_context_data_str: str):
+    def code_analysis_pipeline(self, user_message: str, file_context_data_str: str) -> str:
         chat_history = self.history.generate_chat_history()
         tool_description = self.tool_manager.generate_tools_description()
         full_prompt = code % (file_context_data_str, tool_description, chat_history, user_message )
@@ -93,7 +93,7 @@ class RouterManager:
         final_response = self.generate_final_response(user_message, tool_response)
         return final_response
 
-    def general_chat_pipeline(self, user_message: str, file_context_data_str: str):
+    def general_chat_pipeline(self, user_message: str, file_context_data_str: str) -> str:
         chat_history = self.history.generate_chat_history()
         full_prompt = chat % (file_context_data_str, chat_history, user_message)
         prompt_file = generate_prompt_file(full_prompt)
@@ -105,13 +105,13 @@ class RouterManager:
 
         return final_response
 
-    def code_suggestion_pipeline(self, content: str, user_cursor: str):
+    def code_suggestion_pipeline(self, content: str, user_cursor: str) -> str:
         full_prompt = code_suggestion % (content, user_cursor)
         prompt_file = generate_prompt_file(full_prompt)
         model_response = self.model_runner.talk_with_model(prompt_file)
         return model_response
 
-    def generate_final_response(self, user_message: str, tool_response: str):
+    def generate_final_response(self, user_message: str, tool_response: str) -> str:
         final_response_prompt = generate_final_response % (user_message, tool_response)
         final_prompts_file = generate_prompt_file(final_response_prompt)
         final_response = self.model_runner.talk_with_model(final_prompts_file)

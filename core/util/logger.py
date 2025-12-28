@@ -55,6 +55,10 @@ class Logger:
         self.write_in_log(self.config.setup_path, message, data)
 
     def debug(self, message: str, data: Optional[Any] = None):
+        if self.test_env is True:
+            self.write_in_log(self.config.debug_path, message, data)
+
+    def info(self, message: str, data: Optional[Any] = None):
         self.write_in_log(self.config.debug_path, message, data)
 
     def error(self, error_text: str):
