@@ -1,5 +1,4 @@
-
-from core.managers.model.model_manager import ModelManager
+from core.managers.model.manager import ModelManager
 from core.runner.model.model_runner import RunnerConfig
 from core.util.logger import Logger
 import psutil
@@ -12,8 +11,6 @@ class Setup:
     config: RunnerConfig
 
     def __init__(self, logger: Logger, model_manager: ModelManager, default_config: RunnerConfig):
-        if logger is None:
-            raise ValueError("Setup logger can not be nil")
         self.logger = logger
         self.command_output = logger.get_config().command_path
         self.model_manager = model_manager

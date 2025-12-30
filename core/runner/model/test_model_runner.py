@@ -1,7 +1,7 @@
-from core.main import OSCommands
 from core.runner.model.model_runner import Runner, RunnerConfig
 from core.runner.model.parser import Parser
 from core.runner.model.prompts import chat, generate_prompt_file
+from core.util.OSCommands import OSCommands
 from core.util.logger import Logger
 from pathlib import Path
 import platform

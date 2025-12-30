@@ -1,8 +1,7 @@
-import os
 from pathlib import Path
-from core.main import OSCommands
 from core.managers.history.manager import HistoryManager
 from core.managers.tool.manager import ToolManager
+from core.util.OSCommands import OSCommands
 from core.util.logger import Logger
 from core.router.router import FileContextData, RouterManager
 from core.runner.model.model_runner import Runner, RunnerConfig

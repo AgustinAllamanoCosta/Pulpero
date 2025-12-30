@@ -1,42 +1,16 @@
 import asyncio
-import os
 from pathlib import Path
 import platform
-from core.managers.model.model_manager import ModelManager
+from core.managers.model.manager import ModelManager
 from core.runner.model.model_runner import RunnerConfig
 from core.socket.methods import Methods
 from core.socket.server import Server
 from core.socket.setup import Setup
+from core.util.OSCommands import OSCommands
 from core.util.logger import Logger
 
-global logger, model_name
-logger: Logger | None = None
+global model_name
 model_name: str = "deepseek-coder-v2-lite-instruct.gguf"
-
-class OSCommands:
-    @classmethod
-    def get_model_dir(cls):
-        source_path = cls.get_data_path()
-        final_path = source_path / "model"
-        final_path.mkdir(parents=True, exist_ok=True)
-        return final_path
-
-    @staticmethod
-    def get_data_path():
-        home = Path.home()
-        if os.name == 'nt':
-            return Path(os.getenv('APPDATA', home)) / 'pulpero'
-        else:
-            return home / '.local' / 'share' / 'pulpero'
-
-def initialize_logger(param_logger: Logger | None) -> None
-    if param_logger is None:
-        logger = Logger("service", False)
-        logger.clear_logs()
-        logger_config = logger.get_config()
-        logger.setup("Configuration logger", logger_config)
-    else:
-        logger = param_logger
 
 async def initialize_service(logger: Logger) -> RunnerConfig:
     logger.debug("Initialize service dependencies")
@@ -68,9 +42,8 @@ if __name__ == "__main__":
         response_size = 1024
     )
 
-    initialize_logger(logger)
-
-    if logger is None:
-        raise ValueError('Logger can not be None')
-
-    asyncio.run(initialize_service(logger))
+    new_logger = Logger("service", False)
+    new_logger.clear_logs()
+    logger_config = new_logger.get_config()
+    new_logger.setup("Configuration logger", logger_config)
+    asyncio.run(initialize_service(new_logger))

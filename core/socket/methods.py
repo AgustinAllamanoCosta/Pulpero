@@ -2,10 +2,10 @@ from core.managers.history.manager import HistoryManager
 from core.managers.tool.manager import ToolManager
 from core.runner.model.model_runner import Runner
 from core.runner.model.parser import Parser
+from core.socket.data_model import ServerRequest, ServerResponse
 from core.socket.setup import Setup
 from core.util.logger import Logger
-from core.managers.model.model_manager import ModelManager
-from core.socket.server import ServerRequest, ServerResponse
+from core.managers.model.manager import ModelManager
 from core.router.router import FileContextData, RouterManager
 from core.managers.tool.tools import tools
 
@@ -33,7 +33,7 @@ class Methods:
         self.logger.info("checking if the service is ready")
         status = self.model_manager.get_status_from_file()
         self.logger.debug(f"Model status { status }")
-        if status is "completed":
+        if status == "completed":
             self.logger.debug("Service download status is completed")
             if self.enable is True:
                 self.logger.debug("Service is enable")
@@ -70,20 +70,22 @@ class Methods:
                 return response
 
             case "prepear_env":
-                if not self.is_ready:
+                if not self.is_ready and self.enable:
                     config = self.setup.prepear_env()
 
-                    tool_manager = ToolManager(self.logger)
+                    if self.router is None:
+                        tool_manager = ToolManager(self.logger)
 
-                    tool_manager.register_tool(tools['create_create_file_tool'](self.logger))
-                    tool_manager.register_tool(tools['create_get_file_tool'](self.logger))
-                    tool_manager.register_tool(tools['create_find_file_tool'](self.logger))
+                        tool_manager.register_tool(tools['create_create_file_tool'](self.logger))
+                        tool_manager.register_tool(tools['create_get_file_tool'](self.logger))
+                        tool_manager.register_tool(tools['create_find_file_tool'](self.logger))
 
-                    parser = Parser(self.logger)
-                    runner = Runner(config, self.logger, parser)
-                    self.history = HistoryManager(None)
+                        parser = Parser(self.logger)
+                        runner = Runner(config, self.logger, parser)
+                        if self.history is None:
+                            self.history = HistoryManager(None)
 
-                    self.router = RouterManager(self.logger, runner, tool_manager, self.history)
+                        self.router = RouterManager(self.logger, runner, tool_manager, self.history)
                     self.is_ready = True
                     response.result = self.is_ready
                 return response
@@ -95,13 +97,13 @@ class Methods:
                 return response
 
             case "get_download_status":
-                response.result = self.model_manager.get_download_status()
+                response.result = self.model_manager.get_status_from_file()
                 return response
 
             case "get_service_status":
                 status = self.model_manager.get_status_from_file()
                 service_status = self.service_is_ready()
-                response.result = f'{{ running: True, model_ready: {service_status}, download_status: {status} }}'
+                response.result = f'{{ running: {self.enable}, model_ready: {service_status}, download_status: {status} }}'
                 return response
 
             case "toggle":

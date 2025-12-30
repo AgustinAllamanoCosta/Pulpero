@@ -1,6 +1,6 @@
 import os
-from core.main import OSCommands
 from core.runner.model.model_runner import RunnerConfig
+from core.util.OSCommands import OSCommands
 from core.util.logger import Logger
 import tempfile
 import requests
@@ -119,8 +119,12 @@ class ModelManager:
             json.dump(status, f)
             f.close()
 
+    def clean_status_file(self) -> None:
+        if os.path.exists(self.config['status_file']) == True:
+            os.remove(self.config['status_file'])
+
     def get_status_from_file(self) -> str:
-        self.logger.debug(f"Get model status from file path { 'path': self.config.status_file }")
+        self.logger.debug(f"Get model status from file path { self.config['status_file'] }")
         if os.path.exists(self.config['status_file']) == True:
             with open(self.config['status_file'], 'r') as f:
                 response = json.load(f)
