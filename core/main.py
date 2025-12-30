@@ -2,9 +2,11 @@ import asyncio
 import os
 from pathlib import Path
 import platform
+from core.managers.model.model_manager import ModelManager
 from core.runner.model.model_runner import RunnerConfig
 from core.socket.methods import Methods
 from core.socket.server import Server
+from core.socket.setup import Setup
 from core.util.logger import Logger
 
 global logger, model_name
@@ -55,7 +57,7 @@ if __name__ == "__main__":
 
     default_settings: RunnerConfig = RunnerConfig(
         context_window = 1024,
-         temp = 0.1,
+        temp = 0.1,
         num_threads = 4,
         top_p = 0.4,
         model_name = model_name,

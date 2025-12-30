@@ -2,8 +2,9 @@ from core.managers.history.manager import HistoryManager
 from core.managers.tool.manager import ToolManager
 from core.runner.model.model_runner import Runner
 from core.runner.model.parser import Parser
+from core.socket.setup import Setup
 from core.util.logger import Logger
-from core.managers.model import ModelManager
+from core.managers.model.model_manager import ModelManager
 from core.socket.server import ServerRequest, ServerResponse
 from core.router.router import FileContextData, RouterManager
 from core.managers.tool.tools import tools
@@ -14,11 +15,11 @@ class Methods:
     model_manager: ModelManager
     router: RouterManager | None
     history: HistoryManager | None
-    setup: SetupManager
+    setup: Setup
     is_ready: bool
     enable: bool
 
-    def __init__(self, logger: Logger, model_manager: ModelManager, setup) -> None:
+    def __init__(self, logger: Logger, model_manager: ModelManager, setup: Setup) -> None:
 
         self.logger = logger
         self.model_manager = model_manager
