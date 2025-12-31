@@ -1,6 +1,6 @@
 local OSCommands = require('core.util.OSCommands')
-local json = require('JSON')
-local Logger = require('logger')
+local json = require('core.util.JSON')
+local Logger = require('core.util.logger')
 local uv = vim.loop
 
 local ServiceConnector = {}

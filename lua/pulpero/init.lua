@@ -14,7 +14,6 @@ for _, path in ipairs(paths) do
     end
 end
 
-require('load_dep')
 local UI = require('ui')
 local Virtual_Text = require('virtual_text')
 local Chat = require('chat')

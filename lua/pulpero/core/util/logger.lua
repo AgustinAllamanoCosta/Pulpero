@@ -1,5 +1,5 @@
-local String = require('String')
-local OSCommands = require('OSCommands')
+local String = require('core.util.String')
+local OSCommands = require('core.util.OSCommands')
 local Logger = {}
 local config = {
     directory = "/tmp",
