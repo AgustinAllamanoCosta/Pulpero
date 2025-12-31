@@ -2,8 +2,8 @@ from core.managers.history.manager import HistoryManager
 from core.managers.tool.manager import ToolManager
 from core.runner.model.model_runner import Runner
 from core.runner.model.parser import Parser
-from core.socket.data_model import ServerRequest, ServerResponse
-from core.socket.setup import Setup
+from core.server.data_model import ServerRequest, ServerResponse
+from core.server.setup import Setup
 from core.util.logger import Logger
 from core.managers.model.manager import ModelManager
 from core.router.router import FileContextData, RouterManager

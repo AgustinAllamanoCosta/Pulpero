@@ -4,9 +4,9 @@ import signal
 import tempfile
 from pathlib import Path
 from typing import Optional, List, Any
-from core.socket.data_model import ServerRequest, ServerResponse
+from core.server.data_model import ServerRequest, ServerResponse
 from core.util.logger import Logger
-from core.socket.methods import Methods
+from core.server.methods import Methods
 
 class Server:
 

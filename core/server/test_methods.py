@@ -2,9 +2,9 @@ from pathlib import Path
 import platform
 from core.managers.model.manager import ModelManager
 from core.runner.model.model_runner import RunnerConfig
-from core.socket.data_model import ServerRequest, ServerResponse
-from core.socket.methods import Methods
-from core.socket.setup import Setup
+from core.server.data_model import ServerRequest, ServerResponse
+from core.server.methods import Methods
+from core.server.setup import Setup
 from core.util.OSCommands import OSCommands
 from core.util.logger import Logger
 
