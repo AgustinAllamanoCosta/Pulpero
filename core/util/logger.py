@@ -5,8 +5,24 @@ from typing import Optional, Any
 
 class LoggerConfig:
 
+    directory: str
+    class_name: str
+    debug_file: str
+    setup_file: str
+    command_output: str
+    error_file: str
+    debug_path: str
+    error_path: str
+    command_path: str
+    setup_path: str
+    title_setup: str
+    title_command: str
+    title_error: str
+    title_debug: str
+
     def __init__(self, class_name: str) -> None:
         self.directory = "/tmp"
+        self.class_name = class_name
         self.debug_file = f"pulpero_{class_name}_debug.log"
         self.setup_file = f"pulpero_{class_name}_setup.log"
         self.command_output = f"pulpero_{class_name}_command.log"
@@ -19,6 +35,24 @@ class LoggerConfig:
         self.title_command = "=== New Command Session Started ===\n"
         self.title_error = "=== New Error Session Started ===\n"
         self.title_debug = "=== New Debug Session Started ===\n"
+
+    def __str__(self) -> str:
+        return f'''
+    directory: {self.directory}
+    class_name: {self.class_name}
+    debug_file: {self.debug_file}
+    setup_file: {self.setup_file}
+    command_output: {self.command_output}
+    error_file: {self.error_file}
+    debug_path: {self.debug_path}
+    error_path: {self.error_path}
+    command_path: {self.command_path}
+    setup_path: {self.setup_path}
+    title_setup: {self.title_setup}
+    title_command: {self.title_command}
+    title_error: {self.title_error}
+    title_debug: {self.title_debug}
+    '''
 
 class Logger:
 
@@ -85,12 +119,13 @@ class Logger:
         try:
             with open(path, "a", encoding='utf-8') as log_file:
                 message_template = """
+{}
 {}: {}
 Data: {}
 ----------------------------------------
 """
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                formatted_message = message_template.format(timestamp, message, data_str)
+                formatted_message = message_template.format(self.config.class_name, timestamp, message, data_str)
                 log_file.write(formatted_message)
 
                 if self.test_env:

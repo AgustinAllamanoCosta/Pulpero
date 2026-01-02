@@ -33,6 +33,20 @@ class RunnerConfig:
         self.pulpero_ready = pulpero_ready
         self.response_size = response_size
 
+    def __str__(self) -> str:
+        return f'''
+    context_window: {self.context_window}
+    temp: {self.temp}
+    num_threads: {self.num_threads}
+    top_p: {self.top_p}
+    model_name: {self.model_name}
+    model_path: {self.model_path}
+    llama_repo: {self.llama_repo}
+    os: {self.os}
+    pulpero_ready: {self.pulpero_ready}
+    response_size: {self.response_size}
+    '''
+
 class Runner:
 
     def __init__(self, config: RunnerConfig, logger: Logger, parser: Parser) -> None:

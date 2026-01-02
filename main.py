@@ -42,7 +42,7 @@ if __name__ == "__main__":
         response_size = 1024
     )
 
-    new_logger = Logger("service", False)
+    new_logger = Logger("service", True)
     new_logger.clear_logs()
     logger_config = new_logger.get_config()
     new_logger.setup("Configuration logger", logger_config)

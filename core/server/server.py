@@ -2,6 +2,7 @@ import asyncio
 import os
 import signal
 import tempfile
+import json
 from pathlib import Path
 from typing import Optional, List, Any
 from core.server.data_model import ServerRequest, ServerResponse
@@ -62,7 +63,7 @@ class Server:
                 line = data.decode('utf-8').strip()
                 if line:
                     try:
-                        request_dict = eval(line)
+                        request_dict = json.loads(line)
                         response = await self.process_request(request_dict)
 
                         response_str = str(response) + "\n"
@@ -102,9 +103,9 @@ class Server:
         try:
             self.server = await asyncio.start_unix_server(
                 self.handle_client,
-                path=str(self.socket_path)
+                path=self.socket_path
             )
-            self.logger.info(f"Socket server listening {'path': str(self.socket_path)}")
+            self.logger.info(f"Socket server listening {self.socket_path}")
             return True
         except Exception as e:
             error_msg = str(e)
