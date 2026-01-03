@@ -1,13 +1,13 @@
 from core.managers.history.manager import HistoryManager
+from core.managers.model.manager import ModelManager
 from core.managers.tool.manager import ToolManager
+from core.managers.tool.tools import tools
+from core.router.router import FileContextData, RouterManager
 from core.runner.model.model_runner import Runner
 from core.runner.model.parser import Parser
 from core.server.data_model import ServerRequest, ServerResponse
 from core.server.setup import Setup
 from core.util.logger import Logger
-from core.managers.model.manager import ModelManager
-from core.router.router import FileContextData, RouterManager
-from core.managers.tool.tools import tools
 
 class Methods:
 
@@ -56,9 +56,16 @@ class Methods:
                     return response
 
                 file_context: FileContextData = FileContextData(current_working_dir = '', current_file_name = '', current_file_path = '')
-                if request.params.file_context is not None:
-                    file_context = request.params.file_context
-                response.result = self.router.route(request.params.message, file_context)
+                if request.params.get('file_context') is not None:
+                    file_context.current_working_dir = request.params.get('file_context').get('current_working_dir')
+                    file_context.current_file_path = request.params.get('file_context').get('current_file_path')
+                    file_context.current_file_name = request.params.get('file_context').get('current_file_name')
+
+                message: str = ''
+                if request.params.get('message') != None:
+                    message = request.params.get('message')
+
+                response.result = self.router.route(message, file_context)
                 return response
 
             case "get_live_code_feedback":

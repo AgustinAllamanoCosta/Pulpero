@@ -1,13 +1,14 @@
 import asyncio
+import json
 import os
+from pathlib import Path
 import signal
 import tempfile
-import json
-from pathlib import Path
-from typing import Optional, List, Any
+from typing import Any, List, Optional
+
 from core.server.data_model import ServerRequest, ServerResponse
-from core.util.logger import Logger
 from core.server.methods import Methods
+from core.util.logger import Logger
 
 class Server:
 
@@ -37,15 +38,14 @@ class Server:
             self.logger.error("Request process failed - empty request")
             return ServerResponse(requestId= 0, result=None, error='Empty Request')
 
-        self.logger.debug("Processing request", {"request": request_dict})
         request: ServerRequest = ServerRequest(
                 method = request_dict['method'],
                 Id = request_dict['Id'],
                 params = request_dict['params']
         )
-        response = self.methods.adapter(request)
+        response: ServerResponse = self.methods.adapter(request)
 
-        self.logger.info(f"Request processed {response.requestId} {response.result}")
+        self.logger.info(f"Request processed {response}")
         return response
 
     async def handle_client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
@@ -70,10 +70,10 @@ class Server:
                         writer.write(response_str.encode('utf-8'))
                         await writer.drain()
                     except Exception as e:
-                        self.logger.error(f"Error processing request {'error': str(e)}")
+                        self.logger.error(f"Error processing request: {e}")
                         error_response = {
                             "requestId": 0,
-                            "error": f"Error processing request: {str(e)}",
+                            "error": f"Error processing request: {e}",
                             "result": None
                         }
                         writer.write((str(error_response) + "\n").encode('utf-8'))
@@ -82,7 +82,7 @@ class Server:
         except asyncio.CancelledError:
             self.logger.error("Client handler cancelled")
         except Exception as e:
-            error_msg = str(e)
+            error_msg = e
             self.logger.error(f"Error reading from client {error_msg}")
         finally:
             try:
@@ -108,7 +108,7 @@ class Server:
             self.logger.info(f"Socket server listening {self.socket_path}")
             return True
         except Exception as e:
-            error_msg = str(e)
+            error_msg = e
             self.logger.error(f"Failed to set up socket server {error_msg}")
             return False
 
@@ -119,7 +119,7 @@ class Server:
             self.logger.info("PID file created", {"pid": pid, "path": str(self.pid_file)})
             return True
         except Exception as e:
-            error_msg = {'path': str(self.pid_file), 'error': str(e)}
+            error_msg = {'path': str(self.pid_file), 'error': e}
             self.logger.error(f"Failed to create PID file {error_msg}")
             return False
 
@@ -142,14 +142,14 @@ class Server:
             if self.socket_path.exists():
                 self.socket_path.unlink()
         except Exception as e:
-            error_msg = str(e)
+            error_msg = e
             self.logger.error(f"Error removing socket file {error_msg}")
 
         try:
             if self.pid_file.exists():
                 self.pid_file.unlink()
         except Exception as e:
-            error_msg = str(e)
+            error_msg = e
             self.logger.error(f"Error removing PID file {error_msg}")
 
         self.logger.info("Service shutdown complete")

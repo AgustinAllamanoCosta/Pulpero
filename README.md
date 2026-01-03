@@ -294,6 +294,7 @@ Logs are recreated with each request to maintain a controlled size and facilitat
 - ❌ Create WebStorm adapter
 - ❌ Merge chat history state
 - 🚧 Add unit test generation base of function and context
+- 🚧 Migrate core to python
 - 🚧 Improve model download process
 - 🚧 Add IDE project awernes
 - ✅ Create VSCode adapter

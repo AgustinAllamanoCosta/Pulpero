@@ -17,6 +17,6 @@ if __name__ == "__main__":
             print("Nothing to encode, not argument was spicify")
     except Exception as e:
         error_result = {
-            "error": str(e),
+            "error": e,
         }
         print(json.dumps(error_result))

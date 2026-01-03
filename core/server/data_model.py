@@ -1,4 +1,5 @@
-from typing import Literal, Any
+from typing import Literal
+import json
 
 class ServerResponse:
 
@@ -11,18 +12,25 @@ class ServerResponse:
         self.result = result
         self.error = error
 
+    def __str__(self) -> str:
+        response_dict = {
+            "requestId": self.requestId,
+            "result": self.result,
+            "error": self.error
+        }
+        response_str = json.dumps(response_dict)
+        return response_str
+
 class ServerRequest:
 
-    params: Any
+    params: dict[str, dict[str, str] | str]
     Id: int
     method: Literal["talk_with_model", "get_live_code_feedback", "prepear_env", "clear_model_cache", "get_download_status", "get_service_status", "toggle"]
 
     def __init__(self,
                  method: Literal["talk_with_model", "get_live_code_feedback", "prepear_env", "clear_model_cache", "get_download_status", "get_service_status", "toggle"],
                  Id: int,
-                 params: Any) -> None:
+                 params: dict[str, dict[str, str] | str]) -> None:
         self.method = method
         self.Id = Id
         self.params = params
-
-

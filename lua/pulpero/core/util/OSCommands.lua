@@ -105,7 +105,7 @@ function OSCommands:list_directory(path)
 end
 
 function OSCommands:get_temp_dir()
-    if OSCommands:is_linux() then
+    if OSCommands:is_linux() or OSCommands:is_darwin() then
         local tmp = os.getenv("TMPDIR")
         if tmp then
             return tmp
@@ -124,8 +124,6 @@ function OSCommands:get_temp_dir()
                 end
             end
         end
-    elseif OSCommands:is_darwin() then
-        return "/tmp"
     elseif OSCommands:is_windows() then
         local temp = os.getenv("TEMP")
         if temp then

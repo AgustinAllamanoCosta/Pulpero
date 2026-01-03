@@ -4,6 +4,10 @@ from core.runner.model.model_runner import Runner
 from core.util.logger import Logger
 from core.runner.model.prompts import generate_prompt_file, intent_prompt, file_operation, chat, code_suggestion, generate_final_response, code
 
+# TODO: refactor the model runner to not use the generate prompt file
+# TODO: refactor tools to generate the OPEN AI format 
+# TODO: refactor router to send the correct promp in the new format and the tools if it is necesarie
+
 class FileContextData:
     current_working_dir: str
     current_file_name: str
@@ -14,7 +18,7 @@ class FileContextData:
         self.current_file_path = current_file_path
         self.current_working_dir = current_working_dir
 
-    def to_string(self):
+    def __str__(self) -> str:
         return f"Current working dir: {self.current_working_dir}\nOpen file name: {self.current_file_name}\nOpen file dir path: {self.current_file_path}\n"
 
 class RouterManager:
@@ -45,17 +49,19 @@ class RouterManager:
         # detect when a topic change and switch context or clean the cache
         # Add some basic security check of prompt leaking
         intention = self.detect_intention(user_message)
-        response = "No pipeline category found"
 
-        file_context_data_str = self.file_context_data.to_string()
+        file_context_data_str = str(self.file_context_data)
         self.logger.debug("File contexst data", file_context_data_str)
 
-        if (intention == "file_operations"):
-            response = self.file_pipeline(user_message, file_context_data_str)
-        elif(intention == "code_analysis"):
-            response = self.code_analysis_pipeline(user_message, file_context_data_str)
-        elif(intention == "general_chat"):
-            response = self.general_chat_pipeline(user_message, file_context_data_str)
+        match intention:
+            case "file_operations":
+                response = self.file_pipeline(user_message, file_context_data_str)
+            case "code_analysis":
+                response = self.code_analysis_pipeline(user_message, file_context_data_str)
+            case "general_chat":
+                response = self.general_chat_pipeline(user_message, file_context_data_str)
+            case _:
+                response = "No pipeline category found"
 
         return response
 

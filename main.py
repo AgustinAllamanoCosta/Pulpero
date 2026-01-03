@@ -4,7 +4,7 @@ import platform
 from core.managers.model.manager import ModelManager
 from core.runner.model.model_runner import RunnerConfig
 from core.server.methods import Methods
-from core.server.server import Server
+from core.server.socket_server import Server
 from core.server.setup import Setup
 from core.util.OSCommands import OSCommands
 from core.util.logger import Logger
@@ -42,7 +42,7 @@ if __name__ == "__main__":
         response_size = 1024
     )
 
-    new_logger = Logger("service", True)
+    new_logger = Logger("Server", True)
     new_logger.clear_logs()
     logger_config = new_logger.get_config()
     new_logger.setup("Configuration logger", logger_config)
