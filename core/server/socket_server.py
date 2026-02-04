@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import traceback
 from pathlib import Path
 import signal
 import tempfile
@@ -70,6 +71,7 @@ class Server:
                         writer.write(response_str.encode('utf-8'))
                         await writer.drain()
                     except Exception as e:
+                        print(traceback.format_exc())
                         self.logger.error(f"Error processing request: {e}")
                         error_response = {
                             "requestId": 0,

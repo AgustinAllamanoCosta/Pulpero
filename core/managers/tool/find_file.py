@@ -20,18 +20,20 @@ def find_file(logger: Logger) -> Tool:
         return ToolResult(True, result, None)
 
     return Tool(
-            "find_file",
-            "Find a file recursive in the working dir",
-            {
-            'name': {
-                'type': "string",
-                'description': "Name of the file to find"
-                },
-            'dir': {
-                'type': "string",
-                'description': "Directory where to search for the file"
-                }
+        "find_file",
+        "Find a file recursive in the working dir",
+        {
+        'name': {
+            'type': "string",
+            "title": "name",
+            'description': "Name of the file to find"
             },
-            "<tool name=\"find_file\" params=\"name=NAME_OF_THE_FILE dir=PATH_OF_FOLDER_TO_SEARCH\" />",
-            execute
-            )
+        'dir': {
+            'type': "string",
+            "title": "dir",
+            'description': "Directory where to search for the file"
+            }
+        },
+        ['name','dir'],
+        execute
+    )

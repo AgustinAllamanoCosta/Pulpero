@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, List
 
 class ToolResult:
 
@@ -13,9 +13,20 @@ class ToolResult:
 
 class Tool:
 
-    def __init__(self, name: str, description: str, parameters: dict, example: str, callback: Callable[[dict], ToolResult]) -> None:
+    name: str
+    description: str
+    properties: dict
+    example: str
+    required: List[str]
+    callback: Callable[[dict], ToolResult]
+
+    def __init__(self, name: str, description: str, properties: dict, required: List[str], callback: Callable[[dict], ToolResult]) -> None:
         self.name = name
         self.description = description
-        self.parameters = parameters
-        self.example = example
-        self.execute = callback
+        self.properties = properties
+        self.required = required
+        self.callba = callback
+
+class TooCall:
+    name: str
+    arguments: dict

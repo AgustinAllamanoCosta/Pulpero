@@ -1,6 +1,7 @@
+from core.managers.history.manager import HistoryManager
 from core.runner.model.model_runner import Runner, RunnerConfig
 from core.runner.model.parser import Parser
-from core.runner.model.prompts import chat, generate_prompt_file
+from core.runner.model.prompts import chat
 from core.util.OSCommands import OSCommands
 from core.util.logger import Logger
 from pathlib import Path
@@ -29,10 +30,13 @@ function Runner.new(config, logger, parser)
 end
 '''
 
+    history = HistoryManager(None)
+    history.update_chat_context_as_system(chat)
+    history.update_chat_context_as_user(code)
     logger = Logger("Talk with model test", True)
     parser = Parser(logger)
 
     runner = Runner(default_config, logger, parser)
 
-    response = runner.talk_with_model(generate_prompt_file(chat % ("","",code)))
+    response = runner.talk_with_model(history.generate_chat_history())
     print(response)

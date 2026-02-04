@@ -14,14 +14,15 @@ def get_file(logger: Logger) -> Tool:
         return ToolResult(True, { 'response': response }, None)
 
     return Tool(
-            "get_file",
-            "Get the content of a file by path",
-            {
-                'path': {
-                    'type': "string",
-                    'description': "The file path"
-                }
-            },
-            "<tool name=\"get_file\" params=\"path=EXACT_PATH\" />",
-            execute
-            )
+        "get_file",
+        "Get the content of a file by path",
+        {
+            'path': {
+                'type': "string",
+                'title': "path",
+                'description': "The file path"
+            }
+        },
+        ['path'],
+        execute
+    )

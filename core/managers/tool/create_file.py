@@ -28,13 +28,15 @@ def create_file(logger: Logger) -> Tool:
         {
             "path": {
                 "type": "string",
+                "title": "path",
                 "description": "The file path"
             },
             "content": {
                 "type": "string",
+                "title": "content",
                 "description": "The content of the file"
             }
         },
-        "<tool name=\"create_file\" params=\"path=EXACT_PATH, content=CONTENT_OF_THE_FILE\" />",
+        ['path', 'content'],
         execute
     )

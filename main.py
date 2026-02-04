@@ -10,13 +10,18 @@ from core.util.OSCommands import OSCommands
 from core.util.logger import Logger
 
 global model_name
-model_name: str = "deepseek-coder-v2-lite-instruct.gguf"
+global clasi_model_name
+global tool_model_name
+model_name: str = "Phi-3.5-mini-instruct-Q4_K_M.gguf"
+code_model_name: str = "qwen2.5-coder-1.5b-instruct-q5_k_m.gguf"
+clasi_model_name: str = "Phi-3.5-mini-instruct-Q4_K_M.gguf"
+tool_model_name: str = "Llama-3.2-3B-Instruct-uncensored-IQ4_XS.gguf"
 
 async def initialize_service(logger: Logger) -> RunnerConfig:
     logger.debug("Initialize service dependencies")
     model_manager = ModelManager(logger, default_settings)
     logger.info("Init Setup")
-    setup = Setup(logger, model_manager, default_settings)
+    setup = Setup(logger, model_manager, default_settings, default_clasi_model_settings, default_tool_model_settings, default_code_model_settings)
     logger.info("Configuration plugin")
     config = setup.configure_plugin()
     logger.setup(f"Service starting on OS: { platform.system() }")
@@ -40,6 +45,45 @@ if __name__ == "__main__":
         os = platform.system(),
         pulpero_ready = False,
         response_size = 1024
+    )
+
+    default_code_model_settings: RunnerConfig = RunnerConfig(
+        context_window = 1024,
+        temp = 0.1,
+        num_threads = 4,
+        top_p = 0.4,
+        model_name = code_model_name,
+        model_path = str(Path(OSCommands.get_model_dir()) / model_name),
+        llama_repo = "https://github.com/ggerganov/llama.cpp.git",
+        os = platform.system(),
+        pulpero_ready = False,
+        response_size = 1024
+    )
+
+    default_clasi_model_settings: RunnerConfig = RunnerConfig(
+        context_window = 1024,
+        temp = 0.1,
+        num_threads = 4,
+        top_p = 0,
+        model_name = clasi_model_name,
+        model_path = str(Path(OSCommands.get_model_dir()) / clasi_model_name),
+        llama_repo = "",
+        os = platform.system(),
+        pulpero_ready = False,
+        response_size = 20
+    )
+
+    default_tool_model_settings: RunnerConfig = RunnerConfig(
+        context_window = 4096,
+        temp = 0.1,
+        num_threads = 4,
+        top_p = 0.9,
+        model_name = tool_model_name,
+        model_path = str(Path(OSCommands.get_model_dir()) / tool_model_name),
+        llama_repo = "",
+        os = platform.system(),
+        pulpero_ready = False,
+        response_size = 512
     )
 
     new_logger = Logger("Server", True)

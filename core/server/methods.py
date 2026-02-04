@@ -4,10 +4,10 @@ from core.managers.tool.manager import ToolManager
 from core.managers.tool.tools import tools
 from core.router.router import FileContextData, RouterManager
 from core.runner.model.model_runner import Runner
-from core.runner.model.parser import Parser
 from core.server.data_model import ServerRequest, ServerResponse
 from core.server.setup import Setup
 from core.util.logger import Logger
+from core.runner.model.prompts import chat
 
 class Methods:
 
@@ -15,6 +15,7 @@ class Methods:
     model_manager: ModelManager
     router: RouterManager | None
     history: HistoryManager | None
+    intention_history: HistoryManager | None
     setup: Setup
     is_ready: bool
     enable: bool
@@ -25,6 +26,10 @@ class Methods:
         self.model_manager = model_manager
         self.router = None
         self.history = None
+        self.file_history = None
+        self.code_analysis_history = None
+        self.code_suggestion_history = None
+        self.intention_history = None
         self.setup = setup
         self.is_ready = False
         self.enable = True
@@ -73,12 +78,23 @@ class Methods:
                     response.error = 'router can not be None'
                     return response
 
-                response.result = self.router.code_suggestion_pipeline(request.params.content, request.params.user_cursor)
+                if request.params.get('content') is None or request.params.get('content') is dict[str, str]:
+                    response.error = 'content need to be a string'
+                    return response
+
+                if request.params.get('user_cursor') is None or request.params.get('user_cursor') is dict[str, str]:
+                    response.error = 'user cursor need to be a string'
+                    return response
+
+                content: str = request.params.get('content')
+                user_cursor: str = request.params.get('user_cursor')
+
+                response.result = self.router.code_suggestion_pipeline(content, user_cursor)
                 return response
 
             case "prepear_env":
                 if not self.is_ready and self.enable:
-                    config = self.setup.prepear_env()
+                    env_config = self.setup.prepear_env()
 
                     if self.router is None:
                         tool_manager = ToolManager(self.logger)
@@ -87,12 +103,27 @@ class Methods:
                         tool_manager.register_tool(tools['create_get_file_tool'](self.logger))
                         tool_manager.register_tool(tools['create_find_file_tool'](self.logger))
 
-                        parser = Parser(self.logger)
-                        runner = Runner(config, self.logger, parser)
+                        code_analysis_runner = Runner(env_config.code_config, self.logger)
+                        tool_executuion_runner = Runner(env_config.tool_config, self.logger)
+                        clasi_runner = Runner(env_config.clasi_config, self.logger)
+                        chat_runner = Runner(env_config.model_config, self.logger)
+
                         if self.history is None:
                             self.history = HistoryManager(None)
+                            self.history.update_chat_context_as_system(chat)
 
-                        self.router = RouterManager(self.logger, runner, tool_manager, self.history)
+                        if self.intention_history is None:
+                            self.intention_history = HistoryManager(None)
+
+                        self.router = RouterManager(
+                                self.logger,
+                                code_analysis_runner,
+                                tool_executuion_runner,
+                                clasi_runner,
+                                tool_manager,
+                                self.history,
+                                self.intention_history
+                        )
                     self.is_ready = True
                     response.result = self.is_ready
                 return response
