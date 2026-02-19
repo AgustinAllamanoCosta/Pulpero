@@ -28,11 +28,35 @@ class ToolManager:
                 })
         return descriptions
 
+    def generate_schemas(self):
+        schema = []
+        for name, tool in self.tools.items():
+            schema.append({
+                        "properties": {
+                            "function": {"const": name},
+                            "parameters": {
+                                "type": "object",
+                                "properties": {
+                                    "properties": {
+                                        "type": "object",
+                                        "properties": tool.properties,
+                                        "required": tool.required
+                                    }
+                                }
+                            }
+                        }
+                    })
+        return {
+            "type": "object",
+            "oneOf": schema,
+            "required": ["function", "parameters"]
+        }
+
     def execute_tool(self, tool_call: TooCall) -> ToolResult:
         tool = self.tools.get(tool_call.name)
-        self.logger.info("tool found ", tool)
+        tool_result = ToolResult(False, '', "Tool not found")
         if tool != None:
-            return tool.callback(tool_call.arguments)
-        else:
-            return ToolResult(False, {}, "Tool not found")
+            tool_result = tool.callback(tool_call.arguments)
 
+        self.logger.info("Raw tool execution result ", tool_result.result)
+        return tool_result

@@ -17,7 +17,7 @@ def find_file(logger: Logger) -> Tool:
             result[index] = path
             index = index + 1
 
-        return ToolResult(True, result, None)
+        return ToolResult(True, str(result), None)
 
     return Tool(
         "find_file",

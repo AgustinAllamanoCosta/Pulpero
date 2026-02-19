@@ -1,6 +1,5 @@
 user_key = "user"
-tool_call_key = "tool"
-tool_call_key = "function"
+tool_call_key = "user"
 assistant_key = "assistant"
 system_key = "system"
 
@@ -20,16 +19,18 @@ class ChatEntry:
         return { 'role': self.key, 'content': self.content }
 
 class FunctionResponseEntry:
-    key: str = "function"
+    key: str = tool_call_key
     name: str
+    id: str
     content: str
 
     def __init__(self, name: str, content: str) -> None:
         self.name = name
         self.content = content
+        self.id = name
 
     def dict(self) -> dict:
-        return { 'role': self.key, 'name': self.name, 'content': self.content }
+        return { 'tool_call_id': self.id, 'role': self.key, 'content': self.content }
 
 class ChatContext:
 
@@ -56,7 +57,7 @@ class HistoryManager:
             self.chat_context = context
 
     def create_new_chat_context(self) -> ChatContext:
-        return ChatContext([], 16, 0)
+        return ChatContext([], 50, 0)
 
     def update_chat_context_as_system(self, content: str) -> None:
         self.system_message = ChatEntry(system_key, content)

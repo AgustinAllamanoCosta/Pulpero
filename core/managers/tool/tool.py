@@ -3,10 +3,10 @@ from typing import Callable, List
 class ToolResult:
 
     success: bool = False
-    result: dict = {}
+    result: str
     error: str | None = None
 
-    def __init__(self, success: bool, result: dict, error: str | None):
+    def __init__(self, success: bool, result: str, error: str | None):
         self.success = success
         self.result = result
         self.error = error
@@ -25,7 +25,7 @@ class Tool:
         self.description = description
         self.properties = properties
         self.required = required
-        self.callba = callback
+        self.callback = callback
 
 class TooCall:
     name: str

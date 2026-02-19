@@ -103,10 +103,11 @@ class Methods:
                         tool_manager.register_tool(tools['create_get_file_tool'](self.logger))
                         tool_manager.register_tool(tools['create_find_file_tool'](self.logger))
 
-                        code_analysis_runner = Runner(env_config.code_config, self.logger)
+                        code_analysis_runner = Runner(env_config.code_config, self.logger )
                         tool_executuion_runner = Runner(env_config.tool_config, self.logger)
                         clasi_runner = Runner(env_config.clasi_config, self.logger)
                         chat_runner = Runner(env_config.model_config, self.logger)
+                        react_runner= Runner(env_config.model_config, self.logger)
 
                         if self.history is None:
                             self.history = HistoryManager(None)
@@ -120,6 +121,8 @@ class Methods:
                                 code_analysis_runner,
                                 tool_executuion_runner,
                                 clasi_runner,
+                                chat_runner,
+                                react_runner,
                                 tool_manager,
                                 self.history,
                                 self.intention_history
