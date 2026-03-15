@@ -33,7 +33,6 @@ class Server:
         self.pid_file = Path(self.socket_dir) / "pulpero.pid"
 
     async def process_request(self, request_dict: dict[str, Any]) -> ServerResponse:
-        self.logger.debug("Processing request by service", {"request": request_dict})
 
         if not request_dict:
             self.logger.error("Request process failed - empty request")

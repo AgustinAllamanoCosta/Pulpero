@@ -1,3 +1,5 @@
+import re
+from typing import List
 from core.managers.history.manager import HistoryManager
 from core.managers.tool.manager import ToolManager
 from core.runner.model.model_runner import Runner
@@ -17,6 +19,30 @@ class FileContextData:
     def __str__(self) -> str:
         return f"Current working dir: {self.current_working_dir}\nOpen file name: {self.current_file_name}\nOpen file dir path: {self.current_file_path}\n"
 
+class LightweightSimilarity:
+    def __init__(self, threshold: float = 0.6):
+        self.threshold = threshold
+
+    def _shingle(self, text: str, k: int = 3) -> set[str]:
+        words = re.findall(r'\w+', text.lower())
+        if len(words) < k:
+            return {' '.join(words)}
+        return {' '.join(words[i:i+k]) for i in range(len(words) - k + 1)}
+
+    def jaccard_similarity(self, text1: str, text2: str) -> float:
+        s1 = self._shingle(text1)
+        s2 = self._shingle(text2)
+
+        if not s1 or not s2:
+            return 0.0
+
+        intersection = len(s1 & s2)
+        union = len(s1 | s2)
+        return intersection / union if union > 0 else 0.0
+
+    def is_similar(self, text1: str, text2: str) -> bool:
+        return self.jaccard_similarity(text1, text2) > self.threshold
+
 class RouterManager:
 
     def __init__(self,
@@ -28,7 +54,8 @@ class RouterManager:
         re_act_model_runner:Runner | None,
         tool_manager: ToolManager | None,
         history: HistoryManager | None,
-        intention_history: HistoryManager | None
+        intention_history: HistoryManager | None,
+        code_suggestion_history: HistoryManager | None
     ) -> None:
 
         if (logger is None ):
@@ -58,7 +85,11 @@ class RouterManager:
         if (intention_history is None):
             raise ValueError("Router history manager is nil")
 
+        if (code_suggestion_history is None):
+            raise ValueError("Router code_suggestion_history manager is nil")
+
         self.history = history
+        self.code_suggestion_history = code_suggestion_history
         self.intention_history = intention_history
 
         self.tool_manager = tool_manager
@@ -70,82 +101,117 @@ class RouterManager:
         self.logger = logger
         self.file_context_data = None
         self.amount_of_thinks_cicles = 4
+        self.lightweightSimilarity = LightweightSimilarity()
 
     def route(self, user_message: str, file_context_data: FileContextData) -> str:
         self.file_context_data = file_context_data
 
-        # Add some basic security check of prompt leaking
-        intentions = self.detect_intention(user_message)
+        self.history.update_chat_context_as_user(user_message)
 
-        file_context_data_str = str(self.file_context_data)
-        self.logger.debug("File contexst data", file_context_data_str)
-        response = user_message
+        if(file_context_data.current_working_dir is not None):
+            self.history.update_chat_context_as_assistant(f"this is the information of the file I am working on {self.file_context_data}")
 
-        for intention in intentions:
+        response = ""
+        is_simple_task = self.defined_complexity_from_task(user_message)
 
-            self.logger.debug("raw intention", intention)
-            match intention['pipeline']:
-                case "file_operations":
-                    response = self.file_pipeline(response,file_context_data_str)
-                case "code_analysis":
-                    response = self.code_analysis_pipeline(response, file_context_data_str)
-                case "general_chat":
-                    response = self.general_chat_pipeline(response, file_context_data_str)
-                case _:
-                    response = self.general_chat_pipeline(response, file_context_data_str)
+        if(is_simple_task < 60):
+            response = self.general_chat_pipeline()
+        else:
+            response = self.process_complex_task(user_message)
 
         return response
 
-    def file_pipeline(self, user_message: str, file_context_data_str: str) -> str:
+    def process_complex_task(self, user_message: str) -> str:
+        self.intention_history.update_chat_context_as_system(intent_prompt)
+        intentions = self.generate_plan(user_message)
+        response = ""
+        self.logger.info("Intention to process" ,intentions)
+        # TODO: validar el listado del plan
+
+        for intention in intentions:
+            step = intention['step']
+            description = intention["description"]
+            match step:
+                case "file_operations":
+                    response = self.file_pipeline(description)
+                case "code_analysis":
+                    response = self.code_analysis_pipeline(description)
+                case "general_chat":
+                    response = self.general_chat_pipeline(description)
+                case _:
+                    response = self.general_chat_pipeline(description)
+
+        return response
+
+    def file_pipeline(self, description: str) -> str:
+        self.logger.info("Processing File Pipeline")
         self.history.update_chat_context_as_system(file_operation)
+        model_response = self.re_act_loop(self.history, self.re_act_runner, self.tool_runner, self.tool_manager)
 
-        model_response = self.re_act_loop(self.history, user_message, file_context_data_str, self.re_act_runner, self.tool_runner, self.tool_manager)
+        self.logger.info("Chat History file", self.history)
         return model_response
 
-    def code_analysis_pipeline(self, user_message: str, file_context_data_str: str) -> str:
+    def code_analysis_pipeline(self, description: str) -> str:
+        self.logger.info("Processing Code analysis")
         self.history.update_chat_context_as_system(code_analysis)
-        model_response = self.re_act_loop(self.history, user_message, file_context_data_str, self.code_runner, self.tool_runner, self.tool_manager)
+        model_response = self.re_act_loop(self.history, self.code_runner, self.tool_runner, self.tool_manager)
+
+        self.logger.info("Chat History code analysis", self.history)
         return model_response
 
-    def general_chat_pipeline(self, user_message: str, file_context_data_str: str) -> str:
+    def general_chat_pipeline(self, description: str) -> str:
+        self.logger.info("Processing Chat")
         self.history.update_chat_context_as_system(chat)
-        self.history.update_chat_context_as_user(user_message)
         model_response = self.chat_runner.talk_with_model(self.history)
         self.history.update_chat_context_as_assistant(model_response.message)
+
+        self.logger.info("Chat History general chat", self.history)
         return model_response.message
 
-    def code_suggestion_pipeline(self, content: str, file_context_data: str) -> str:
-        self.history.update_chat_context_as_system(code_suggestion)
-        model_response = self.re_act_loop(self.history, content, file_context_data, self.code_runner, self.tool_runner, self.tool_manager)
-        return model_response
+    def code_suggestion_pipeline(self, file_content: str) -> dict:
+        self.logger.info("Processing Code suggestion")
+        self.code_suggestion_history.update_chat_context_as_system(code_suggestion)
+        self.code_suggestion_history.clear()
+        self.code_suggestion_history.update_chat_context_as_user(f" Giveme suggestions about this code: \n {file_content}")
+        model_response = self.code_runner.generate_code_suggestion(self.code_suggestion_history)
+        self.code_suggestion_history.update_chat_context_as_assistant(str(model_response.message))
+
+        self.logger.info("Chat History suggestion", self.code_suggestion_history)
+        return model_response.message
 
     def re_act_loop(
             self,
             history: HistoryManager,
-            user_message: str,
-            file_context_data: str,
             re_act_model_runner: Runner,
             tool_model_runner: Runner,
             tool_manager: ToolManager
         ):
         max_iteration = 5
         previous_thoughts = []
+        consecutive_similar = 0
 
-        history.update_chat_context_as_user(user_message)
         final_response = "Upps looks like the model its trap in his own thoughts"
         finish = False
 
         for i in range(max_iteration):
-            self.logger.info("Chat History", history.generate_chat_history())
 
             response = re_act_model_runner.think(history)
             self.logger.info("Model response ", response)
 
-            if response.thought in previous_thoughts[-2:]:
-                self.logger.info(f"Thought loop detected: {response.thought}")
-                final_response = self.re_act_safe_guard(history, re_act_model_runner)
-                finish = True
-                break;
+            for prev_thought in previous_thoughts[-3:]:
+                similarity = self.lightweightSimilarity.is_similar(response.thought, prev_thought)
+                if similarity:
+                    consecutive_similar += 1
+                    break
+
+            if consecutive_similar >= 2:
+                self.logger.info("Thought loop detected, attempting recovery")
+                history.update_chat_context_as_system(
+                    "Your previous thoughts were repetitive. Try a completely different approach. "
+                    "If stuck, provide your best answer based on current information."
+                )
+                consecutive_similar = 0
+                continue
 
             previous_thoughts.append(response.thought)
 
@@ -178,15 +244,57 @@ class RouterManager:
         return final_response
 
     def re_act_safe_guard(self, history: HistoryManager, model: Runner):
-        history.update_chat_context_as_user("Provide your complete answer to the user based on the information in our conversation:")
+        history.update_chat_context_as_system("Provide your complete answer to the user based on the information in our conversation:")
         model_response = model.talk_with_model(history)
+        history.update_chat_context_as_assistant(model_response.message)
+        self.logger.info("Model response ", model_response)
         return model_response.message
 
-    def detect_intention(self, user_message: str) -> str:
+    def defined_complexity_from_task(self, message: str) -> int:
+        score = 0
+        msg_lower = message.lower().strip()
 
-        self.intention_history.update_chat_context_as_system(intent_prompt)
+        social_patterns = [
+            r'^(hi|hello|hey|how are you|good morning|thanks|thank you)[\s!.?]*$',
+            r'^(yes|no|ok|okay|sure|nope|cool|great)[\s!.?]*$'
+        ]
+        for pattern in social_patterns:
+            if re.match(pattern, msg_lower):
+                score = -50
+                return score
+
+        if any(starter in msg_lower for starter in ['what is', 'explain', 'how does']):
+            if not any(ctx in msg_lower for ctx in ['my', 'this', 'the file', 'our code']):
+                score = -30
+                return score
+
+        action_verbs = ['read', 'show', 'open', 'create', 'write', 'save', 'delete', 'find', 'list']
+        file_nouns = ['file', 'folder', 'directory', 'project', 'code', 'script']
+
+        has_action = any(verb in msg_lower for verb in action_verbs)
+        has_target = any(noun in msg_lower for noun in file_nouns) or \
+                     any(ext in msg_lower for ext in ['.py', '.js', '.ts', '.go', '.rs'])
+
+        if has_action and has_target:
+            score += 50
+        elif has_action or has_target:
+            score += 25
+
+        code_actions = ['debug', 'fix', 'refactor', 'optimize', 'review', 'analyze', 'test']
+        if any(action in msg_lower for action in code_actions):
+            score += 40
+
+        word_count = len(message.split())
+        if word_count > 15:
+            score += 15
+        elif word_count > 10:
+            score += 10
+
+        return score
+
+    def generate_plan(self, user_message: str) -> list:
+
         self.intention_history.update_chat_context_as_user(user_message)
-
         model_response = self.clasi_runner.generate_todo_lits(self.intention_history)
 
         if model_response is None:

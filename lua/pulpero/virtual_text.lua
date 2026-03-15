@@ -9,30 +9,44 @@ end
 
 function VirtualText:show_at_line(response, line_number)
     local bufnr = vim.api.nvim_get_current_buf()
+    local win_width = vim.opt.columns:get()
 
-    local vir_text = {}
-    for line in string.gmatch(response, "[^\n]+") do
-        table.insert(vir_text, { { line, "Comment" } })
-    end
-
+    local line_content = vim.api.nvim_buf_get_lines(bufnr, line_number - 1, line_number, false)[1]
     local virt_text_opts = {
         id = math.random(1000000),
-        priority = 50,
-        hl_mode = "blend",
-        virt_lines_leftcol = false,
-        virt_lines = vir_text,
+        virt_text = {},
+        virt_text_pos = "eol",
         sign_text = "🦶"
     }
 
-    vim.api.nvim_buf_set_extmark(bufnr, self.namespace, line_number, 0, virt_text_opts)
+    if line_content ~= nil and #line_content + #response > win_width then
+        local available_room = win_width - #line_content
+        for i = 0, math.floor(#response / available_room), 1 do
+            local final_line_number = line_number + i
+            local offset = available_room * i
+            virt_text_opts.virt_text = { { string.sub(response, offset, available_room + offset), "Comment" } }
 
-    table.insert(self.active_feedback, {
-        bufnr = bufnr,
-        line = line_number,
-        id = virt_text_opts.id,
-        type = "Completion",
-        timestamp = os.time()
-    })
+            vim.api.nvim_buf_set_extmark(bufnr, self.namespace, final_line_number, 0, virt_text_opts)
+            table.insert(self.active_feedback, {
+                bufnr = bufnr,
+                line = final_line_number,
+                id = virt_text_opts.id,
+                timestamp = os.time()
+            })
+
+            virt_text_opts.id = math.random(1000000)
+            virt_text_opts.sign_text = ""
+        end
+    else
+        virt_text_opts.virt_text = { { response, "Comment" } }
+        vim.api.nvim_buf_set_extmark(bufnr, self.namespace, line_number, 0, virt_text_opts)
+        table.insert(self.active_feedback, {
+            bufnr = bufnr,
+            line = line_number,
+            id = virt_text_opts.id,
+            timestamp = os.time()
+        })
+    end
 end
 
 function VirtualText:clear_all()

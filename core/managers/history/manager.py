@@ -1,3 +1,6 @@
+import json
+
+
 user_key = "user"
 tool_call_key = "user"
 assistant_key = "assistant"
@@ -44,6 +47,9 @@ class ChatContext:
         self.max_messages = max_messages
         self.current_tokens = current_tokens
 
+    def __str__(self) -> str:
+        return str(self.messages)
+
 class HistoryManager:
 
     chat_context: ChatContext | None
@@ -70,6 +76,9 @@ class HistoryManager:
 
     def update_chat_context_as_tool_call(self, name: str, content: str) -> None:
 
+        if(content.__len__() == 0):
+            return
+
         if(self.chat_context is None):
             raise ValueError('Chat context is None when we try to update the chat history')
 
@@ -79,6 +88,9 @@ class HistoryManager:
             self.chat_context.messages.pop(0)
 
     def update_chat_context(self, role: str, content: str) -> None:
+
+        if(content.__len__() == 0):
+            return
 
         if(self.chat_context is None):
             raise ValueError('Chat context is None when we try to update the chat history')
@@ -99,6 +111,9 @@ class HistoryManager:
 
         history.insert(0, self.system_message.dict())
         return history
+
+    def __str__(self) -> str:
+        return json.dumps(self.generate_chat_history(), indent=2, default=str)
 
     def clear(self) -> None:
         self.chat_context = self.create_new_chat_context()

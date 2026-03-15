@@ -136,7 +136,6 @@ Data: {}
                 print(f"Error writing to log: {e}")
 
     def _to_string(self, data: Any) -> str:
-        """Convert data to string representation (equivalent to String:to_string from Lua)"""
         if isinstance(data, dict):
             try:
                 return json.dumps(data, indent=2, default=str)

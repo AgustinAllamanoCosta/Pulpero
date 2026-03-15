@@ -87,9 +87,13 @@ class Methods:
                     return response
 
                 content: str = request.params.get('content')
-                user_cursor: str = request.params.get('user_cursor')
+                # user_cursor: str = request.params.get('user_cursor')
 
-                response.result = self.router.code_suggestion_pipeline(content, user_cursor)
+                formatted_content = []
+
+                for line in content:
+                    formatted_content.append(f"{line['line_number']:4d} | {line['content']}")
+                response.result = self.router.code_suggestion_pipeline('\n'.join(formatted_content))
                 return response
 
             case "prepear_env":
@@ -113,6 +117,9 @@ class Methods:
                             self.history = HistoryManager(None)
                             self.history.update_chat_context_as_system(chat)
 
+                        if self.code_suggestion_history is None:
+                            self.code_suggestion_history = HistoryManager(None)
+
                         if self.intention_history is None:
                             self.intention_history = HistoryManager(None)
 
@@ -125,7 +132,8 @@ class Methods:
                                 react_runner,
                                 tool_manager,
                                 self.history,
-                                self.intention_history
+                                self.intention_history,
+                                self.code_suggestion_history
                         )
                     self.is_ready = True
                     response.result = self.is_ready

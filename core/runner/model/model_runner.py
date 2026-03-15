@@ -7,6 +7,40 @@ from core.managers.tool.tool import TooCall
 from core.util.logger import Logger
 import json
 
+code_suggestion_schema = {
+    "type": "object",
+    "properties": {
+        "suggestions": {
+            "type": "array",
+            "minItems": 0,
+            "maxItems": 10,
+            "items": {
+                "type": "object",
+                "properties": {
+                    "line_number": {
+                        "type": "integer",
+                        "description": "The line number this suggestion applies to"
+                    },
+                    "category": {
+                        "type": "string",
+                        "enum": ["bug", "refactor", "typo"]
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "Brief feedback message (max 80 chars)"
+                    },
+                },
+                "required": ["line_number", "category", "message"]
+            },
+        },
+        "has_suggestions": {
+            "type": "boolean",
+            "description": "Whether any actionable issues were found"
+        }
+    },
+    "required": ["suggestions", "has_issues"]
+}
+
 step_schema_raw = {
     "type": "object",
     "properties": {
@@ -15,19 +49,33 @@ step_schema_raw = {
             "items": {
                 "type": "object",
                 "properties": {
-                    "pipeline": {
+                    "step": {
                         "type": "string",
                         "enum": ["file_operations", "code_analysis", "general_chat"]
                     },
+                    "description": {
+                        "type": "string",
+                        "description": "What this step should accomplish"
+                    },
                 },
-                "required": ["pipeline", "input"],
-                "minItems": 1,
-                "maxItems": 5,
-                "uniqueItems": True
+                "required": ["step", "description"]
             },
-        }
+            "minItems": 1,
+            "maxItems": 5
+        },
     },
     "required": ["steps"]
+}
+
+validate_schema= {
+    "type": "object",
+    "properties": {
+        "is_valid": {
+            "type": "boolean",
+            "description": "is true if the statement from the user is valid or false if its isn't"
+        }
+    },
+    "required": ["is_valid"]
 }
 
 re_act_schema_raw = {
@@ -50,27 +98,53 @@ re_act_schema_raw = {
     "required": ["thought", "action"]
 }
 
-class ModelResponse:
-    message: str
-    thought: str
+class ModelResponseBase:
     tool_calls: list[TooCall]
     is_final_response: bool
     keep_thinking: bool
 
-    def __init__(self, message: str, tool_calls: list[TooCall]) -> None:
-        self.message = message
+    def __init__(self, tool_calls: list[TooCall]) -> None:
         self.tool_calls = tool_calls
         self.is_final_response = False
         self.keep_thinking = False
 
     def __str__(self) -> str:
         return f'''
-    message: {self.message}
-    thought: {self.thought}
     tool_calls: {self.tool_calls}
     is_final_response: {self.is_final_response}
     keep_thinking: {self.keep_thinking}
     '''
+
+class ModelResponseDict(ModelResponseBase):
+    message: dict
+    thought: dict
+
+    def __init__(self, message: dict, tool_calls: list[TooCall]) -> None:
+        self.message = message
+        self.thought = message
+        super().__init__(tool_calls)
+
+    def __str__(self) -> str:
+        return f'''{super().__str__()}
+        message: {str(self.message)}
+        thought: {str(self.thought)}
+    '''
+
+class ModelResponseStr(ModelResponseBase):
+    message: str
+    thought: str
+
+    def __init__(self, message: str, tool_calls: list[TooCall]) -> None:
+        self.message = message
+        self.thought = message
+        super().__init__(tool_calls)
+
+    def __str__(self) -> str:
+        return f'''{super().__str__()}
+        message: {self.message}
+        thought: {self.thought}
+    '''
+
 class RunnerConfig:
     context_window: int
     temp: float
@@ -161,12 +235,12 @@ class Runner:
             self,
             history: list[ChatCompletionRequestMessage],
             config: RunnerConfig,
-            tools: list[ChatCompletionTool], 
+            tools: list[ChatCompletionTool],
             schema: Optional[ChatCompletionRequestResponseFormat] = None
     ) -> CreateChatCompletionResponse:
         try:
 
-            self.logger.debug("Generating response with Llama ccp")
+            self.logger.debug(f"Generating response with Llama ccp {self.config.model_name}")
 
             llama_completion = self.llm.create_chat_completion(
                 messages=history,
@@ -188,8 +262,8 @@ class Runner:
             self.logger.error(f"Error during model inference: {e}")
             return cast(CreateChatCompletionResponse,{ 'choices': [{'message': { 'content': "An Error ocurred when we try to run infer the response"}}]})
 
-    def generate_todo_lits(self, history: HistoryManager):
-        model_response: dict | None = None
+    def generate_todo_lits(self, history: HistoryManager) -> list:
+        model_response: ModelResponseDict = ModelResponseDict({},[])
         raw_responses = self.run_local_model(
             cast(list[ChatCompletionRequestMessage], history.generate_chat_history()),
             self.config,
@@ -200,17 +274,47 @@ class Runner:
             }
         )
 
-        if raw_responses.get('choices').__len__() > 0:
-            completion = raw_responses.get('choices')[0]
-            content = completion.get('message').get('content')
-            if content != None:
-                if content.startswith('{'):
-                    model_response = json.loads(content)
+        try:
+            if raw_responses.get('choices').__len__() > 0:
+                completion = raw_responses.get('choices')[0]
+                content = completion.get('message').get('content')
+                if content != None:
+                    if content.startswith('{'):
+                        model_response.message = json.loads(content)
 
-        return model_response['steps']
+            return model_response.message['steps']
+        except Exception as e:
+            self.logger.error(f"Failed to execute generate code suggestion {e}")
+            self.logger.info("Raw model response ", raw_responses)
+            return []
 
-    def think(self, history: HistoryManager) -> ModelResponse:
-        model_response = ModelResponse("", [])
+    def generate_code_suggestion(self, history: HistoryManager) -> ModelResponseDict:
+        model_response: ModelResponseDict = ModelResponseDict({ "suggestions": [], "has_suggestion": False }, [])
+        raw_responses = self.run_local_model(
+            cast(list[ChatCompletionRequestMessage], history.generate_chat_history()),
+            self.config,
+            [],
+            {
+                "type": "json_object",
+                "schema": code_suggestion_schema
+            }
+        )
+
+        try:
+            if raw_responses.get('choices').__len__() > 0:
+                completion = raw_responses.get('choices')[0]
+                content = completion.get('message').get('content')
+
+                if content != None:
+                    model_response.message = json.loads(content)
+            return model_response
+        except Exception as e:
+            self.logger.error(f"Failed to execute generate code suggestion {e}")
+            self.logger.info("Raw model response ", raw_responses)
+            return model_response
+
+    def think(self, history: HistoryManager) -> ModelResponseStr:
+        model_response = ModelResponseStr("", [])
         raw_responses = self.run_local_model(
             cast(list[ChatCompletionRequestMessage], history.generate_chat_history()),
             self.config,
@@ -221,76 +325,86 @@ class Runner:
             }
 
         )
+        try:
+            if raw_responses.get('choices').__len__() > 0:
+                completion = raw_responses.get('choices')[0]
+                content = completion.get('message').get('content')
+                if content != None:
+                    parse_content = json.loads(content)
 
-        if raw_responses.get('choices').__len__() > 0:
-            completion = raw_responses.get('choices')[0]
-            content = completion.get('message').get('content')
-            if content != None:
-                parse_content = json.loads(content)
+                    action = parse_content.get('action')
 
-                action = parse_content.get('action')
+                    if action == "finish":
+                        model_response.is_final_response = True
+                        final_answer = parse_content.get('thought')
+                        model_response.thought = final_answer
+                        model_response.message = final_answer
+                    if action == "need_tool":
+                        tool_request = parse_content.get('tool_request')
+                        thought = parse_content.get('thought')
+                        model_response.thought = thought
+                        model_response.message = tool_request
+                    elif action == "continue_thinking":
+                        model_response.keep_thinking = True
+                        thought = parse_content.get('thought')
+                        model_response.thought = thought
+                        model_response.message = thought
 
-                if action == "finish":
-                    model_response.is_final_response = True
-                    final_answer = parse_content.get('thought')
-                    model_response.thought = final_answer
-                    model_response.message = final_answer
-                if action == "need_tool":
-                    tool_request = parse_content.get('tool_request')
-                    thought = parse_content.get('thought')
-                    model_response.thought = thought
-                    model_response.message = tool_request
-                elif action == "continue_thinking":
-                    model_response.keep_thinking = True
-                    thought = parse_content.get('thought')
-                    model_response.thought = thought
-                    model_response.message = thought
+            return model_response
+        except Exception as e:
+            self.logger.error(f"Failed to execute think {e}")
+            self.logger.info("Raw model response ", raw_responses)
+            response = ModelResponseStr("",[])
+            response.is_final_response = True
+            return response
 
-        return model_response
-
-    def talk_with_model(self, history: HistoryManager):
-        model_response = ModelResponse("", [])
+    def talk_with_model(self, history: HistoryManager) -> ModelResponseStr:
+        model_response = ModelResponseStr('', [])
         raw_responses = self.run_local_model(
             cast(list[ChatCompletionRequestMessage], history.generate_chat_history()),
             self.config,
             [],
-            None
+            { "type": "text" }
         )
+        try:
+            if raw_responses.get('choices').__len__() > 0:
+                model_response.keep_thinking = True
+                completion = raw_responses.get('choices')[0]
+                content = completion.get('message').get('content')
+                if content != None:
+                    model_response.message = content
 
-        if raw_responses.get('choices').__len__() > 0:
-            model_response.keep_thinking = True
-            completion = raw_responses.get('choices')[0]
-            content = completion.get('message').get('content')
-            if content != None:
-                model_response.message = content
+            return model_response
+        except Exception as e:
+            self.logger.error(f"Failed to execute talk with model {e}")
+            self.logger.info("Raw model response ", raw_responses)
+            return ModelResponseStr("",[])
 
-        return model_response
-
-    def ask_for_tool_call(self, history: HistoryManager, tool_manager: ToolManager) -> ModelResponse:
-        model_response = ModelResponse("", [])
+    def validate(self, history: HistoryManager) -> ModelResponseDict:
+        model_response: ModelResponseDict = ModelResponseDict({},[])
         raw_responses = self.run_local_model(
             cast(list[ChatCompletionRequestMessage], history.generate_chat_history()),
             self.config,
-            cast(list[ChatCompletionTool], tool_manager.get_tool_descriptions()),
-            {
+            [],
+             {
                 "type": "json_object",
-                "schema": tool_manager.generate_schemas()
+                "schema": validate_schema
             }
         )
+        try:
+            if raw_responses.get('choices').__len__() > 0:
+                completion = raw_responses.get('choices')[0]
+                content = completion.get('message').get('content')
 
-        if raw_responses.get('choices').__len__() > 0:
-            model_response.keep_thinking = True
-            completion = raw_responses.get('choices')[0]
-            content = completion.get('message').get('content')
-            if content != None:
-                if content.startswith('{'):
-                    model_response.tool_calls = self.parse_function_call(content)
-                else:
-                    model_response.message = content
+                if content != None:
+                    model_response.message = json.loads(content)
+            return model_response
+        except Exception as e:
+            self.logger.error(f"Failed to generate tool call {e}")
+            self.logger.info("Raw model response ", raw_responses)
+            return ModelResponseDict({},[])
 
-        return model_response
-
-    def parse_function_call(self, content: str):
+    def parse_function_call(self, content: str) -> list:
         try:
             tool_call_json = json.loads(content.strip())
             function_name = tool_call_json.get('function')

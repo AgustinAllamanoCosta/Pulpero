@@ -76,6 +76,36 @@ function Chat.append_message(self, sender, content)
     vim.api.nvim_buf_set_option(self.ui.chat_buf, 'modifiable', false)
 end
 
+function Chat.replace_last_message(self, sender, content)
+    if not self.chat_open then
+        return
+    end
+
+    vim.api.nvim_buf_set_option(self.ui.chat_buf, 'modifiable', true)
+    local current_lines = vim.api.nvim_buf_get_lines(self.ui.chat_buf, 0, -1, false)
+    local message_lines = vim.split(content, '\n')
+
+    table.insert(current_lines, "")
+
+    table.remove(current_lines)
+    table.remove(current_lines)
+    if sender == user_key then
+        current_lines[#current_lines+1] = "😎 " .. sender .. ": " .. message_lines[1]
+    elseif sender == pulpero_key then
+        current_lines[#current_lines+1] = "🦶 " .. sender .. ": " .. message_lines[1]
+    elseif sender == system_key then
+        current_lines[#current_lines+1] =  "🤖 " .. sender .. ": " .. message_lines[1]
+    end
+
+    for i = 2, #message_lines do
+        table.insert(current_lines, "    " .. message_lines[i])
+    end
+
+    vim.api.nvim_buf_set_lines(self.ui.chat_buf, 0, -1, false, current_lines)
+    vim.api.nvim_win_set_cursor(self.ui.chat_win, { #current_lines, 0 })
+    vim.api.nvim_buf_set_option(self.ui.chat_buf, 'modifiable', false)
+end
+
 function Chat.submit_message(self)
     if not self.chat_open then
         return
@@ -85,23 +115,23 @@ function Chat.submit_message(self)
     if message and message ~= "" then
         vim.api.nvim_buf_set_lines(self.ui.input_buf, 0, -1, false, { "" })
 
-        self:append_message(user_key, message)
+        self:replace_last_message(user_key, message)
         self:append_message(pulpero_key, "⏲️  Cooking...")
         self.service:talk_with_model(message, self.file_context, function(err, result)
             vim.schedule(function()
                 if err then
-                    self:append_message(pulpero_key, "🛑 Error: " .. err)
+                    self:replace_last_message(pulpero_key, "🛑 Error: " .. err)
                     return
                 end
 
                 if result then
                     local message_to_append = result:gsub("\\n", "\n")
-                    self:append_message(pulpero_key, message_to_append)
+                    self:replace_last_message(pulpero_key, message_to_append)
 
                     self:append_message(system_key,
                         "🚨 ! Note: This explanation is AI-generated and should be verified for accuracy. ! 🚨")
                 else
-                    self:append_message(pulpero_key, "🛑 Error: Failed to get response from model")
+                    self:replace_last_message(pulpero_key, "🛑 Error: Failed to get response from model")
                 end
             end)
         end)

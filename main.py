@@ -14,7 +14,7 @@ global clasi_model_name
 global tool_model_name
 model_name: str = "Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf"
 code_model_name: str = "qwen2.5-coder-7b-instruct-q4_k_m.gguf"
-clasi_model_name: str = "Llama-3.2-3B-Instruct-uncensored-IQ4_XS.gguf"
+clasi_model_name: str = "Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf"
 tool_model_name: str = "Llama-3.2-3B-Instruct-uncensored-IQ4_XS.gguf"
 
 async def initialize_service(logger: Logger) -> RunnerConfig:
@@ -34,35 +34,13 @@ async def initialize_service(logger: Logger) -> RunnerConfig:
 
 if __name__ == "__main__":
 
-    default_settings: RunnerConfig = RunnerConfig(
-        context_window = 2048,
-        temp = 0.5,
-        num_threads = -1,
-        top_p = 0.4,
-        model_name = model_name,
-        model_path = str(Path(OSCommands.get_model_dir()) / model_name),
-        os = platform.system(),
-        response_size = 1024
-    )
-
     default_code_model_settings: RunnerConfig = RunnerConfig(
-        context_window = 2048,
-        temp = 0.5,
+        context_window = 8192,
+        temp = 0.7,
         num_threads = -1,
-        top_p = 0.4,
+        top_p = 0.9,
         model_name = code_model_name,
         model_path = str(Path(OSCommands.get_model_dir()) / code_model_name),
-        os = platform.system(),
-        response_size = 1024
-    )
-
-    default_clasi_model_settings: RunnerConfig = RunnerConfig(
-        context_window = 2048,
-        temp = 0.2,
-        num_threads = -1,
-        top_p = 0.4,
-        model_name = clasi_model_name,
-        model_path = str(Path(OSCommands.get_model_dir()) / clasi_model_name),
         os = platform.system(),
         response_size = 1024
     )
@@ -76,6 +54,28 @@ if __name__ == "__main__":
         model_path = str(Path(OSCommands.get_model_dir()) / tool_model_name),
         os = platform.system(),
         response_size = 512
+    )
+
+    default_settings: RunnerConfig = RunnerConfig(
+        context_window=4096,  # Increased from 2048
+        temp=0.3,  # Lower for classification tasks
+        num_threads=-1,
+        top_p=0.9,  # Increased for better diversity
+        model_name=model_name,
+        model_path=str(Path(OSCommands.get_model_dir()) / model_name),
+        os=platform.system(),
+        response_size=2048  # Increased from 1024
+    )
+
+    default_clasi_model_settings: RunnerConfig = RunnerConfig(
+        context_window=2048,
+        temp=0.1,  # Very low for classification - want consistency
+        num_threads=-1,
+        top_p=0.5,  # Lower for focused outputs
+        model_name=clasi_model_name,
+        model_path=str(Path(OSCommands.get_model_dir()) / clasi_model_name),
+        os=platform.system(),
+        response_size=512  # Small - just need JSON response
     )
 
     new_logger = Logger("Server", True)

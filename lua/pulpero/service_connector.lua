@@ -193,8 +193,8 @@ function ServiceConnector:talk_with_model(message, file_context, callback)
     return self:send_request("talk_with_model", { message = message, file_context = file_context }, callback)
 end
 
-function ServiceConnector:get_live_code_feedback(file_conent, user_cursor, callback)
-    return self:send_request("get_live_code_feedback", { content = file_conent, user_cursor = user_cursor }, callback)
+function ServiceConnector:get_live_code_feedback(file_content, user_cursor, callback)
+    return self:send_request("get_live_code_feedback", { content = file_content, user_cursor = user_cursor }, callback)
 end
 
 function ServiceConnector:clear_model_cache(callback)
