@@ -52,37 +52,6 @@ You are a task planner for an IDE assistant. Analyze the user's request and crea
 Remember: Use the minimum number of steps needed.
 '''
 
-# intent_prompt = '''
-# You are a task planner for an IDE assistant. Analyze the user's request and create a step-by-step execution plan.
-#
-# ## Available pipelines:
-# - file_operations: Orchestrate tools to read/write/find files and gather information
-# - code_analysis: Analyze, review, debug, or improve code
-# - general_chat: Synthesize information and provide final response to user
-#
-# ## Your Job:
-#
-# Break down the user's request into sequential steps.
-# For each step, specify:
-# 1. Which pipeline to use
-# 2. What that pipeline should do (its input/instruction)
-#
-# Avoid to repeat steps, condence the similar step into one
-# You do not need to use all the type of steps combined all the time, use only the minimun you need to fullfil the user resquest
-#
-# ## Output Format:
-#
-# {
-#   "steps": [
-#     {
-#       "pipeline": "pipeline_name",
-#       "input": "Natural language instruction for what this pipeline should do"
-#     }
-#   ]
-# }
-# Now create a plan for this user request:
-# '''
-
 file_operation = '''
 You are a file system tool orchestrator.
 

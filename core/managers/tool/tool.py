@@ -4,9 +4,9 @@ class ToolResult:
 
     success: bool = False
     result: str
-    error: str | None = None
+    error: Exception | None = None
 
-    def __init__(self, success: bool, result: str, error: str | None):
+    def __init__(self, success: bool, result: str, error: Exception | None):
         self.success = success
         self.result = result
         self.error = error

@@ -404,6 +404,29 @@ class Runner:
             self.logger.info("Raw model response ", raw_responses)
             return ModelResponseDict({},[])
 
+    def ask_for_tool_call(self, history: HistoryManager, tool_manager: ToolManager):
+        response: ModelResponseDict = ModelResponseDict({}, [])
+        try:
+            tool_schemas = tool_manager.generate_schemas()
+            raw_responses = self.run_local_model(
+                cast(list[ChatCompletionRequestMessage], history.generate_chat_history()),
+                self.config,
+                tool_manager.get_tool_descriptions(),
+                {
+                    "type": "json_object",
+                    "schema": tool_schemas
+                }
+            )
+
+            if raw_responses.get('choices').__len__() > 0:
+                response.tool_calls = self.parse_function_call(raw_responses.get('choices')[0].get('message').get('content'))
+
+            return response
+
+        except Exception as e:
+            self.logger.error(f"Failed to generate tool call: {e}")
+            return response
+
     def parse_function_call(self, content: str) -> list:
         try:
             tool_call_json = json.loads(content.strip())

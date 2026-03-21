@@ -108,44 +108,45 @@ class RouterManager:
 
         self.history.update_chat_context_as_user(user_message)
 
-        if(file_context_data.current_working_dir is not None):
+        if(file_context_data.current_working_dir is not None and self.file_context_data.current_working_dir != file_context_data.current_working_dir ):
             self.history.update_chat_context_as_assistant(f"this is the information of the file I am working on {self.file_context_data}")
 
-        response = ""
-        is_simple_task = self.defined_complexity_from_task(user_message)
-
-        if(is_simple_task < 60):
-            response = self.general_chat_pipeline()
-        else:
-            response = self.process_complex_task(user_message)
-
-        return response
-
-    def process_complex_task(self, user_message: str) -> str:
         self.intention_history.update_chat_context_as_system(intent_prompt)
         intentions = self.generate_plan(user_message)
         response = ""
         self.logger.info("Intention to process" ,intentions)
-        # TODO: validar el listado del plan
 
-        for intention in intentions:
-            step = intention['step']
-            description = intention["description"]
-            match step:
-                case "file_operations":
-                    response = self.file_pipeline(description)
-                case "code_analysis":
-                    response = self.code_analysis_pipeline(description)
-                case "general_chat":
-                    response = self.general_chat_pipeline(description)
-                case _:
-                    response = self.general_chat_pipeline(description)
+        validation_response = self.validate_plan(user_message, intentions)
+
+        if(validation_response == True):
+            for intention in intentions:
+                step = intention['step']
+                description = intention["description"]
+                match step:
+                    case "file_operations":
+                        response = self.file_pipeline(description)
+                    case "code_analysis":
+                        response = self.code_analysis_pipeline(description)
+                    case "general_chat":
+                        response = self.general_chat_pipeline(description)
+                    case _:
+                        response = self.general_chat_pipeline(description)
+        else:
+            response = self.general_chat_pipeline("")
 
         return response
+
+    def validate_plan(self, user_message: str, plan: list) -> bool:
+        self.intention_history.clear()
+        self.intention_history.update_chat_context_as_system(f"given the following user message and plan, validate if the plan will acomplish the user query, plan: {plan}")
+        self.intention_history.update_chat_context_as_user(user_message)
+        validation_response = self.chat_runner.validate(self.intention_history)
+        return validation_response.message['is_valid']
 
     def file_pipeline(self, description: str) -> str:
         self.logger.info("Processing File Pipeline")
         self.history.update_chat_context_as_system(file_operation)
+        self.history.update_chat_context_as_assistant(description)
         model_response = self.re_act_loop(self.history, self.re_act_runner, self.tool_runner, self.tool_manager)
 
         self.logger.info("Chat History file", self.history)
@@ -154,6 +155,7 @@ class RouterManager:
     def code_analysis_pipeline(self, description: str) -> str:
         self.logger.info("Processing Code analysis")
         self.history.update_chat_context_as_system(code_analysis)
+        self.history.update_chat_context_as_assistant(description)
         model_response = self.re_act_loop(self.history, self.code_runner, self.tool_runner, self.tool_manager)
 
         self.logger.info("Chat History code analysis", self.history)
@@ -162,6 +164,7 @@ class RouterManager:
     def general_chat_pipeline(self, description: str) -> str:
         self.logger.info("Processing Chat")
         self.history.update_chat_context_as_system(chat)
+        self.history.update_chat_context_as_assistant(description)
         model_response = self.chat_runner.talk_with_model(self.history)
         self.history.update_chat_context_as_assistant(model_response.message)
 
@@ -249,48 +252,6 @@ class RouterManager:
         history.update_chat_context_as_assistant(model_response.message)
         self.logger.info("Model response ", model_response)
         return model_response.message
-
-    def defined_complexity_from_task(self, message: str) -> int:
-        score = 0
-        msg_lower = message.lower().strip()
-
-        social_patterns = [
-            r'^(hi|hello|hey|how are you|good morning|thanks|thank you)[\s!.?]*$',
-            r'^(yes|no|ok|okay|sure|nope|cool|great)[\s!.?]*$'
-        ]
-        for pattern in social_patterns:
-            if re.match(pattern, msg_lower):
-                score = -50
-                return score
-
-        if any(starter in msg_lower for starter in ['what is', 'explain', 'how does']):
-            if not any(ctx in msg_lower for ctx in ['my', 'this', 'the file', 'our code']):
-                score = -30
-                return score
-
-        action_verbs = ['read', 'show', 'open', 'create', 'write', 'save', 'delete', 'find', 'list']
-        file_nouns = ['file', 'folder', 'directory', 'project', 'code', 'script']
-
-        has_action = any(verb in msg_lower for verb in action_verbs)
-        has_target = any(noun in msg_lower for noun in file_nouns) or \
-                     any(ext in msg_lower for ext in ['.py', '.js', '.ts', '.go', '.rs'])
-
-        if has_action and has_target:
-            score += 50
-        elif has_action or has_target:
-            score += 25
-
-        code_actions = ['debug', 'fix', 'refactor', 'optimize', 'review', 'analyze', 'test']
-        if any(action in msg_lower for action in code_actions):
-            score += 40
-
-        word_count = len(message.split())
-        if word_count > 15:
-            score += 15
-        elif word_count > 10:
-            score += 10
-
-        return score
 
     def generate_plan(self, user_message: str) -> list:
 

@@ -5,19 +5,23 @@ import subprocess
 def find_file(logger: Logger) -> Tool:
     def execute(params) -> ToolResult:
         if params["name"] == None:
-            return ToolResult(False, {},"File name is require")
+            return ToolResult(False, {}, Exception("File name is require"))
 
         if params["dir"] == None:
-            return ToolResult(False, {},"Working dir is require")
+            return ToolResult(False, {}, Exception("Working dir is require"))
 
         result: dict = {}
         paths = subprocess.run(["find", params['dir'],"-name", params['name']], capture_output=True, text=True)
         index = 1
-        for path in paths.stdout.splitlines():
-            result[index] = path
-            index = index + 1
 
-        return ToolResult(True, str(result), None)
+        try:
+            for path in paths.stdout.splitlines():
+                result[index] = path
+                index = index + 1
+
+            return ToolResult(True, str(result), None)
+        except Exception as e:
+            return ToolResult(False, '', e)
 
     return Tool(
         "find_file",

@@ -124,61 +124,61 @@ function M.setup()
             realtime_feedback:reset()
         end
     })
-
-    vim.api.nvim_create_autocmd({ "ModeChanged" }, {
-        group = group,
-        callback = function()
-            local new_mode = vim.api.nvim_get_mode().mode
-            local old_mode = realtime_feedback.state.current_mode
-            realtime_feedback.state.current_mode = new_mode
-
-            if old_mode == "i" and new_mode == "n" then
-                if realtime_feedback.state.mode_timer then
-                    vim.fn.timer_stop(realtime_feedback.state.mode_timer)
-                end
-
-                realtime_feedback.state.mode_timer = vim.fn.timer_start(realtime_feedback.config.debounce_ms,
-                    function()
-                        realtime_feedback:analyze_current_context()
-                    end)
-            end
-        end
-    })
-
-    vim.api.nvim_create_autocmd({ "TextChangedI", "TextChanged" }, {
-        group = group,
-        callback = function()
-            if realtime_feedback.state.typing_timer then
-                vim.fn.timer_stop(realtime_feedback.state.typing_timer)
-            end
-
-            realtime_feedback.state.typing_timer = vim.fn.timer_start(realtime_feedback.config.debounce_ms,
-                function()
-                    realtime_feedback:analyze_current_context()
-                end)
-        end
-    })
-
-    vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
-        group = group,
-        callback = function()
-            local cursor_pos = vim.api.nvim_win_get_cursor(0)
-            local current_line = cursor_pos[1] - 1
-
-            if current_line ~= realtime_feedback.state.last_cursor_line then
-                realtime_feedback.state.last_cursor_line = current_line
-
-                if realtime_feedback.state.typing_timer then
-                    vim.fn.timer_stop(realtime_feedback.state.typing_timer)
-                end
-
-                realtime_feedback.state.typing_timer = vim.fn.timer_start(realtime_feedback.config.debounce_ms,
-                    function()
-                        realtime_feedback:analyze_current_context()
-                    end)
-            end
-        end
-    })
+    --
+    -- vim.api.nvim_create_autocmd({ "ModeChanged" }, {
+    --     group = group,
+    --     callback = function()
+    --         local new_mode = vim.api.nvim_get_mode().mode
+    --         local old_mode = realtime_feedback.state.current_mode
+    --         realtime_feedback.state.current_mode = new_mode
+    --
+    --         if old_mode == "i" and new_mode == "n" then
+    --             if realtime_feedback.state.mode_timer then
+    --                 vim.fn.timer_stop(realtime_feedback.state.mode_timer)
+    --             end
+    --
+    --             realtime_feedback.state.mode_timer = vim.fn.timer_start(realtime_feedback.config.debounce_ms,
+    --                 function()
+    --                     realtime_feedback:analyze_current_context()
+    --                 end)
+    --         end
+    --     end
+    -- })
+    --
+    -- vim.api.nvim_create_autocmd({ "TextChangedI", "TextChanged" }, {
+    --     group = group,
+    --     callback = function()
+    --         if realtime_feedback.state.typing_timer then
+    --             vim.fn.timer_stop(realtime_feedback.state.typing_timer)
+    --         end
+    --
+    --         realtime_feedback.state.typing_timer = vim.fn.timer_start(realtime_feedback.config.debounce_ms,
+    --             function()
+    --                 realtime_feedback:analyze_current_context()
+    --             end)
+    --     end
+    -- })
+    --
+    -- vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+    --     group = group,
+    --     callback = function()
+    --         local cursor_pos = vim.api.nvim_win_get_cursor(0)
+    --         local current_line = cursor_pos[1] - 1
+    --
+    --         if current_line ~= realtime_feedback.state.last_cursor_line then
+    --             realtime_feedback.state.last_cursor_line = current_line
+    --
+    --             if realtime_feedback.state.typing_timer then
+    --                 vim.fn.timer_stop(realtime_feedback.state.typing_timer)
+    --             end
+    --
+    --             realtime_feedback.state.typing_timer = vim.fn.timer_start(realtime_feedback.config.debounce_ms,
+    --                 function()
+    --                     realtime_feedback:analyze_current_context()
+    --                 end)
+    --         end
+    --     end
+    -- })
 end
 
 return M
