@@ -213,6 +213,10 @@ function ServiceConnector:toggle_service(callback)
     return self:send_request("toggle", {}, callback)
 end
 
+function ServiceConnector:update_project_context(cwd, callback)
+    return self:send_request("update_project_context", { cwd = cwd }, callback)
+end
+
 function ServiceConnector:disconnect()
     if self.pipe then
         self.pipe:close()

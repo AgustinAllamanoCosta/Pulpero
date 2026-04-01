@@ -151,6 +151,20 @@ class Methods:
                     response.result = self.is_ready
                 return response
 
+            case "update_project_context":
+                cwd = request.params.get('cwd')
+                if cwd and self.history is not None:
+                    from core.managers.tool.get_file_tree import get_file_tree
+                    tree_tool = get_file_tree(self.logger)
+                    tree_result = tree_tool.callback({'path': cwd})
+                    if tree_result.success:
+                        self.history.update_chat_context_as_assistant(
+                            f"Current project structure at {cwd}:\n{tree_result.result}"
+                        )
+                        self.history.flush()
+                response.result = True
+                return response
+
             case "clear_model_cache":
                 if self.history is not None:
                     self.history.clear()

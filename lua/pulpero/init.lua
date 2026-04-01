@@ -25,6 +25,7 @@ local ui = UI.new()
 local service = Service_Connector.new()
 local chat = Chat.new(ui, service)
 local realtime_feedback = Realtime_Feedback.new(virtual_text, service)
+local last_working_dir = ""
 local function ui_log(message)
     vim.api.nvim_buf_set_option(ui.log_buf, 'modifiable', true)
     local current_lines = vim.api.nvim_buf_get_lines(ui.log_buf, 0, -1, false)
@@ -47,11 +48,20 @@ local function update_code_context()
 
     if buftype == "" then
         local current_file_path = vim.api.nvim_buf_get_name(0)
+        local cwd = vim.loop.cwd()
         chat.file_context = {
-            current_working_dir = vim.loop.cwd(),
+            current_working_dir = cwd,
             current_file_name   = string.match(current_file_path, "[^/\\]+$"),
             current_file_path   = current_file_path,
         }
+        if cwd ~= last_working_dir and service.connected then
+            last_working_dir = cwd
+            service:update_project_context(cwd, function(err, _)
+                if err then
+                    print("Pulpero: failed to update project context: " .. tostring(err))
+                end
+            end)
+        end
     end
 end
 
@@ -146,19 +156,19 @@ function M.setup()
     --     end
     -- })
 
-    -- vim.api.nvim_create_autocmd({ "TextChangedI", "TextChanged" }, {
-    --     group = group,
-    --     callback = function()
-    --         if realtime_feedback.state.typing_timer then
-    --             vim.fn.timer_stop(realtime_feedback.state.typing_timer)
-    --         end
-    --
-    --         realtime_feedback.state.typing_timer = vim.fn.timer_start(realtime_feedback.config.debounce_ms,
-    --             function()
-    --                 realtime_feedback:analyze_current_context()
-    --             end)
-    --     end
-    -- })
+    vim.api.nvim_create_autocmd({ "TextChangedI", "TextChanged" }, {
+        group = group,
+        callback = function()
+            if realtime_feedback.state.typing_timer then
+                vim.fn.timer_stop(realtime_feedback.state.typing_timer)
+            end
+
+            realtime_feedback.state.typing_timer = vim.fn.timer_start(realtime_feedback.config.debounce_ms,
+                function()
+                    realtime_feedback:analyze_current_context()
+                end)
+        end
+    })
 
     -- vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
     --     group = group,

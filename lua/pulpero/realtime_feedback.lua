@@ -371,11 +371,11 @@ function RealtimeFeedback:display_suggestions(result, current_line)
     end
 
     for _, suggestion in ipairs(result.suggestions) do
-        local display_line = (suggestion.line_number or current_line + 1) - 1
-        local message = suggestion.message or ""
-
-        if message ~= "" then
-            self.virtual_text:show_at_line(message, display_line)
+        if suggestion.message and suggestion.message ~= "" then
+            if not suggestion.line_number then
+                suggestion.line_number = current_line + 1
+            end
+            self.virtual_text:show_suggestion(suggestion)
         end
     end
 end

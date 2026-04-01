@@ -147,22 +147,23 @@ class HistoryManager:
         return ephemeral
 
     def generate_chat_history(self) -> list[dict]:
+        if self.chat_context is None:
+            raise ValueError('Chat context is None when we try to generate the chat history')
+
         history: list[dict] = []
 
-        if(self.chat_context is None or self.system_message is None):
-            raise ValueError('Chat context is None when we try to generate the chat history')
+        if self.system_message is not None:
+            history.append(self.system_message.dict())
 
         for msg in self.chat_context.messages:
             history.append(msg.dict())
 
-        history.insert(0, self.system_message.dict())
         return history
 
     def __str__(self) -> str:
-        chat_history = self.generate_chat_history()
-        if chat_history != None:
-            return json.dumps(chat_history, indent=2, default=str)
-        else:
+        try:
+            return json.dumps(self.generate_chat_history(), indent=2, default=str)
+        except Exception:
             return ""
 
     def clear(self) -> None:
