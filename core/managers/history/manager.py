@@ -1,4 +1,5 @@
 import json
+import os
 
 user_key = "user"
 tool_call_key = "user"
@@ -53,10 +54,14 @@ class HistoryManager:
 
     chat_context: ChatContext | None
     system_message: ChatEntry | None
-    def __init__(self, context: ChatContext | None) -> None:
-        self.chat_context = None
+    file_path: str | None
 
-        if( context is None):
+    def __init__(self, context: ChatContext | None, file_path: str | None = None) -> None:
+        self.chat_context = None
+        self.system_message = None
+        self.file_path = file_path
+
+        if context is None:
             self.chat_context = self.create_new_chat_context()
         else:
             self.chat_context = context
@@ -98,6 +103,48 @@ class HistoryManager:
 
         while len(self.chat_context.messages) > self.chat_context.max_messages:
             self.chat_context.messages.pop(0)
+
+    def load(self) -> None:
+        if self.file_path is None or not os.path.exists(self.file_path):
+            return
+
+        try:
+            with open(self.file_path, 'r', encoding='utf-8') as f:
+                entries = json.load(f)
+            for entry in entries:
+                role = entry.get('role')
+                content = entry.get('content', '')
+                if role in (user_key, assistant_key) and content:
+                    self.chat_context.messages.append(ChatEntry(role, content))
+            while len(self.chat_context.messages) > self.chat_context.max_messages:
+                self.chat_context.messages.pop(0)
+        except Exception:
+            pass
+
+    def flush(self) -> None:
+        if self.file_path is None:
+            return
+
+        entries = [
+            msg.dict()
+            for msg in self.chat_context.messages
+            if isinstance(msg, ChatEntry) and msg.key in (user_key, assistant_key)
+        ]
+
+        try:
+            os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
+            with open(self.file_path, 'w', encoding='utf-8') as f:
+                json.dump(entries, f, indent=2)
+        except Exception:
+            pass
+
+    def create_ephemeral(self, system_prompt: str) -> 'HistoryManager':
+        ephemeral = HistoryManager(None)
+        ephemeral.update_chat_context_as_system(system_prompt)
+        for msg in self.chat_context.messages:
+            if isinstance(msg, ChatEntry) and msg.key in (user_key, assistant_key):
+                ephemeral.chat_context.messages.append(ChatEntry(msg.key, msg.content))
+        return ephemeral
 
     def generate_chat_history(self) -> list[dict]:
         history: list[dict] = []

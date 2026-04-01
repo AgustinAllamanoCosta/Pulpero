@@ -51,7 +51,7 @@ step_schema_raw = {
                 "properties": {
                     "step": {
                         "type": "string",
-                        "enum": ["file_operations", "code_analysis", "general_chat"]
+                        "enum": ["file_operations", "code_analysis", "general_chat", "research"]
                     },
                     "description": {
                         "type": "string",

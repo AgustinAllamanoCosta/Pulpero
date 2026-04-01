@@ -7,7 +7,7 @@ from core.runner.model.model_runner import Runner
 from core.server.data_model import ServerRequest, ServerResponse
 from core.server.setup import Setup
 from core.util.logger import Logger
-from core.runner.model.prompts import chat
+from core.util.OSCommands import OSCommands
 
 class Methods:
 
@@ -104,20 +104,25 @@ class Methods:
 
                     if self.router is None:
                         tool_manager = ToolManager(self.logger)
-
                         tool_manager.register_tool(tools['create_create_file_tool'](self.logger))
                         tool_manager.register_tool(tools['create_get_file_tool'](self.logger))
                         tool_manager.register_tool(tools['create_find_file_tool'](self.logger))
+                        tool_manager.register_tool(tools['create_list_directory_tool'](self.logger))
+                        tool_manager.register_tool(tools['create_get_file_tree_tool'](self.logger))
 
-                        code_analysis_runner = Runner(env_config.code_config, self.logger )
+                        research_tool_manager = ToolManager(self.logger)
+                        research_tool_manager.register_tool(tools['create_web_search_tool'](self.logger))
+
+                        code_analysis_runner = Runner(env_config.code_config, self.logger)
                         tool_executuion_runner = Runner(env_config.tool_config, self.logger)
                         clasi_runner = Runner(env_config.clasi_config, self.logger)
                         chat_runner = Runner(env_config.model_config, self.logger)
-                        react_runner= Runner(env_config.model_config, self.logger)
+                        react_runner = Runner(env_config.model_config, self.logger)
 
                         if self.history is None:
-                            self.history = HistoryManager(None)
-                            self.history.update_chat_context_as_system(chat)
+                            history_path = str(OSCommands.get_data_path() / 'history.json')
+                            self.history = HistoryManager(None, file_path=history_path)
+                            self.history.load()
 
                         if self.loop_history is None:
                             self.loop_history = HistoryManager(None)
@@ -136,6 +141,7 @@ class Methods:
                                 chat_runner,
                                 react_runner,
                                 tool_manager,
+                                research_tool_manager,
                                 self.history,
                                 self.intention_history,
                                 self.code_suggestion_history,
@@ -148,6 +154,7 @@ class Methods:
             case "clear_model_cache":
                 if self.history is not None:
                     self.history.clear()
+                    self.history.flush()
                 response.result = True
                 return response
 
