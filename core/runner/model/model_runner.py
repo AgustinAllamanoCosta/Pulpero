@@ -83,7 +83,7 @@ re_act_schema_raw = {
     "properties": {
         "thought": {
             "type": "string",
-            "description": "Your reasoning about the task"
+            "description": "All the information relevant to full fill the task, you can inclue hints, file information, note and summaries"
         },
         "action": {
             "type": "string",

@@ -34,7 +34,7 @@ You must output JSON with this structure:
 '''
 
 intent_prompt = '''
-You are a task planner for an IDE assistant. Analyze the user's request and create a step-by-step plan.
+You are a task planner. Analyze the user's request and create a step-by-step plan to be execute for other models.
 
 ## Available pipelines:
 - file_operations: Read/write/find files in the project
@@ -48,8 +48,9 @@ You are a task planner for an IDE assistant. Analyze the user's request and crea
 3. **Simple questions** (no files/tools) → Use only general_chat
 4. **File requests** (show/read files) → file_operations, then general_chat
 5. **Code analysis tasks** → file_operations (if needed), code_analysis, then general_chat
+6. **Description** → include all the information necesary to fullfill the step, remember the executor lack of the context you have
 
-Remember: Use the minimum number of steps needed.
+Remember: Add the necesary information on each description to the models be able to understand and full fil there steps and use the minimum number of steps needed.
 '''
 
 file_operation = '''

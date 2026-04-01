@@ -54,7 +54,7 @@ class ToolManager:
 
     def execute_tool(self, tool_call: TooCall) -> ToolResult:
         tool = self.tools.get(tool_call.name)
-        tool_result = ToolResult(False, '', "Tool not found")
+        tool_result = ToolResult(False, '', Expection("Tool not found"))
         if tool != None:
             tool_result = tool.callback(tool_call.arguments)
 

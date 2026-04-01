@@ -1,6 +1,5 @@
 import json
 
-
 user_key = "user"
 tool_call_key = "user"
 assistant_key = "assistant"

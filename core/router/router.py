@@ -1,5 +1,4 @@
 import re
-from typing import List
 from core.managers.history.manager import HistoryManager
 from core.managers.tool.manager import ToolManager
 from core.runner.model.model_runner import Runner
@@ -55,7 +54,8 @@ class RouterManager:
         tool_manager: ToolManager | None,
         history: HistoryManager | None,
         intention_history: HistoryManager | None,
-        code_suggestion_history: HistoryManager | None
+        code_suggestion_history: HistoryManager | None,
+        loop_history: HistoryManager | None
     ) -> None:
 
         if (logger is None ):
@@ -88,9 +88,14 @@ class RouterManager:
         if (code_suggestion_history is None):
             raise ValueError("Router code_suggestion_history manager is nil")
 
+        if (loop_history is None):
+            raise ValueError("Router loop_history manager is nil")
+
+
         self.history = history
         self.code_suggestion_history = code_suggestion_history
         self.intention_history = intention_history
+        self.loop_history = loop_history
 
         self.tool_manager = tool_manager
         self.chat_runner = chat_model_runner
@@ -99,16 +104,16 @@ class RouterManager:
         self.tool_runner = tool_model_runner
         self.code_runner = code_model_runner
         self.logger = logger
-        self.file_context_data = None
+        self.file_context_data = FileContextData(current_working_dir = '', current_file_name = '', current_file_path = '')
         self.amount_of_thinks_cicles = 4
         self.lightweightSimilarity = LightweightSimilarity()
 
     def route(self, user_message: str, file_context_data: FileContextData) -> str:
-        self.file_context_data = file_context_data
 
         self.history.update_chat_context_as_user(user_message)
 
-        if(file_context_data.current_working_dir is not None and self.file_context_data.current_working_dir != file_context_data.current_working_dir ):
+        if( self.file_context_data.current_working_dir != file_context_data.current_working_dir):
+            self.file_context_data = file_context_data
             self.history.update_chat_context_as_assistant(f"this is the information of the file I am working on {self.file_context_data}")
 
         self.intention_history.update_chat_context_as_system(intent_prompt)
@@ -131,6 +136,7 @@ class RouterManager:
                         response = self.general_chat_pipeline(description)
                     case _:
                         response = self.general_chat_pipeline(description)
+                self.logger.info("Chat History", self.history)
         else:
             response = self.general_chat_pipeline("")
 
@@ -145,20 +151,27 @@ class RouterManager:
 
     def file_pipeline(self, description: str) -> str:
         self.logger.info("Processing File Pipeline")
-        self.history.update_chat_context_as_system(file_operation)
         self.history.update_chat_context_as_assistant(description)
-        model_response = self.re_act_loop(self.history, self.re_act_runner, self.tool_runner, self.tool_manager)
 
-        self.logger.info("Chat History file", self.history)
+        self.loop_history.clear()
+        self.loop_history.update_chat_context_as_system(file_operation)
+        self.loop_history.update_chat_context_as_assistant(description)
+        self.loop_history.update_chat_context_as_assistant(f"this is the information of the file I am working on {self.file_context_data}")
+        model_response = self.re_act_loop(self.loop_history, self.re_act_runner, self.tool_runner, self.tool_manager)
+        self.history.update_chat_context_as_assistant(model_response)
+
         return model_response
 
     def code_analysis_pipeline(self, description: str) -> str:
         self.logger.info("Processing Code analysis")
-        self.history.update_chat_context_as_system(code_analysis)
         self.history.update_chat_context_as_assistant(description)
-        model_response = self.re_act_loop(self.history, self.code_runner, self.tool_runner, self.tool_manager)
 
-        self.logger.info("Chat History code analysis", self.history)
+        self.loop_history.clear()
+        self.loop_history.update_chat_context_as_system(code_analysis)
+        self.loop_history.update_chat_context_as_assistant(description)
+        model_response = self.re_act_loop(self.loop_history,self.code_runner, self.tool_runner, self.tool_manager)
+
+        self.history.update_chat_context_as_assistant(model_response)
         return model_response
 
     def general_chat_pipeline(self, description: str) -> str:
@@ -168,18 +181,15 @@ class RouterManager:
         model_response = self.chat_runner.talk_with_model(self.history)
         self.history.update_chat_context_as_assistant(model_response.message)
 
-        self.logger.info("Chat History general chat", self.history)
         return model_response.message
 
     def code_suggestion_pipeline(self, file_content: str) -> dict:
         self.logger.info("Processing Code suggestion")
         self.code_suggestion_history.update_chat_context_as_system(code_suggestion)
         self.code_suggestion_history.clear()
-        self.code_suggestion_history.update_chat_context_as_user(f" Giveme suggestions about this code: \n {file_content}")
         model_response = self.code_runner.generate_code_suggestion(self.code_suggestion_history)
         self.code_suggestion_history.update_chat_context_as_assistant(str(model_response.message))
 
-        self.logger.info("Chat History suggestion", self.code_suggestion_history)
         return model_response.message
 
     def re_act_loop(

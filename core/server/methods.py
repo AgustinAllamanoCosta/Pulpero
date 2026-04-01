@@ -15,6 +15,7 @@ class Methods:
     model_manager: ModelManager
     router: RouterManager | None
     history: HistoryManager | None
+    loop_history: HistoryManager | None
     intention_history: HistoryManager | None
     setup: Setup
     is_ready: bool
@@ -26,6 +27,7 @@ class Methods:
         self.model_manager = model_manager
         self.router = None
         self.history = None
+        self.loop_history = None
         self.file_history = None
         self.code_analysis_history = None
         self.code_suggestion_history = None
@@ -117,6 +119,9 @@ class Methods:
                             self.history = HistoryManager(None)
                             self.history.update_chat_context_as_system(chat)
 
+                        if self.loop_history is None:
+                            self.loop_history = HistoryManager(None)
+
                         if self.code_suggestion_history is None:
                             self.code_suggestion_history = HistoryManager(None)
 
@@ -133,7 +138,8 @@ class Methods:
                                 tool_manager,
                                 self.history,
                                 self.intention_history,
-                                self.code_suggestion_history
+                                self.code_suggestion_history,
+                                self.loop_history
                         )
                     self.is_ready = True
                     response.result = self.is_ready

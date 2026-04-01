@@ -113,8 +113,9 @@ function M.setup()
         desc = "Analyze the current contxt of the cursor with Pulpero"
     })
 
-    vim.api.nvim_create_autocmd({ "BufEnter" }, {
+    vim.api.nvim_create_autocmd({ "BufEnter", "BufReadPre", "BufNewFile" }, {
         callback = function()
+            print("Update Code Context")
             update_code_context()
         end
     })
@@ -124,7 +125,7 @@ function M.setup()
             realtime_feedback:reset()
         end
     })
-    --
+
     -- vim.api.nvim_create_autocmd({ "ModeChanged" }, {
     --     group = group,
     --     callback = function()
@@ -144,7 +145,7 @@ function M.setup()
     --         end
     --     end
     -- })
-    --
+
     -- vim.api.nvim_create_autocmd({ "TextChangedI", "TextChanged" }, {
     --     group = group,
     --     callback = function()
@@ -158,7 +159,7 @@ function M.setup()
     --             end)
     --     end
     -- })
-    --
+
     -- vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
     --     group = group,
     --     callback = function()

@@ -6,6 +6,7 @@
 **/vscode/package-lock.json
 **/model-in-tar
 build/**
+.claude/**
 **.tar.gz
 **.gguf
 local_build.sh
