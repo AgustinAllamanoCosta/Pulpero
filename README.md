@@ -45,7 +45,7 @@ Pulpero uses multiple local models via llama-cpp-python, each specialized for a 
 - **Chat / ReAct reasoning**: General conversation, planning and multi-step thinking
 - **Code analysis**: Code-specific tasks and suggestions
 - **Classification**: Intent detection to route requests to the right pipeline
-- **Tool execution**: File operations and agent-style tool use
+- **Tool execution**: File operations, project exploration, and web search
 
 All models run locally using llama.cpp bindings.
 
@@ -59,6 +59,7 @@ All models run locally using llama.cpp bindings.
 - Git latest version
 - Wget latest version
 - Have CMake already installed is a plus
+- `duckduckgo-search` Python package (for web search: `pip install duckduckgo-search`)
 
 <details>
   <summary>Performance</summary>
@@ -81,11 +82,6 @@ chmod +x install.sh && ./install.sh
 🐧 *Linux*
 ```bash
 chmod +x install_linux.sh && ./install_linux.sh
-```
-
-🪟 *Windows*
-```powershell
-install.ps1
 ```
 
 These scripts handle:
@@ -239,7 +235,7 @@ Logs are recreated with each request to maintain a controlled size and facilitat
 
 ### 🚨 TODO List
 
-- ❌ Improve chat history (deduplication, persistence)
+- ❌ Improve chat history (compression / summarization of past context)
 - ❌ Add unit test generation based on function and context
 - ❌ Add IDE project awareness
 - ❌ Publish Docker image
@@ -264,6 +260,10 @@ Logs are recreated with each request to maintain a controlled size and facilitat
 - ✅ Add ReAct pattern for multi-step reasoning and tool use
 - ✅ Add file operation tools (create, read, find)
 - ✅ Add intent classification and plan validation
+- ✅ Add persistent conversation history (survives restarts)
+- ✅ Add ephemeral pipeline histories (tool calls and reasoning stay isolated)
+- ✅ Add project context tools (list_directory, get_file_tree)
+- ✅ Add web search tool and research pipeline (DuckDuckGo)
 
 *References*:
 
@@ -284,12 +284,39 @@ Pulpero consists of two main parts:
    - Service connector: communicates with the Python backend over a socket
 
 2. **Python Backend** (`core/`): The AI engine that handles all reasoning:
-   - **Router**: Classifies intent and routes to the right pipeline (file operations, code analysis, general chat)
-   - **ReAct Loop**: Multi-step reasoning with tool use — the model can think, call tools, and refine its answer
+   - **Router**: Classifies intent and routes to the right pipeline
+   - **ReAct Loop**: Multi-step reasoning with tool use — the model thinks, calls tools, and refines its answer
    - **Runners**: Multiple specialized `llama-cpp-python` model instances for different tasks
-   - **Tool Manager**: File system tools (get_file, find_file, create_file) the model can call during reasoning
-   - **History Manager**: Maintains conversation context per session
+   - **Tool Manager**: Tools the model can call during reasoning (see below)
+   - **History Manager**: Persistent conversation context with ephemeral pipeline isolation
    - **Socket Server**: Accepts JSON-RPC requests from the Lua plugin
+
+### Pipelines
+
+| Pipeline | Trigger | What it does |
+|---|---|---|
+| `file_operations` | Read/write/find files | Orchestrates file tools, passes gathered context forward |
+| `code_analysis` | Explain/review/debug code | Deep code reasoning with file access |
+| `general_chat` | Questions, concepts | Conversational responses using conversation history |
+| `research` | External docs, current events | Web search + synthesis into summary + sources |
+
+### Tools
+
+| Tool | Description |
+|---|---|
+| `get_file` | Read file content by path |
+| `find_file` | Search for files by name recursively |
+| `create_file` | Write a new file at a given path |
+| `list_directory` | List files and subdirectories at a path (one level) |
+| `get_file_tree` | Recursive project tree up to a configurable depth |
+| `web_search` | DuckDuckGo search — returns title, URL, and snippet per result |
+
+### History
+
+Conversation history is split into two layers:
+
+- **Persistent** (`~/.local/share/pulpero/history.json`): Stores only user messages and final assistant responses. Survives restarts.
+- **Ephemeral**: Created fresh for each pipeline call, seeded with the persistent turns. System prompts, tool calls, and ReAct reasoning stay isolated here and are discarded after the pipeline returns.
 
 ### Architecture
 
@@ -319,7 +346,7 @@ llama-cpp-python → Local Models (.gguf)
       participant Server
       participant Router
       participant Classifier
-      participant ReAct
+      participant Pipeline
       participant Tools
       participant Model
 
@@ -327,20 +354,21 @@ llama-cpp-python → Local Models (.gguf)
       Server->>+Router: route(message, file_context)
       Router->>+Classifier: generate_plan(message)
       Classifier->>+Model: classify intent
-      Model-->>-Classifier: steps [ file_operations | code_analysis | general_chat ]
+      Model-->>-Classifier: steps [ file_operations | code_analysis | general_chat | research ]
       Classifier-->>-Router: plan
       Router->>Router: validate_plan
+      Router->>+Pipeline: create_ephemeral(system_prompt)
       loop ReAct loop (max 5 iterations)
-          Router->>+ReAct: think(history)
-          ReAct->>+Model: reason
-          Model-->>-ReAct: { thought, action: need_tool | finish | continue_thinking }
+          Pipeline->>+Model: think(ephemeral_history)
+          Model-->>-Pipeline: { thought, action: need_tool | finish | continue_thinking }
           alt action == need_tool
-              ReAct->>+Tools: execute tool call
-              Tools-->>-ReAct: tool result
+              Pipeline->>+Tools: execute tool call
+              Tools-->>-Pipeline: tool result / error
           else action == finish
-              ReAct-->>Router: final answer
+              Pipeline-->>Router: final answer
           end
       end
+      Router->>Router: update persistent history + flush to disk
       Router-->>-Server: response
       Server-->>-Neovim: { result, error, requestId }
       Note right of Server: Logs written to /tmp
