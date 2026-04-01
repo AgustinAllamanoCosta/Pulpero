@@ -4,7 +4,7 @@ from core.managers.history.manager import HistoryManager
 from core.managers.tool.manager import ToolManager
 from core.runner.model.model_runner import Runner
 from core.util.logger import Logger
-from core.runner.model.prompts import intent_prompt, file_operation, chat, code_suggestion, code_analysis
+from core.runner.model.prompts import intent_prompt, file_operation, chat, code_suggestion, code_analysis, research
 
 class FileContextData:
     current_working_dir: str
@@ -53,6 +53,7 @@ class RouterManager:
         chat_model_runner:Runner | None,
         re_act_model_runner:Runner | None,
         tool_manager: ToolManager | None,
+        research_tool_manager: ToolManager | None,
         history: HistoryManager | None,
         intention_history: HistoryManager | None,
         code_suggestion_history: HistoryManager | None
@@ -72,6 +73,9 @@ class RouterManager:
 
         if (tool_manager is None):
             raise ValueError("Router tool manager is nil")
+
+        if (research_tool_manager is None):
+            raise ValueError("Router research tool manager is nil")
 
         if (chat_model_runner is None):
             raise ValueError("Router model runner is nil")
@@ -93,6 +97,7 @@ class RouterManager:
         self.intention_history = intention_history
 
         self.tool_manager = tool_manager
+        self.research_tool_manager = research_tool_manager
         self.chat_runner = chat_model_runner
         self.re_act_runner = re_act_model_runner
         self.clasi_runner = clasi_model_runner
@@ -127,6 +132,8 @@ class RouterManager:
                         response = self.file_pipeline(description)
                     case "code_analysis":
                         response = self.code_analysis_pipeline(description)
+                    case "research":
+                        response = self.research_pipeline(description)
                     case "general_chat":
                         response = self.general_chat_pipeline(description)
                     case _:
@@ -134,6 +141,8 @@ class RouterManager:
         else:
             response = self.general_chat_pipeline("")
 
+        self.history.update_chat_context_as_assistant(response)
+        self.history.flush()
         return response
 
     def validate_plan(self, user_message: str, plan: list) -> bool:
@@ -145,31 +154,39 @@ class RouterManager:
 
     def file_pipeline(self, description: str) -> str:
         self.logger.info("Processing File Pipeline")
-        self.history.update_chat_context_as_system(file_operation)
-        self.history.update_chat_context_as_assistant(description)
-        model_response = self.re_act_loop(self.history, self.re_act_runner, self.tool_runner, self.tool_manager)
+        ephemeral = self.history.create_ephemeral(file_operation)
+        ephemeral.update_chat_context_as_assistant(description)
+        model_response = self.re_act_loop(ephemeral, self.re_act_runner, self.tool_runner, self.tool_manager)
 
-        self.logger.info("Chat History file", self.history)
+        self.logger.info("Chat History file", ephemeral)
         return model_response
 
     def code_analysis_pipeline(self, description: str) -> str:
         self.logger.info("Processing Code analysis")
-        self.history.update_chat_context_as_system(code_analysis)
-        self.history.update_chat_context_as_assistant(description)
-        model_response = self.re_act_loop(self.history, self.code_runner, self.tool_runner, self.tool_manager)
+        ephemeral = self.history.create_ephemeral(code_analysis)
+        ephemeral.update_chat_context_as_assistant(description)
+        model_response = self.re_act_loop(ephemeral, self.code_runner, self.tool_runner, self.tool_manager)
 
-        self.logger.info("Chat History code analysis", self.history)
+        self.logger.info("Chat History code analysis", ephemeral)
         return model_response
 
     def general_chat_pipeline(self, description: str) -> str:
         self.logger.info("Processing Chat")
-        self.history.update_chat_context_as_system(chat)
-        self.history.update_chat_context_as_assistant(description)
-        model_response = self.chat_runner.talk_with_model(self.history)
-        self.history.update_chat_context_as_assistant(model_response.message)
+        ephemeral = self.history.create_ephemeral(chat)
+        ephemeral.update_chat_context_as_assistant(description)
+        model_response = self.chat_runner.talk_with_model(ephemeral)
 
-        self.logger.info("Chat History general chat", self.history)
+        self.logger.info("Chat History general chat", ephemeral)
         return model_response.message
+
+    def research_pipeline(self, description: str) -> str:
+        self.logger.info("Processing Research")
+        ephemeral = self.history.create_ephemeral(research)
+        ephemeral.update_chat_context_as_assistant(description)
+        model_response = self.re_act_loop(ephemeral, self.re_act_runner, self.tool_runner, self.research_tool_manager)
+
+        self.logger.info("Chat History research", ephemeral)
+        return model_response
 
     def code_suggestion_pipeline(self, file_content: str) -> dict:
         self.logger.info("Processing Code suggestion")
