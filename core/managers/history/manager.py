@@ -150,7 +150,7 @@ class HistoryManager:
         history: list[dict] = []
 
         if(self.chat_context is None or self.system_message is None):
-            raise ValueError('Chat context is None when we try to update the chat history')
+            raise ValueError('Chat context is None when we try to generate the chat history')
 
         for msg in self.chat_context.messages:
             history.append(msg.dict())
@@ -159,7 +159,11 @@ class HistoryManager:
         return history
 
     def __str__(self) -> str:
-        return json.dumps(self.generate_chat_history(), indent=2, default=str)
+        chat_history = self.generate_chat_history()
+        if chat_history != None:
+            return json.dumps(chat_history, indent=2, default=str)
+        else:
+            return ""
 
     def clear(self) -> None:
         self.chat_context = self.create_new_chat_context()

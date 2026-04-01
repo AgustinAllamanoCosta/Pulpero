@@ -143,6 +143,7 @@ class RouterManager:
                         response = self.general_chat_pipeline(description)
                     case _:
                         response = self.general_chat_pipeline(description)
+                self.history.update_chat_context_as_assistant(response)
                 self.logger.info("Chat History", self.history)
         else:
             response = self.general_chat_pipeline("")
