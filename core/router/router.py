@@ -239,7 +239,9 @@ class RouterManager:
                     if tool_response.success:
                         history.update_chat_context_as_tool_call(tool_call.name, str(tool_response.result))
                     else:
-                        history.update_chat_context_as_tool_call(tool_call.name, str(tool_response.error))
+                        error_message = f"Tool '{tool_call.name}' failed with arguments {tool_call.arguments}. Error: {tool_response.error}"
+                        self.logger.error(error_message)
+                        history.update_chat_context_as_tool_call(tool_call.name, error_message)
 
         if not finish:
             final_response = self.re_act_safe_guard(history, re_act_model_runner)

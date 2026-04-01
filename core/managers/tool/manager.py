@@ -54,9 +54,15 @@ class ToolManager:
 
     def execute_tool(self, tool_call: TooCall) -> ToolResult:
         tool = self.tools.get(tool_call.name)
-        tool_result = ToolResult(False, '', "Tool not found")
-        if tool != None:
+        if tool is None:
+            self.logger.error(f"Tool not found: {tool_call.name}")
+            return ToolResult(False, '', f"Tool '{tool_call.name}' is not registered")
+
+        try:
             tool_result = tool.callback(tool_call.arguments)
+        except Exception as e:
+            self.logger.error(f"Tool '{tool_call.name}' raised an unexpected exception: {e}")
+            return ToolResult(False, '', str(e))
 
         self.logger.info("Raw tool execution result ", tool_result.result)
         return tool_result
