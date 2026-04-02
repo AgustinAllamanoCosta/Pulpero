@@ -26,6 +26,7 @@ function RealtimeFeedback.new(virtual_text, service)
         reason = "",
         typing_timer = nil,
         analysis_in_progress = false,
+        mode_timer = nil,
     }
 
     return self
@@ -34,7 +35,7 @@ end
 function RealtimeFeedback:reset()
     self.virtual_text:clear_all()
     self.state.last_content_hash = ""
-    if self.state.typing_timer then
+    if self.state.typing_timer ~= nil then
         vim.fn.timer_stop(self.state.typing_timer)
         self.state.typing_timer = nil
     end
@@ -271,7 +272,7 @@ function RealtimeFeedback:should_analyze_buffer(current_time)
     if extension then
         for _, excluded_ext in ipairs(self.config.excluded_extensions) do
             if extension == excluded_ext then
-                self.state = "excluded extension"
+                self.state.reason = "excluded extension"
                 return false
             end
         end
@@ -308,7 +309,11 @@ function RealtimeFeedback:analyze_current_context()
     local current_time = vim.loop.hrtime() / 1000000
 
     if not self:should_analyze_buffer(current_time) then
-        print("Avoid to analyze buffer "..self.state.reason)
+        if self.state.reason ~= nil then
+            print("Avoid to analyze buffer " .. self.state.reason)
+        else
+            print("Avoid to analyze buffer ")
+        end
         return
     end
 
@@ -316,7 +321,6 @@ function RealtimeFeedback:analyze_current_context()
 end
 
 function RealtimeFeedback:analyze_current_context_always(current_time)
-
     self.state.analysis_in_progress = true
     self.state.last_analysis_time = current_time
 
@@ -359,7 +363,6 @@ function RealtimeFeedback:analyze_current_context_always(current_time)
             end
         )
     else
-
         self.state.analysis_in_progress = false
         print("Context is nil")
     end

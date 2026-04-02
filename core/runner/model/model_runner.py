@@ -38,7 +38,7 @@ code_suggestion_schema = {
             "description": "Whether any actionable issues were found"
         }
     },
-    "required": ["suggestions", "has_issues"]
+    "required": ["suggestions", "has_suggestions"]
 }
 
 step_schema_raw = {

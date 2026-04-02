@@ -26,18 +26,6 @@ local service = Service_Connector.new()
 local chat = Chat.new(ui, service)
 local realtime_feedback = Realtime_Feedback.new(virtual_text, service)
 local last_working_dir = ""
-local function ui_log(message)
-    vim.api.nvim_buf_set_option(ui.log_buf, 'modifiable', true)
-    local current_lines = vim.api.nvim_buf_get_lines(ui.log_buf, 0, -1, false)
-    local message_lines = vim.split(message, '\n')
-    for i = 1, #message_lines do
-        table.insert(current_lines, "    " .. message_lines[i])
-    end
-    vim.api.nvim_buf_set_lines(ui.log_buf, 0, -1, false, current_lines)
-    vim.api.nvim_win_set_cursor(ui.log_win, { #current_lines, 0 })
-    vim.api.nvim_buf_set_option(ui.log_buf, 'modifiable', false)
-    print(message)
-end
 
 local function update_code_context()
     local bufnr = vim.api.nvim_get_current_buf()
@@ -67,7 +55,6 @@ end
 
 function M.setup()
     if not service:connect() then
-        ui_log("Service not connected")
         return
     end
 
@@ -125,7 +112,6 @@ function M.setup()
 
     vim.api.nvim_create_autocmd({ "BufEnter", "BufReadPre", "BufNewFile" }, {
         callback = function()
-            print("Update Code Context")
             update_code_context()
         end
     })
@@ -136,30 +122,10 @@ function M.setup()
         end
     })
 
-    -- vim.api.nvim_create_autocmd({ "ModeChanged" }, {
-    --     group = group,
-    --     callback = function()
-    --         local new_mode = vim.api.nvim_get_mode().mode
-    --         local old_mode = realtime_feedback.state.current_mode
-    --         realtime_feedback.state.current_mode = new_mode
-    --
-    --         if old_mode == "i" and new_mode == "n" then
-    --             if realtime_feedback.state.mode_timer then
-    --                 vim.fn.timer_stop(realtime_feedback.state.mode_timer)
-    --             end
-    --
-    --             realtime_feedback.state.mode_timer = vim.fn.timer_start(realtime_feedback.config.debounce_ms,
-    --                 function()
-    --                     realtime_feedback:analyze_current_context()
-    --                 end)
-    --         end
-    --     end
-    -- })
-
     vim.api.nvim_create_autocmd({ "TextChangedI", "TextChanged" }, {
         group = group,
         callback = function()
-            if realtime_feedback.state.typing_timer then
+            if realtime_feedback.state.typing_timer ~= nil then
                 vim.fn.timer_stop(realtime_feedback.state.typing_timer)
             end
 
@@ -169,27 +135,6 @@ function M.setup()
                 end)
         end
     })
-
-    -- vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
-    --     group = group,
-    --     callback = function()
-    --         local cursor_pos = vim.api.nvim_win_get_cursor(0)
-    --         local current_line = cursor_pos[1] - 1
-    --
-    --         if current_line ~= realtime_feedback.state.last_cursor_line then
-    --             realtime_feedback.state.last_cursor_line = current_line
-    --
-    --             if realtime_feedback.state.typing_timer then
-    --                 vim.fn.timer_stop(realtime_feedback.state.typing_timer)
-    --             end
-    --
-    --             realtime_feedback.state.typing_timer = vim.fn.timer_start(realtime_feedback.config.debounce_ms,
-    --                 function()
-    --                     realtime_feedback:analyze_current_context()
-    --                 end)
-    --         end
-    --     end
-    -- })
 end
 
 return M

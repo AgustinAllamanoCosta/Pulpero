@@ -236,7 +236,7 @@ Logs are recreated with each request to maintain a controlled size and facilitat
 ### 🚨 TODO List
 
 - ✅ Improve chat history (compression / summarization of past context)
-- ❌ Add unit test generation based on function and context
+- ✅ Add unit test generation based on function and context
 - ✅ Add IDE project awareness
 - ❌ Publish Docker image
 - ✅ Migrate core to Python
