@@ -1,6 +1,6 @@
 local OSCommands = require('core.util.OSCommands')
-local json = require('JSON')
-local Logger = require('logger')
+local json = require('core.util.JSON')
+local Logger = require('core.util.logger')
 local uv = vim.loop
 
 local ServiceConnector = {}
@@ -56,42 +56,6 @@ function ServiceConnector:is_service_running()
     end
 end
 
-function ServiceConnector:start_service()
-    self.logger:debug("Starting Pulpero service")
-
-    if not OSCommands:file_exists(SERVICE_SCRIPT) then
-        self.logger:error("Service script not found", { path = SERVICE_SCRIPT })
-        return false
-    end
-
-    local handle, pid
-    local args = { SERVICE_SCRIPT }
-    if OSCommands:is_windows() then
-        self.logger:debug("Is windows, starting service", { args })
-        handle, pid = uv.spawn('lua', {
-            args = args,
-            detached = true,
-            hide = true
-        })
-    else
-        self.logger:debug("Is Linux or Darwing, starting service", { args })
-        handle, pid = uv.spawn('lua', {
-            args = args,
-            detached = true
-        })
-    end
-
-    if not handle then
-        self.logger:error("Failed to start service process", { pid = pid })
-        return false
-    end
-
-    handle:unref()
-    uv.sleep(1000)
-    self.logger:debug("Service started", { pid = pid })
-    return true
-end
-
 function ServiceConnector:process_data(data)
     if data then
         self.pending_data = self.pending_data .. data
@@ -115,17 +79,8 @@ function ServiceConnector:connect()
         self.logger:debug("Socket file not found")
         service_started = self:is_service_running()
         if not service_started then
-            self.logger:debug("Service is not running starting a new one")
-            service_started = self:start_service()
-            if not service_started then
-                return false
-            end
-            self.logger:debug("Waiting for the service to complete")
-            uv.sleep(1000)
-            if not OSCommands:file_exists(SOCKET_PATH) then
-                self.logger:error("Socket file still not found after starting service")
-                return false
-            end
+            self.logger:error("Service is not running starting a new one")
+            return false
         else
             self.logger:error("Service appears to be running but socket file not found")
             return false
@@ -214,7 +169,7 @@ function ServiceConnector:send_request(method, params, callback)
     end
     self.request_id = self.request_id + 1
     local request = {
-        id = self.request_id,
+        Id = self.request_id,
         method = method,
         params = params
     }
@@ -238,8 +193,8 @@ function ServiceConnector:talk_with_model(message, file_context, callback)
     return self:send_request("talk_with_model", { message = message, file_context = file_context }, callback)
 end
 
-function ServiceConnector:get_live_code_feedback(file_conent, user_cursor, callback)
-    return self:send_request("get_live_code_feedback", { content = file_conent, user_cursor = user_cursor }, callback)
+function ServiceConnector:get_live_code_feedback(file_content, user_cursor, callback)
+    return self:send_request("get_live_code_feedback", { content = file_content, user_cursor = user_cursor }, callback)
 end
 
 function ServiceConnector:clear_model_cache(callback)
@@ -256,6 +211,10 @@ end
 
 function ServiceConnector:toggle_service(callback)
     return self:send_request("toggle", {}, callback)
+end
+
+function ServiceConnector:update_project_context(cwd, callback)
+    return self:send_request("update_project_context", { cwd = cwd }, callback)
 end
 
 function ServiceConnector:disconnect()

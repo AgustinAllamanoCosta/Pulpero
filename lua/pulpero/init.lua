@@ -14,7 +14,6 @@ for _, path in ipairs(paths) do
     end
 end
 
-require('load_dep')
 local UI = require('ui')
 local Virtual_Text = require('virtual_text')
 local Chat = require('chat')
@@ -26,18 +25,7 @@ local ui = UI.new()
 local service = Service_Connector.new()
 local chat = Chat.new(ui, service)
 local realtime_feedback = Realtime_Feedback.new(virtual_text, service)
-local function ui_log(message)
-    vim.api.nvim_buf_set_option(ui.log_buf, 'modifiable', true)
-    local current_lines = vim.api.nvim_buf_get_lines(ui.log_buf, 0, -1, false)
-    local message_lines = vim.split(message, '\n')
-    for i = 1, #message_lines do
-        table.insert(current_lines, "    " .. message_lines[i])
-    end
-    vim.api.nvim_buf_set_lines(ui.log_buf, 0, -1, false, current_lines)
-    vim.api.nvim_win_set_cursor(ui.log_win, { #current_lines, 0 })
-    vim.api.nvim_buf_set_option(ui.log_buf, 'modifiable', false)
-    print(message)
-end
+local last_working_dir = ""
 
 local function update_code_context()
     local bufnr = vim.api.nvim_get_current_buf()
@@ -48,17 +36,25 @@ local function update_code_context()
 
     if buftype == "" then
         local current_file_path = vim.api.nvim_buf_get_name(0)
+        local cwd = vim.loop.cwd()
         chat.file_context = {
-            current_working_dir = vim.loop.cwd(),
+            current_working_dir = cwd,
             current_file_name   = string.match(current_file_path, "[^/\\]+$"),
             current_file_path   = current_file_path,
         }
+        if cwd ~= last_working_dir and service.connected then
+            last_working_dir = cwd
+            service:update_project_context(cwd, function(err, _)
+                if err then
+                    print("Pulpero: failed to update project context: " .. tostring(err))
+                end
+            end)
+        end
     end
 end
 
 function M.setup()
     if not service:connect() then
-        ui_log("Service not connected")
         return
     end
 
@@ -74,24 +70,9 @@ function M.setup()
             "Open the chat windows, if it is open in another tab close that windows and open a new one in the current tab"
         })
 
-    vim.api.nvim_create_user_command('PulperoStatus', function()
-        service:get_service_status(function(err, result)
-            print(err)
-            print(result)
-        end)
-    end, { range = true, desc = "Get the pulpero service status" })
-
     vim.api.nvim_create_user_command('PulperoCloseChat', function()
         chat:close()
     end, { range = true, desc = "Close the current open chat" })
-
-    vim.api.nvim_create_user_command('PulperoUILogClose', function()
-        ui:close_log()
-    end, { range = true, desc = "" })
-
-    vim.api.nvim_create_user_command('PulperoUILogOpen', function()
-        ui:create_log_fullscreen()
-    end, { range = true, desc = "" })
 
     vim.api.nvim_create_user_command('PulperoSendChat', function()
         chat:submit_message()
@@ -116,67 +97,44 @@ function M.setup()
         range = true,
         desc = "Clear all Pulpero virtual text feedback"
     })
-    --
-    -- vim.api.nvim_create_autocmd({ "BufLeave" }, {
-    --     callback = function()
-    --         realtime_feedback:reset()
-    --     end
-    -- })
-    --
-    -- vim.api.nvim_create_autocmd({ "ModeChanged" }, {
-    --     group = group,
-    --     callback = function()
-    --         local new_mode = vim.api.nvim_get_mode().mode
-    --         local old_mode = realtime_feedback.state.current_mode
-    --         realtime_feedback.state.current_mode = new_mode
-    --
-    --         if old_mode == "i" and new_mode == "n" then
-    --             if realtime_feedback.state.mode_timer then
-    --                 vim.fn.timer_stop(realtime_feedback.state.mode_timer)
-    --             end
-    --
-    --             realtime_feedback.state.mode_timer = vim.fn.timer_start(realtime_feedback.config.mode_switch_delay_ms,
-    --                 function()
-    --                     realtime_feedback:analyze_current_context()
-    --                 end)
-    --         end
-    --     end
-    -- })
-    --
-    -- vim.api.nvim_create_autocmd({ "TextChangedI", "TextChanged" }, {
-    --     group = group,
-    --     callback = function()
-    --         if realtime_feedback.state.typing_timer then
-    --             vim.fn.timer_stop(realtime_feedback.state.typing_timer)
-    --         end
-    --
-    --         realtime_feedback.state.typing_timer = vim.fn.timer_start(realtime_feedback.config.typing_debounce_ms,
-    --             function()
-    --                 realtime_feedback:analyze_current_context()
-    --             end)
-    --     end
-    -- })
-    --
-    -- vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
-    --     group = group,
-    --     callback = function()
-    --         local cursor_pos = vim.api.nvim_win_get_cursor(0)
-    --         local current_line = cursor_pos[1] - 1
-    --
-    --         if current_line ~= realtime_feedback.state.last_cursor_line then
-    --             realtime_feedback.state.last_cursor_line = current_line
-    --
-    --             if realtime_feedback.state.typing_timer then
-    --                 vim.fn.timer_stop(realtime_feedback.state.typing_timer)
-    --             end
-    --
-    --             realtime_feedback.state.typing_timer = vim.fn.timer_start(realtime_feedback.config.debounce_ms,
-    --                 function()
-    --                     realtime_feedback:analyze_current_context()
-    --                 end)
-    --         end
-    --     end
-    -- })
+
+    vim.api.nvim_create_user_command('PulperoFeedback', function()
+        local current_time = vim.loop.hrtime() / 1000000
+        virtual_text:clear_all()
+        if realtime_feedback.state.mode_timer then
+            vim.fn.timer_stop(realtime_feedback.state.mode_timer)
+        end
+        realtime_feedback:analyze_current_context_always(current_time)
+    end, {
+        range = true,
+        desc = "Analyze the current contxt of the cursor with Pulpero"
+    })
+
+    vim.api.nvim_create_autocmd({ "BufEnter", "BufReadPre", "BufNewFile" }, {
+        callback = function()
+            update_code_context()
+        end
+    })
+
+    vim.api.nvim_create_autocmd({ "BufLeave" }, {
+        callback = function()
+            realtime_feedback:reset()
+        end
+    })
+
+    vim.api.nvim_create_autocmd({ "TextChangedI", "TextChanged" }, {
+        group = group,
+        callback = function()
+            if realtime_feedback.state.typing_timer ~= nil then
+                vim.fn.timer_stop(realtime_feedback.state.typing_timer)
+            end
+
+            realtime_feedback.state.typing_timer = vim.fn.timer_start(realtime_feedback.config.debounce_ms,
+                function()
+                    realtime_feedback:analyze_current_context()
+                end)
+        end
+    })
 end
 
 return M
