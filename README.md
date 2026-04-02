@@ -235,10 +235,14 @@ Logs are recreated with each request to maintain a controlled size and facilitat
 
 ### 🚨 TODO List
 
+- ❌ Publish Docker image
+- 🚧 Reduce the file tree
+- 🚧 Create tools for use git
+- 🚧 Inser the relevant context an hints into the system prompts and replace it when is pertinent
+- ❌ Add support for use mind by MCP
 - ✅ Improve chat history (compression / summarization of past context)
 - ✅ Add unit test generation based on function and context
 - ✅ Add IDE project awareness
-- ❌ Publish Docker image
 - ✅ Migrate core to Python
 - ✅ Create a Docker image of the core
 - ✅ Improve model download process
