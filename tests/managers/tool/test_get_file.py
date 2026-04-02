@@ -1,6 +1,4 @@
-import pytest
 from core.managers.tool.get_file import get_file
-
 
 class TestGetFile:
 

@@ -1,6 +1,4 @@
 import pytest
-import os
-import tempfile
 from core.util.logger import Logger
 
 
