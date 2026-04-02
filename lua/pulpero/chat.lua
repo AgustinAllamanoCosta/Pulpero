@@ -125,8 +125,14 @@ function Chat.submit_message(self)
                 end
 
                 if result then
-                    local message_to_append = result:gsub("\\n", "\n")
-                    self:replace_last_message(pulpero_key, message_to_append)
+                    if type(result) == "table" and result.type == "buffer_edit" then
+                        self:apply_buffer_edit(result)
+                        local msg = result.message and result.message:gsub("\\n", "\n") or "Buffer edit applied."
+                        self:replace_last_message(pulpero_key, msg)
+                    else
+                        local message_to_append = result:gsub("\\n", "\n")
+                        self:replace_last_message(pulpero_key, message_to_append)
+                    end
 
                     self:append_message(system_key,
                         "🚨 ! Note: This explanation is AI-generated and should be verified for accuracy. ! 🚨")
@@ -135,6 +141,45 @@ function Chat.submit_message(self)
                 end
             end)
         end)
+    end
+end
+
+function Chat.apply_buffer_edit(self, edit_response)
+    local target_path = edit_response.path
+    local new_content = edit_response.content
+
+    if not target_path or target_path == "" then
+        self:append_message(system_key, "⚠️ Buffer edit failed: no file path provided by model.")
+        return
+    end
+
+    if not new_content then
+        self:append_message(system_key, "⚠️ Buffer edit failed: no content provided by model.")
+        return
+    end
+
+    local target_buf = nil
+    for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+        if vim.api.nvim_buf_is_loaded(bufnr) then
+            if vim.api.nvim_buf_get_name(bufnr) == target_path then
+                target_buf = bufnr
+                break
+            end
+        end
+    end
+
+    if target_buf then
+        local normalised = new_content:gsub("\r\n", "\n"):gsub("\r", "\n")
+        local lines = vim.split(normalised, "\n", { plain = true })
+        if lines[#lines] == "" then
+            table.remove(lines)
+        end
+        vim.api.nvim_buf_set_lines(target_buf, 0, -1, false, lines)
+        self:append_message(system_key, "✅ Buffer updated.")
+    else
+        self:append_message(system_key,
+            "⚠️ File '" .. target_path .. "' is not currently open in the editor. " ..
+            "Open it and re-run the request to apply the edit.")
     end
 end
 

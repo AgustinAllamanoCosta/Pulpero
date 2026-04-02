@@ -4,10 +4,10 @@ import json
 class ServerResponse:
 
     requestId: int
-    result: bool | str | None
+    result: bool | str | dict | None
     error: str | None
 
-    def __init__(self, requestId: int, result: bool | str | None, error: str | None ) -> None:
+    def __init__(self, requestId: int, result: bool | str | dict | None, error: str | None ) -> None:
         self.requestId = requestId
         self.result = result
         self.error = error

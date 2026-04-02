@@ -103,12 +103,18 @@ class Methods:
                     env_config = self.setup.prepear_env()
 
                     if self.router is None:
+                        pending_buffer_edit_store: dict = {}
+
                         tool_manager = ToolManager(self.logger)
                         tool_manager.register_tool(tools['create_create_file_tool'](self.logger))
+                        tool_manager.register_tool(tools['create_update_file_tool'](self.logger))
                         tool_manager.register_tool(tools['create_get_file_tool'](self.logger))
                         tool_manager.register_tool(tools['create_find_file_tool'](self.logger))
                         tool_manager.register_tool(tools['create_list_directory_tool'](self.logger))
                         tool_manager.register_tool(tools['create_get_file_tree_tool'](self.logger))
+                        tool_manager.register_tool(
+                            tools['create_apply_buffer_edit_tool'](self.logger, pending_buffer_edit_store)
+                        )
 
                         research_tool_manager = ToolManager(self.logger)
                         research_tool_manager.register_tool(tools['create_web_search_tool'](self.logger))
@@ -145,7 +151,8 @@ class Methods:
                                 self.history,
                                 self.intention_history,
                                 self.code_suggestion_history,
-                                self.loop_history
+                                self.loop_history,
+                                pending_buffer_edit_store
                         )
                     self.is_ready = True
                     response.result = self.is_ready

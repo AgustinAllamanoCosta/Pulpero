@@ -1,9 +1,11 @@
 import re
 from core.managers.history.manager import HistoryManager
 from core.managers.tool.manager import ToolManager
+from core.managers.tool.tool import TooCall
 from core.runner.model.model_runner import Runner
 from core.util.logger import Logger
-from core.runner.model.prompts import intent_prompt, file_operation, chat, code_suggestion, code_analysis, research
+from core.runner.model.prompts import intent_prompt, file_operation, chat, code_suggestion, code_analysis, research, compression
+from core.managers.hints.manager import HintsManager
 
 class FileContextData:
     current_working_dir: str
@@ -56,7 +58,8 @@ class RouterManager:
         history: HistoryManager | None,
         intention_history: HistoryManager | None,
         code_suggestion_history: HistoryManager | None,
-        loop_history: HistoryManager | None
+        loop_history: HistoryManager | None,
+        pending_buffer_edit_store: dict | None = None
     ) -> None:
 
         if (logger is None ):
@@ -112,9 +115,28 @@ class RouterManager:
         self.file_context_data = FileContextData(current_working_dir = '', current_file_name = '', current_file_path = '')
         self.amount_of_thinks_cicles = 4
         self.lightweightSimilarity = LightweightSimilarity()
+        self._pending_buffer_edit: dict = pending_buffer_edit_store if pending_buffer_edit_store is not None else {}
+
+    def _seed_open_file_hint(self, file_context_data: FileContextData) -> None:
+        path = file_context_data.current_file_path
+        if not path:
+            return
+        try:
+            tool_call = TooCall()
+            tool_call.name = "get_file"
+            tool_call.arguments = {"path": path}
+            result = self.tool_manager.execute_tool(tool_call)
+            if result.success:
+                self.hints.record("get_file", {"path": path}, result.result)
+                self.logger.info("Open file seeded into hints", path)
+        except Exception as e:
+            self.logger.error(f"Failed to seed open file hint: {e}")
 
     def route(self, user_message: str, file_context_data: FileContextData) -> str:
 
+        self.hints = HintsManager(self.chat_runner, self.logger)
+        self._pending_buffer_edit.clear()
+        self._seed_open_file_hint(file_context_data)
         self.history.update_chat_context_as_user(user_message)
 
         if( self.file_context_data.current_working_dir != file_context_data.current_working_dir):
@@ -149,6 +171,21 @@ class RouterManager:
             self.history.update_chat_context_as_assistant(response)
 
         self.history.flush()
+
+        if self.history.needs_compression():
+            self.history.compress(
+                keep_recent=10,
+                compress_fn=self._summarize_turns
+            )
+
+        if self._pending_buffer_edit:
+            return {
+                "type": "buffer_edit",
+                "path": self._pending_buffer_edit["path"],
+                "content": self._pending_buffer_edit["content"],
+                "message": response
+            }
+
         return response
 
     def validate_plan(self, user_message: str, plan: list) -> bool:
@@ -161,6 +198,7 @@ class RouterManager:
     def file_pipeline(self, description: str) -> str:
         self.logger.info("Processing File Pipeline")
         ephemeral = self.history.create_ephemeral(file_operation)
+        self.hints.inject_into(ephemeral, "file_operations")
         ephemeral.update_chat_context_as_assistant(description)
         ephemeral.update_chat_context_as_assistant(f"this is the information of the file I am working on {self.file_context_data}")
         model_response = self.re_act_loop(ephemeral, self.re_act_runner, self.tool_runner, self.tool_manager)
@@ -171,6 +209,7 @@ class RouterManager:
     def code_analysis_pipeline(self, description: str) -> str:
         self.logger.info("Processing Code analysis")
         ephemeral = self.history.create_ephemeral(code_analysis)
+        self.hints.inject_into(ephemeral, "code_analysis")
         ephemeral.update_chat_context_as_assistant(description)
         model_response = self.re_act_loop(ephemeral, self.code_runner, self.tool_runner, self.tool_manager)
 
@@ -180,6 +219,7 @@ class RouterManager:
     def general_chat_pipeline(self, description: str) -> str:
         self.logger.info("Processing Chat")
         ephemeral = self.history.create_ephemeral(chat)
+        self.hints.inject_into(ephemeral, "general_chat")
         ephemeral.update_chat_context_as_assistant(description)
         model_response = self.chat_runner.talk_with_model(ephemeral)
 
@@ -189,6 +229,7 @@ class RouterManager:
     def research_pipeline(self, description: str) -> str:
         self.logger.info("Processing Research")
         ephemeral = self.history.create_ephemeral(research)
+        self.hints.inject_into(ephemeral, "research")
         ephemeral.update_chat_context_as_assistant(description)
         model_response = self.re_act_loop(ephemeral, self.re_act_runner, self.tool_runner, self.research_tool_manager)
 
@@ -260,6 +301,7 @@ class RouterManager:
 
                     if tool_response.success:
                         history.update_chat_context_as_tool_call(tool_call.name, str(tool_response.result))
+                        self.hints.record(tool_call.name, tool_call.arguments, str(tool_response.result))
                     else:
                         error_message = f"Tool '{tool_call.name}' failed with arguments {tool_call.arguments}. Error: {tool_response.error}"
                         self.logger.error(error_message)
@@ -276,6 +318,17 @@ class RouterManager:
         history.update_chat_context_as_assistant(model_response.message)
         self.logger.info("Model response ", model_response)
         return model_response.message
+
+    def _summarize_turns(self, turns: list) -> str:
+        summary_history = HistoryManager(None)
+        summary_history.update_chat_context_as_system(compression)
+        formatted = "\n".join(
+            f"{msg.key.upper()}: {msg.content}" for msg in turns
+        )
+        summary_history.update_chat_context_as_user(formatted)
+        response = self.chat_runner.talk_with_model(summary_history)
+        self.logger.info("History compressed", response.message)
+        return response.message
 
     def generate_plan(self, user_message: str) -> list:
 

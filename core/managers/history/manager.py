@@ -12,7 +12,7 @@ class ChatEntry:
 
     def __init__(self, key: str, content: str) -> None:
 
-        if(key is not tool_call_key and key is not user_key and key is not system_key and key is not assistant_key):
+        if(key != tool_call_key and key != user_key and key != system_key and key != assistant_key):
             raise Exception('chat entry key not valid')
 
         self.key = key
@@ -165,6 +165,42 @@ class HistoryManager:
             return json.dumps(self.generate_chat_history(), indent=2, default=str)
         except Exception:
             return ""
+
+    def needs_compression(self, threshold: int = 30) -> bool:
+        turn_count = sum(
+            1 for msg in self.chat_context.messages
+            if isinstance(msg, ChatEntry) and msg.key == user_key
+        )
+        return turn_count >= threshold
+
+    def compress(self, keep_recent: int, compress_fn) -> None:
+        conversation_turns = [
+            msg for msg in self.chat_context.messages
+            if isinstance(msg, ChatEntry) and msg.key in (user_key, assistant_key)
+        ]
+
+        if len(conversation_turns) <= keep_recent:
+            return
+
+        to_compress = conversation_turns[:-keep_recent]
+        to_keep     = conversation_turns[-keep_recent:]
+
+        try:
+            summary = compress_fn(to_compress)
+        except Exception:
+            return
+
+        if not summary:
+            return
+
+        other_messages = [
+            msg for msg in self.chat_context.messages
+            if not (isinstance(msg, ChatEntry) and msg.key in (user_key, assistant_key))
+        ]
+
+        summary_entry = ChatEntry(assistant_key, f"[Conversation summary]: {summary}")
+        self.chat_context.messages = other_messages + [summary_entry] + to_keep
+        self.flush()
 
     def clear(self) -> None:
         self.chat_context = self.create_new_chat_context()
